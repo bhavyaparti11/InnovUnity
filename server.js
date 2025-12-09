@@ -35,21 +35,17 @@ mongoose.connect(process.env.MONGO_URI, {})
   .then(() => console.log('✅ MongoDB Connected'))
   .catch(err => console.log('MongoDB error:', err));
 
-// ✨ FIX: Robust Email Configuration (30s Timeout)
+// ✨ FINAL FIX: Force IPv4 to prevent Gmail Timeouts
 const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 587,
-  secure: false, 
+  service: 'gmail', 
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS
   },
-  // INCREASED TIMEOUTS to 30 seconds
-  connectionTimeout: 30000, 
-  greetingTimeout: 30000,
-  socketTimeout: 30000,
-  debug: true, // This will show us detailed logs if it fails again
-  logger: true 
+  // 👇 THIS IS THE KEY FIX 👇
+  family: 4, // Forces IPv4 (Avoids IPv6 connection hangs)
+  logger: true,
+  debug: true
 });
 
 // --- SCHEMAS ---
