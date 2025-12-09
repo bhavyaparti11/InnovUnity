@@ -35,19 +35,21 @@ mongoose.connect(process.env.MONGO_URI, {})
   .then(() => console.log('✅ MongoDB Connected'))
   .catch(err => console.log('MongoDB error:', err));
 
-// ✨ FIX: Robust Email Configuration for Cloud
+// ✨ FIX: Robust Email Configuration (30s Timeout)
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
-  port: 465, // Use secure port 465 instead of default
-  secure: true, // Must be true for port 465
+  port: 465,
+  secure: true, 
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS
   },
-  // Increase timeouts to prevent ETIMEDOUT errors
-  connectionTimeout: 10000, // 10 seconds
-  greetingTimeout: 10000,
-  socketTimeout: 10000
+  // INCREASED TIMEOUTS to 30 seconds
+  connectionTimeout: 30000, 
+  greetingTimeout: 30000,
+  socketTimeout: 30000,
+  debug: true, // This will show us detailed logs if it fails again
+  logger: true 
 });
 
 // --- SCHEMAS ---
