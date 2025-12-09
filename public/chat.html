@@ -337,7 +337,7 @@
         const userName = localStorage.getItem("user_name") || "Guest";
         let currentUserId = null;
         
-        const API_BASE = "http://localhost:5000";
+        const API_BASE = "";
         const socket = io(API_BASE, { auth: { token } });
         
         // --- GLOBAL VARIABLES ---
