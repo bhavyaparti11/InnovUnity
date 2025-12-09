@@ -35,12 +35,19 @@ mongoose.connect(process.env.MONGO_URI, {})
   .then(() => console.log('✅ MongoDB Connected'))
   .catch(err => console.log('MongoDB error:', err));
 
+// ✨ FIX: Robust Email Configuration for Cloud
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: 'smtp.gmail.com',
+  port: 465, // Use secure port 465 instead of default
+  secure: true, // Must be true for port 465
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS
-  }
+  },
+  // Increase timeouts to prevent ETIMEDOUT errors
+  connectionTimeout: 10000, // 10 seconds
+  greetingTimeout: 10000,
+  socketTimeout: 10000
 });
 
 // --- SCHEMAS ---
