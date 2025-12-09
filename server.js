@@ -143,12 +143,15 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 
-// --- REGISTER ROUTE (NO EMAIL VERIFICATION) ---
+// ==========================================
+// AUTH ROUTE REPLACEMENT (Auto-Verify + Allow All)
+// ==========================================
+
+// 1. REGISTER (Auto-verifies new users)
 app.post('/register', async (req, res) => {
     try {
         const { name, email, password } = req.body;
         
-        // Basic Validation
         if (!name || !email || !password) {
             return res.status(400).json({ error: 'All fields are required' });
         }
@@ -157,96 +160,64 @@ app.post('/register', async (req, res) => {
         const existingUser = await User.findOne({ email: normalizedEmail });
         
         if (existingUser) {
-            return res.status(409).json({ error: 'Email already exists. Please log in.' });
+            // ✨ FIX: Tell them to login immediately (since we fixed login)
+            return res.status(409).json({ error: 'Email already exists. Please go to Login.' });
         }
 
         const passwordHash = await bcrypt.hash(password, 10);
 
-        // ✨ TRICK: Create user as ALREADY VERIFIED
         const user = new User({
             name,
             email: normalizedEmail,
             passwordHash,
-            verified: true, // <--- This allows immediate login
+            verified: true, // ✨ Auto-Verify immediately
             verificationCodeHash: null,
             verificationCodeExpiresAt: null
         });
 
         await user.save();
+        
+        console.log(`✅ User Registered: ${normalizedEmail}`);
+        res.status(201).json({ message: 'Registration successful! logging in...' });
 
-        console.log(`✅ User registered and auto-verified: ${normalizedEmail}`);
-
-        // Send success message
-        res.status(201).json({ 
-            message: 'Registration successful! You can now log in.' 
-        });
-
-    } catch (err) {
-        console.error('Registration Error:', err);
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-});
-
-app.post('/verify', async (req, res) => {
-    try {
-        const { email, code } = req.body || {};
-        if (!email || !code) return res.status(400).json({ error: 'Email and code are required' });
-        const normalizedEmail = email.toLowerCase().trim();
-        const user = await User.findOne({ email: normalizedEmail });
-        if (!user) return res.status(400).json({ error: 'User not found' });
-        if (user.verified) return res.json({ message: 'Already verified' });
-        if (!user.verificationCodeHash || !user.verificationCodeExpiresAt)
-          return res.status(400).json({ error: 'No verification in progress' });
-        if (user.verificationCodeExpiresAt < new Date())
-          return res.status(400).json({ error: 'Code expired. Please resend.' });
-        const ok = await bcrypt.compare(code, user.verificationCodeHash);
-        if (!ok) return res.status(400).json({ error: 'Incorrect code' });
-        user.verified = true;
-        user.verificationCodeHash = null;
-        user.verificationCodeExpiresAt = null;
-        await user.save();
-        res.json({ message: 'Email verified. You can now log in.' });
     } catch (err) {
         console.error(err);
-        res.status(500).json({ error: 'Server error' });
+        res.status(500).json({ error: 'Server Error' });
     }
 });
-app.post('/resend-code', async (req, res) => {
-    try {
-        const { email } = req.body || {};
-        if (!email) return res.status(400).json({ error: 'Email is required' });
-        const normalizedEmail = email.toLowerCase().trim();
-        const user = await User.findOne({ email: normalizedEmail });
-        if (!user) return res.status(400).json({ error: 'User not found' });
-        if (user.verified) return res.status(400).json({ error: 'Already verified' });
-        const code = genOtp();
-        user.verificationCodeHash = await bcrypt.hash(code, 10);
-        user.verificationCodeExpiresAt = new Date(Date.now() + (Number(process.env.OTP_EXPIRES_MIN) || 10) * 60 * 1000);
-        await user.save();
-        try { await sendOtpEmail(user.email, user.name, code); } catch (e) { console.error('Email send error:', e); }
-        res.json({ message: 'New code sent.' });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Server error' });
-    }
-});
+
+// 2. LOGIN (Removed verification check)
 app.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body || {};
         if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
+        
         const normalizedEmail = email.toLowerCase().trim();
         const user = await User.findOne({ email: normalizedEmail });
+        
         if (!user) return res.status(400).json({ error: 'Invalid email or password' });
+        
         const ok = await bcrypt.compare(password, user.passwordHash);
         if (!ok) return res.status(400).json({ error: 'Invalid email or password' });
-        if (!user.verified) return res.status(400).json({ error: 'Please verify your email first' });
+
+        // ❌ DELETED: "if (!user.verified)" is gone. 
+        // Now you can login even if the database says verified: false.
+
         const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'secret', { expiresIn: '7d' });
-        res.json({ message: 'Login successful', token, user: { name: user.name, email: user.email } });
+        
+        res.json({ 
+            message: 'Login successful', 
+            token, 
+            user: { name: user.name, email: user.email, id: user._id } 
+        });
+
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Server error' });
     }
 });
+
+// (You can delete the /verify and /resend-code routes completely, they are not needed anymore)
 
 
 // --- API ROUTES (PROTECTED) ---
