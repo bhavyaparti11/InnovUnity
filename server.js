@@ -35,16 +35,16 @@ mongoose.connect(process.env.MONGO_URI, {})
   .then(() => console.log('✅ MongoDB Connected'))
   .catch(err => console.log('MongoDB error:', err));
 
-// ✨ FINAL FIX: Using Brevo (Sendinblue) SMTP
+// ✨ FINAL FIX: Brevo on Port 2525 (Bypasses Blocks) + Force IPv4
 const transporter = nodemailer.createTransport({
-  host: 'smtp-relay.brevo.com', // Brevo's specific SMTP server
-  port: 587,
-  secure: false, // Must be false for port 587 (STARTTLS)
+  host: 'smtp-relay.brevo.com',
+  port: 2525,           // CHANGED: Port 2525 is the "fallback" port for blocked networks
+  secure: false,        // False for port 2525
   auth: {
-    user: process.env.SMTP_USER, // Your Brevo Login Email
-    pass: process.env.SMTP_PASS  // Your New Brevo SMTP Key
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS
   },
-  // Brevo is reliable, so standard timeouts usually work
+  family: 4,            // ✨ FORCE IPv4: Crucial for fixing timeouts on Render
   connectionTimeout: 10000,
   logger: true,
   debug: true
