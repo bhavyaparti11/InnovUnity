@@ -143,47 +143,50 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 
-// --- AUTH ROUTES (Unchanged) ---
-app.post('/register', async (req, res) => { 
+// --- REGISTER ROUTE (NO EMAIL VERIFICATION) ---
+app.post('/register', async (req, res) => {
     try {
-        const { name, email, password } = req.body || {};
-        if (!name || !email || !password)
-          return res.status(400).json({ error: 'Name, email and password are required' });
-        const normalizedEmail = email.toLowerCase().trim();
-        const existing = await User.findOne({ email: normalizedEmail });
-        const passwordHash = await bcrypt.hash(password, 10);
-        const code = genOtp();
-        const codeHash = await bcrypt.hash(code, 10);
-        const expires = new Date(Date.now() + (Number(process.env.OTP_EXPIRES_MIN) || 10) * 60 * 1000);
-        if (existing) {
-          if (existing.verified) {
-            return res.status(409).json({ error: 'Email already registered and verified' });
-          }
-          existing.name = name;
-          existing.passwordHash = passwordHash;
-          existing.verificationCodeHash = codeHash;
-          existing.verificationCodeExpiresAt = expires;
-          await existing.save();
-          try { await sendOtpEmail(existing.email, existing.name, code); } catch (e) { console.error('Email send error:', e); }
-          return res.json({ message: 'Registered. Verification OTP sent to email.' });
+        const { name, email, password } = req.body;
+        
+        // Basic Validation
+        if (!name || !email || !password) {
+            return res.status(400).json({ error: 'All fields are required' });
         }
+
+        const normalizedEmail = email.toLowerCase().trim();
+        const existingUser = await User.findOne({ email: normalizedEmail });
+        
+        if (existingUser) {
+            return res.status(409).json({ error: 'Email already exists. Please log in.' });
+        }
+
+        const passwordHash = await bcrypt.hash(password, 10);
+
+        // ✨ TRICK: Create user as ALREADY VERIFIED
         const user = new User({
-          name,
-          email: normalizedEmail,
-          passwordHash,
-          verified: false,
-          verificationCodeHash: codeHash,
-          verificationCodeExpiresAt: expires
+            name,
+            email: normalizedEmail,
+            passwordHash,
+            verified: true, // <--- This allows immediate login
+            verificationCodeHash: null,
+            verificationCodeExpiresAt: null
         });
+
         await user.save();
-        try { await sendOtpEmail(user.email, user.name, code); } catch (e) { console.error('Email send error:', e); }
-        res.json({ message: 'Registered. Verification OTP sent to email.' });
+
+        console.log(`✅ User registered and auto-verified: ${normalizedEmail}`);
+
+        // Send success message
+        res.status(201).json({ 
+            message: 'Registration successful! You can now log in.' 
+        });
+
     } catch (err) {
-        console.error(err);
-        if (err.code === 11000) return res.status(409).json({ error: 'Email already registered' });
-        res.status(500).json({ error: 'Server error' });
+        console.error('Registration Error:', err);
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 });
+
 app.post('/verify', async (req, res) => {
     try {
         const { email, code } = req.body || {};
