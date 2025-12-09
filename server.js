@@ -35,15 +35,17 @@ mongoose.connect(process.env.MONGO_URI, {})
   .then(() => console.log('✅ MongoDB Connected'))
   .catch(err => console.log('MongoDB error:', err));
 
-// ✨ FINAL FIX: Force IPv4 to prevent Gmail Timeouts
+// ✨ FINAL FIX: Using Brevo (Sendinblue) SMTP
 const transporter = nodemailer.createTransport({
-  service: 'gmail', 
+  host: 'smtp-relay.brevo.com', // Brevo's specific SMTP server
+  port: 587,
+  secure: false, // Must be false for port 587 (STARTTLS)
   auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS
+    user: process.env.SMTP_USER, // Your Brevo Login Email
+    pass: process.env.SMTP_PASS  // Your New Brevo SMTP Key
   },
-  // 👇 THIS IS THE KEY FIX 👇
-  family: 4, // Forces IPv4 (Avoids IPv6 connection hangs)
+  // Brevo is reliable, so standard timeouts usually work
+  connectionTimeout: 10000,
   logger: true,
   debug: true
 });
