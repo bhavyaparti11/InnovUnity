@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - InnovUnity</title>
+    <style>
+        /* --- Import Font --- */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+        /* --- CSS Variables (from style.css) --- */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f9fafb;
+            --bg-tertiary: #f3f4f6;
+            --border-primary: #e5e7eb;
+            --text-primary: #111827;
+            --text-secondary: #4b5563;
+            --text-tertiary: #6b7280;
+                        --accent-purple: #3e399b;
+
+                        --accent-blue: #95508f;
+
+            --accent-gradient: linear-gradient(45deg, var(--accent-purple), var(--accent-blue));
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --danger-color: #ef4444;
+        }
+
+        /* --- Base & Global Styles --- */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            font-size: 15px;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Page-specific styles for profile layout */
+        .profile-header {
+            background-color: var(--bg-primary);
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border-primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .profile-header .heading {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .back-btn {
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            background-color: var(--accent-blue);
+            color: white;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+
+        .profile-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .profile-card {
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-primary);
+            border-radius: 8px;
+            padding: 2rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .profile-layout {
+            display: flex;
+            gap: 2rem;
+        }
+
+        @media (max-width: 640px) {
+            .profile-layout {
+                flex-direction: column;
+            }
+        }
+
+        .profile-picture-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            width: 150px;
+            flex-shrink: 0;
+            margin: 0 auto;
+        }
+
+        #profileImage {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--border-primary);
+        }
+        
+        .profile-picture-section button, .profile-details-section button {
+            width: 100%;
+            padding: 0.6rem 1rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .profile-picture-section button {
+            background-color: var(--bg-tertiary);
+            border: 1px solid var(--border-primary);
+            color: var(--text-primary);
+        }
+        
+        .profile-details-section button {
+             background: var(--accent-gradient);
+             color: white;
+        }
+        
+        /* ✨ Style for the new logout button */
+        .logout-btn {
+            background-color: var(--danger-color);
+            color: white;
+            margin-top: 1rem;
+        }
+
+        .profile-details-section {
+            flex: 1;
+        }
+
+        h2 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border-primary);
+        }
+        
+        .input-group {
+            margin-bottom: 1.25rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+        
+        input {
+            width: 100%;
+            padding: 0.75rem;
+            border-radius: 6px;
+            border: 1px solid var(--border-primary);
+            background-color: var(--bg-secondary);
+            outline-color: var(--accent-blue);
+            color: var(--text-primary);
+        }
+
+        input:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        hr {
+            margin: 2rem 0;
+            border: 0;
+            border-top: 1px solid var(--border-primary);
+        }
+    </style>
+</head>
+<body>
+    <header class="profile-header">
+        <div class="heading">My Profile</div>
+        <a href="chat.html" class="back-btn">Back to Chat</a>
+    </header>
+
+    <main class="profile-container">
+        <div class="profile-card">
+            <div class="profile-layout">
+                <div class="profile-picture-section">
+                    <img id="profileImage" src="https://via.placeholder.com/150" alt="Profile Picture">
+                    <input type="file" id="imageUpload" accept="image/*" style="display: none;">
+                    <button onclick="document.getElementById('imageUpload').click()">Change Picture</button>
+                </div>
+
+                <div class="profile-details-section">
+                    <h2>Profile Information</h2>
+                    <form id="profileForm">
+                        <div class="input-group">
+                            <label for="name">Full Name</label>
+                            <input type="text" id="name" placeholder="Your Name">
+                        </div>
+                        <div class="input-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" disabled>
+                        </div>
+                        <button type="submit">Save Changes</button>
+                    </form>
+
+                    <hr>
+
+                    <h2>Change Password</h2>
+                    <form id="passwordForm">
+                         <div class="input-group">
+                            <label for="currentPassword">Current Password</label>
+                            <input type="password" id="currentPassword" placeholder="Enter current password" required>
+                        </div>
+                        <div class="input-group">
+                            <label for="newPassword">New Password</label>
+                            <input type="password" id="newPassword" placeholder="Enter new password" required>
+                        </div>
+                        <button type="submit">Update Password</button>
+                    </form>
+
+                    <!-- ✨ NEW LOGOUT BUTTON ADDED HERE -->
+                    <hr>
+                    <button class="logout-btn" onclick="logoutUser()">Logout</button>
+
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const token = localStorage.getItem("token");
+        if (!token) {
+            window.location.href = "register.html";
+        }
+        const API_BASE = "http://localhost:5000";
+
+        const profileImage = document.getElementById('profileImage');
+        const imageUpload = document.getElementById('imageUpload');
+        const nameInput = document.getElementById('name');
+        const emailInput = document.getElementById('email');
+        const profileForm = document.getElementById('profileForm');
+        const passwordForm = document.getElementById('passwordForm');
+        const currentPasswordInput = document.getElementById('currentPassword');
+        const newPasswordInput = document.getElementById('newPassword');
+
+        // Fetch user profile on page load
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const res = await fetch(`${API_BASE}/api/profile`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!res.ok) throw new Error('Failed to fetch profile');
+
+                const user = await res.json();
+                nameInput.value = user.name;
+                emailInput.value = user.email;
+                if (user.profile_picture_url) {
+                    profileImage.src = user.profile_picture_url;
+                }
+            } catch (e) {
+                console.error(e);
+                alert('Could not load your profile data.');
+            }
+        });
+
+        // ✨ NEW LOGOUT FUNCTION
+        function logoutUser() {
+            localStorage.clear();
+            window.location.href = "index.html";
+        }
+
+        // Handle profile picture update
+        imageUpload.addEventListener('change', async () => {
+            const file = imageUpload.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('profilePicture', file);
+
+            try {
+                const res = await fetch(`${API_BASE}/api/profile/picture`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+
+                if (!res.ok) throw new Error('Image upload failed');
+                
+                const data = await res.json();
+                profileImage.src = data.url;
+                alert('Profile picture updated!');
+
+            } catch (e) {
+                console.error(e);
+                alert('Error uploading image.');
+            }
+        });
+
+        // Handle profile information update
+        profileForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = nameInput.value.trim();
+            if (!name) return alert('Name cannot be empty.');
+
+            try {
+                const res = await fetch(`${API_BASE}/api/profile`, {
+                    method: 'PUT',
+                    headers: { 
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name })
+                });
+
+                if (!res.ok) throw new Error('Failed to update profile');
+                
+                localStorage.setItem('user_name', name); // Update local storage too
+                alert('Profile updated successfully!');
+
+            } catch (e) {
+                console.error(e);
+                alert('Error updating profile.');
+            }
+        });
+
+        // Handle password change
+        passwordForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const currentPassword = currentPasswordInput.value;
+            const newPassword = newPasswordInput.value;
+
+            try {
+                 const res = await fetch(`${API_BASE}/api/profile/password`, {
+                    method: 'PUT',
+                    headers: { 
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ currentPassword, newPassword })
+                });
+
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Failed to update password');
+                
+                alert('Password updated successfully!');
+                passwordForm.reset();
+
+            } catch (e) {
+                console.error(e);
+                alert(`Error: ${e.message}`);
+            }
+        });
+    </script>
+</body>
+</html>

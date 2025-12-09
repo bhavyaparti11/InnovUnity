@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>InnovUnity - Get Started</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    
+    :root {
+        --primary-bg: #F9FAFB;
+        --form-bg: #FFFFFF;
+        --primary-text: #111827;
+        --secondary-text: #4B5563;
+        --accent-purple: #3e399b;
+            --accent-blue: #95508f;
+        --border-color: #E5E7EB;
+        --error-color: #EF4444;
+        --success-color: #10B981;
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Inter', sans-serif;
+        background-color: var(--primary-bg);
+        color: var(--primary-text);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        padding: 1rem;
+    }
+
+    .auth-container {
+        width: 100%;
+        max-width: 420px;
+        background-color: var(--form-bg);
+        padding: 2.5rem;
+        border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    }
+
+    .logo {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        font-size: 1.75rem;
+        font-weight: 700;
+        text-decoration: none;
+        color: var(--primary-text);
+        margin-bottom: 0.5rem;
+    }
+
+    .logo-icon {
+        width: 32px;
+        height: 32px;
+        background: linear-gradient(45deg, var(--accent-purple), var(--accent-blue));
+        border-radius: 8px;
+    }
+
+    .auth-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .auth-header h1 {
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+    }
+
+    .auth-header p {
+        color: var(--secondary-text);
+    }
+
+    .input-group {
+        margin-bottom: 1.25rem;
+    }
+
+    .input-group label {
+        display: block;
+        font-weight: 600;
+        font-size: 0.875rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .input-group input {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .input-group input:focus {
+        outline: none;
+        border-color: var(--accent-blue);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    }
+    
+    .btn {
+        width: 100%;
+        padding: 0.875rem;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 1rem;
+        cursor: pointer;
+        background: linear-gradient(45deg, var(--accent-purple), var(--accent-blue));
+        color: white;
+        transition: opacity 0.2s;
+    }
+    .btn:hover {
+        opacity: 0.9;
+    }
+
+    .toggle-section {
+        text-align: center;
+        margin-top: 1.5rem;
+        font-size: 0.875rem;
+        color: var(--secondary-text);
+    }
+    .toggle-section a {
+        color: var(--accent-purple);
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+    }
+    .toggle-section a:hover {
+        text-decoration: underline;
+    }
+
+    /* OTP Modal Styles */
+    #otpModal {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: rgba(0,0,0,0.5);
+        display: none; /* Initially hidden */
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+    }
+    .otp-box {
+        background: white;
+        padding: 2rem;
+        border-radius: 12px;
+        text-align: center;
+        width: 90%;
+        max-width: 380px;
+    }
+    .otp-box h3 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+    .otp-box p { color: var(--secondary-text); margin-bottom: 1.5rem; }
+    #otpCode {
+        width: 100%;
+        padding: 0.75rem;
+        font-size: 1.5rem;
+        text-align: center;
+        letter-spacing: 0.5rem;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        margin-bottom: 1rem;
+    }
+    .otp-box .resend-btn {
+      background: none;
+      border: none;
+      color: var(--secondary-text);
+      cursor: pointer;
+      margin-top: 1rem;
+    }
+    #otpMsg {
+        margin-top: 1rem;
+        font-weight: 500;
+        color: var(--error-color);
+    }
+  </style>
+</head>
+<body>
+  
+  <div class="auth-container">
+    <a href="index.html" class="logo">
+        <div class="logo-icon"></div>
+        <span>InnovUnity</span>
+    </a>
+
+    <!-- LOGIN FORM -->
+    <form id="loginForm" onsubmit="return loginUser(event)">
+      <div class="auth-header">
+        <h1 id="formTitle">Welcome back</h1>
+        <p>Please enter your details to sign in.</p>
+      </div>
+      <div class="input-group">
+        <label for="loginEmail">Email</label>
+        <input type="email" id="loginEmail" required placeholder="Your email address" />
+      </div>
+      <div class="input-group">
+        <label for="loginPassword">Password</label>
+        <input type="password" id="loginPassword" required placeholder="••••••••" />
+      </div>
+      <button type="submit" class="btn">Login</button>
+      <div class="toggle-section">
+        <p>Don't have an account? <a onclick="toggleForm()">Register</a></p>
+      </div>
+    </form>
+
+    <!-- REGISTER FORM -->
+    <form id="registerForm" onsubmit="return registerUser(event)" style="display: none;">
+      <div class="auth-header">
+        <h1>Create an account</h1>
+        <p>Enter your information to get started.</p>
+      </div>
+      <div class="input-group">
+        <label for="name">Full Name</label>
+        <input type="text" id="name" required placeholder="Your full name" />
+      </div>
+      <div class="input-group">
+        <label for="registerEmail">Email</label>
+        <input type="email" id="registerEmail" required placeholder="Your email address" />
+      </div>
+      <div class="input-group">
+        <label for="registerPassword">Password</label>
+        <input type="password" id="registerPassword" required placeholder="••••••••" />
+      </div>
+      <div class="input-group">
+        <label for="confirmPassword">Confirm Password</label>
+        <input type="password" id="confirmPassword" required placeholder="••••••••" />
+      </div>
+      <button type="submit" class="btn">Create Account</button>
+      <div class="toggle-section">
+        <p>Already have an account? <a onclick="toggleForm()">Login</a></p>
+      </div>
+    </form>
+  </div>
+
+  <!-- OTP MODAL -->
+  <div id="otpModal">
+    <div class="otp-box">
+      <h3>Verify your email</h3>
+      <p>Enter the 6-digit code we emailed you.</p>
+      <input id="otpCode" maxlength="6" placeholder="123456"/>
+      <button onclick="verifyCode()" class="btn">Verify</button>
+      <button onclick="resendCode()" class="resend-btn">Resend code</button>
+      <p id="otpMsg"></p>
+    </div>
+  </div>
+
+  <script>
+    // --- THIS JAVASCRIPT IS THE SAME AS YOUR ORIGINAL FILE ---
+    // --- It is already connected to the new HTML IDs above ---
+    const API_BASE = "http://localhost:5000";
+
+    let pendingEmail = "";
+    let pendingName = "";
+
+    function toggleForm() {
+      const loginForm = document.getElementById("loginForm");
+      const registerForm = document.getElementById("registerForm");
+      const formTitle = document.getElementById("formTitle"); // Note: This only exists on the login form now.
+
+      if (loginForm.style.display === "none") {
+        loginForm.style.display = "block";
+        registerForm.style.display = "none";
+      } else {
+        loginForm.style.display = "none";
+        registerForm.style.display = "block";
+      }
+    }
+
+    async function registerUser(event) {
+      event.preventDefault();
+      const name = document.getElementById("name").value.trim();
+      const email = document.getElementById("registerEmail").value.trim();
+      const password = document.getElementById("registerPassword").value;
+      const confirmPassword = document.getElementById("confirmPassword").value;
+
+      if (password !== confirmPassword) {
+        alert("Passwords do not match!");
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_BASE}/register`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, email, password })
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          alert(data.error || 'Registration failed');
+          return;
+        }
+
+        pendingEmail = email;
+        pendingName = name;
+
+        document.getElementById("otpModal").style.display = "flex";
+      } catch (e) {
+        console.error(e);
+        alert("Network error");
+      }
+    }
+
+    async function verifyCode() {
+      const code = document.getElementById("otpCode").value.trim();
+      const otpMsg = document.getElementById("otpMsg");
+      otpMsg.textContent = "";
+
+      if (code.length !== 6) {
+        otpMsg.textContent = "Enter the 6-digit code.";
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_BASE}/verify`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: pendingEmail, code })
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          otpMsg.textContent = data.error || "Verification failed";
+          return;
+        }
+
+        alert("Email verified! You can log in now.");
+        document.getElementById("otpModal").style.display = "none";
+        toggleForm();
+      } catch (e) {
+        console.error(e);
+        otpMsg.textContent = "Network error";
+      }
+    }
+
+    async function resendCode() {
+      const otpMsg = document.getElementById("otpMsg");
+      otpMsg.textContent = "";
+      try {
+        const res = await fetch(`${API_BASE}/resend-code`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: pendingEmail })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          otpMsg.textContent = data.error || "Could not resend";
+          return;
+        }
+        otpMsg.style.color = "#10B981"; // Success color
+        otpMsg.textContent = "Code sent!";
+        setTimeout(() => { otpMsg.textContent = ''; otpMsg.style.color = '#EF4444'; }, 3000); // Error color
+      } catch (e) {
+        console.error(e);
+        otpMsg.textContent = "Network error";
+      }
+    }
+
+    async function loginUser(event) {
+      event.preventDefault();
+      const email = document.getElementById("loginEmail").value.trim();
+      const password = document.getElementById("loginPassword").value;
+
+      try {
+        const res = await fetch(`${API_BASE}/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password })
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          alert(data.error || "Login failed");
+          return;
+        }
+
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user_name", data.user?.name || "");
+        localStorage.setItem("user_email", data.user?.email || "");
+
+        window.location.href = "chat.html";
+      } catch (e) {
+        console.error(e);
+        alert("Network error");
+      }
+    }
+  </script>
+</body>
+</html>
+
