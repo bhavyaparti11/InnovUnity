@@ -208,7 +208,7 @@
             </div>
              <footer class="sidebar-footer">
                 <div id="user-profile-button" class="user-profile-button">
-                    <img id="user-avatar-sidebar" class="avatar" src="https://via.placeholder.com/32" alt="User Avatar">
+                    
                     <span id="username-display-sidebar" class="username">Guest</span>
                 </div>
                 <div class="user-menu" id="user-menu">
@@ -418,7 +418,7 @@
                 const res = await fetch(`${API_BASE}/api/profile`, { headers: { 'Authorization': `Bearer ${token}` } });
                 if (res.ok) {
                     const user = await res.json();
-                    document.getElementById('user-avatar-sidebar').src = user.profile_picture_url || 'https://via.placeholder.com/32';
+                    
                     currentUserId = user._id;
                 }
             } catch (e) {}
@@ -722,7 +722,8 @@
              members.forEach(member => {
                 const item = document.createElement('div'); item.className = 'member-item';
                 const img = member.profile_picture_url || 'https://via.placeholder.com/32';
-                item.innerHTML = `<img class="avatar" src="${img}"><span>${member.name}</span>`;
+                // Just the name, simple and clean
+item.innerHTML = `<span style="padding: 10px; font-weight: 500;">${member.name}</span>`;
                 membersList.appendChild(item);
              });
         }
