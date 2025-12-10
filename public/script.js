@@ -162,3 +162,49 @@ async function verifyOtp() {
 function closeOtpModal() {
     document.getElementById('otpModal').style.display = 'none';
 }
+// --- PROJECT CREATION LOGIC ---
+
+// 1. Open the Modal
+function openProjectModal() {
+    document.getElementById('projectModal').style.display = 'flex';
+}
+
+// 2. Close the Modal
+function closeProjectModal() {
+    document.getElementById('projectModal').style.display = 'none';
+    document.getElementById('newProjectName').value = ""; // Clear input
+}
+
+// 3. Create Project (Talks to Server)
+async function createProject() {
+    const nameInput = document.getElementById('newProjectName');
+    const name = nameInput.value.trim();
+    const token = localStorage.getItem('token'); // Get login token
+
+    if (!name) return alert("Please enter a project name!");
+
+    try {
+        const res = await fetch('/api/projects', {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}` // IMPORTANT: Send token
+            },
+            body: JSON.stringify({ name })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+            alert("Project Created Successfully!");
+            closeProjectModal();
+            // Reload the list (or the whole page) to see the new project
+            window.location.reload(); 
+        } else {
+            alert(data.error || "Failed to create project");
+        }
+    } catch (err) {
+        console.error(err);
+        alert("Server Error: Could not create project.");
+    }
+}

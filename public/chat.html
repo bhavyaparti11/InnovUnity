@@ -194,13 +194,12 @@
                 </a>
             </header>
             <div class="sidebar-content">
-                <div class="projects-header">
+                
+                <div class="projects-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                     <span>Projects</span>
-                    <button id="add-project-btn" title="Create a new project">+</button>
+                    <button onclick="openProjectModal()" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;" title="Create a new project">+</button>
                 </div>
-                <div class="new-project-container" id="new-project-container" style="display: none;">
-                    <input type="text" id="new-project-input" placeholder="Enter project name...">
-                </div>
+                
                 <div id="channel-list" class="channel-list"></div>
             </div>
              <footer class="sidebar-footer">
@@ -330,12 +329,23 @@
         </div>
     </div>
 
+    <div id="projectModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:3000; justify-content:center; align-items:center;">
+        <div style="background:white; padding:20px; border-radius:8px; width:300px; text-align:center; color: black;">
+            <h3 style="margin-bottom:15px;">Create New Project</h3>
+            <input type="text" id="newProjectName" placeholder="Enter Project Name" style="width:100%; padding:10px; margin-bottom:15px; border:1px solid #ccc; border-radius:4px;">
+            <div style="display:flex; gap:10px;">
+                <button onclick="createProject()" style="flex:1; background:#4CAF50; color:white; border:none; padding:10px; cursor:pointer; border-radius:4px;">Create</button>
+                <button onclick="closeProjectModal()" style="flex:1; background:#ef4444; color:white; border:none; padding:10px; cursor:pointer; border-radius:4px;">Cancel</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // --- AUTH & SETUP ---
         const token = localStorage.getItem("token");
         if (!token) window.location.href = "register.html";
         const userName = localStorage.getItem("user_name") || "Guest";
-        let currentUserId = null;
+        let currentUserId = localStorage.getItem("user_id"); // Ensure this matches login
         
         const API_BASE = "";
         const socket = io(API_BASE, { auth: { token } });
@@ -365,7 +375,6 @@
         document.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('username-display-sidebar').innerText = userName;
             
-            // ✨ FIX: Profile Menu Logic
             const userBtn = document.getElementById('user-profile-button');
             const userMenu = document.getElementById('user-menu');
             if (userBtn && userMenu) {
@@ -406,7 +415,47 @@
             renderProjects();
         }
 
-        // --- PROJECT LOGIC ---
+        // --- NEW PROJECT MODAL LOGIC (✨ ADDED HERE) ---
+        function openProjectModal() {
+            document.getElementById('projectModal').style.display = 'flex';
+        }
+
+        function closeProjectModal() {
+            document.getElementById('projectModal').style.display = 'none';
+            document.getElementById('newProjectName').value = ""; 
+        }
+
+        async function createProject() {
+            const nameInput = document.getElementById('newProjectName');
+            const name = nameInput.value.trim();
+            
+            if (!name) return alert("Please enter a project name!");
+
+            try {
+                const res = await fetch(`${API_BASE}/api/projects`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}` 
+                    },
+                    body: JSON.stringify({ name })
+                });
+
+                if (res.ok) {
+                    alert("Project Created!");
+                    closeProjectModal();
+                    fetchProjects(); // Refresh the list
+                } else {
+                    const data = await res.json();
+                    alert(data.error || "Failed to create project");
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Error creating project");
+            }
+        }
+
+        // --- PROJECT RENDERING ---
         function renderProjects() {
             channelList.innerHTML = '';
             channels.forEach(project => {
@@ -463,11 +512,7 @@
             
             try {
                 localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-                
-                // Add "My Video"
                 addVideoStream(localStream, 'You', true);
-
-                // Join the socket room
                 socket.emit('join-voice-room', currentChannel._id, currentUserId);
             } catch (err) {
                 console.error(err);
@@ -477,10 +522,7 @@
         }
 
         function leaveVideoCall() {
-            // 1. Hide Overlay
             document.getElementById('video-call-overlay').style.display = 'none';
-            
-            // 2. Stop Local Camera & Mic (Turn off light)
             if (localStream) {
                 localStream.getTracks().forEach(track => {
                     track.stop();
@@ -488,22 +530,14 @@
                 });
                 localStream = null;
             }
-
-            // 3. Notify Server we are leaving
             if (currentChannel) {
                 socket.emit('leave-voice-room', currentChannel._id, currentUserId);
             }
-
-            // 4. Destroy Peer Connections
             Object.values(peers).forEach(peer => {
                 if(peer) peer.destroy();
             });
             peers = {};
-            
-            // 5. Clear Video Grid (Remove old videos)
             videoGrid.innerHTML = ''; 
-            
-            // ✨ NO RELOAD: We stay on the same page!
         }
 
         function toggleMute() {
@@ -543,7 +577,6 @@
 
             peer.on('stream', stream => addVideoStream(stream, 'User'));
             
-            // ✨ Cleanup when this specific peer disconnects/leaves
             socket.on('user-disconnected', (disconnectedUserId) => {
                 if(disconnectedUserId === userId) {
                     if(peers[disconnectedUserId]) peers[disconnectedUserId].destroy();
@@ -556,7 +589,6 @@
             peers[userId] = peer;
         });
         
-        // Handle disconnection of others generally
         socket.on('user-disconnected', userId => {
             if (peers[userId]) {
                 peers[userId].destroy();
@@ -580,11 +612,10 @@
             peer.signal(data.signal);
         });
 
-        // ✨ Updated helper to include ID for removal
         function addVideoStream(stream, labelText = 'User', isMutedLocal = false, userId = null) {
             const wrapper = document.createElement('div');
             wrapper.className = 'video-wrapper';
-            if(userId) wrapper.id = `video-${userId}`; // Store ID to remove later
+            if(userId) wrapper.id = `video-${userId}`; 
             
             const video = document.createElement('video');
             video.srcObject = stream;
@@ -611,6 +642,7 @@
             const res = await fetch(`${API_BASE}/api/projects/${projectId}/tasks`, { headers: { 'Authorization': `Bearer ${token}` } });
             const tasks = await res.json();
             renderTasks(tasks);
+            const taskAssignSelect = document.getElementById('task-assign-select');
             taskAssignSelect.innerHTML = '<option value="">Unassigned</option>';
             currentChannel.members.forEach(m => {
                 const opt = document.createElement('option'); opt.value = m._id; opt.innerText = m.name;
@@ -626,7 +658,8 @@
             });
         }
         async function addTask() {
-            const desc = document.getElementById('task-desc-input').value; const assignee = taskAssignSelect.value;
+            const desc = document.getElementById('task-desc-input').value; 
+            const assignee = document.getElementById('task-assign-select').value;
             if(!desc) return;
             await fetch(`${API_BASE}/api/projects/${currentChannel._id}/tasks`, {
                 method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
