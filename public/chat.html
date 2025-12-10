@@ -736,18 +736,58 @@
             }
         });
         function renderDocuments() {
-            const list = document.getElementById('doc-list'); list.innerHTML = '';
-            documents.forEach(doc => {
-                 const d = document.createElement('div'); d.className = 'doc-item'; d.innerText = doc.title;
-                 d.onclick = async () => {
-                     const res = await fetch(`${API_BASE}/api/documents/${doc._id}`, { headers: { 'Authorization': `Bearer ${token}` } });
-                     const data = await res.json();
-                     document.getElementById('doc-editor').value = data.content;
-                     socket.emit('joinDocument', doc._id);
-                 };
-                 list.appendChild(d);
-            });
-        }
+    const list = document.getElementById('doc-list'); 
+    list.innerHTML = '';
+    
+    documents.forEach(doc => {
+         const d = document.createElement('div'); 
+         d.className = 'doc-item'; 
+         d.innerText = doc.title;
+         
+         d.onclick = async () => {
+             // 1. Highlight the active document
+             document.querySelectorAll('.doc-item').forEach(i => i.style.background = '');
+             d.style.background = '#e0e7ff';
+
+             // 2. Fetch the latest content
+             const res = await fetch(`${API_BASE}/api/documents/${doc._id}`, { 
+                 headers: { 'Authorization': `Bearer ${token}` } 
+             });
+             const data = await res.json();
+             
+             // 3. Load content into the textarea
+             const textarea = document.getElementById('doc-editor');
+             textarea.value = data.content;
+             currentDocument = doc._id; // Important: Track which doc we are on
+
+             // 4. Join the Socket Room for this specific document
+             socket.emit('joinDocument', doc._id);
+
+             // 5. ✨ THE FIX: Remove old listeners first to prevent duplicates
+             // (Cloning the node effectively strips old event listeners)
+             const newTextarea = textarea.cloneNode(true);
+             textarea.parentNode.replaceChild(newTextarea, textarea);
+             
+             // 6. Re-attach the 'input' listener for real-time typing
+             newTextarea.addEventListener('input', (e) => {
+                 socket.emit('documentUpdate', { 
+                     documentId: currentDocument, 
+                     content: e.target.value 
+                 });
+             });
+
+             // 7. Listen for updates coming from OTHER users
+             socket.off('documentChange'); // Turn off old listeners
+             socket.on('documentChange', (newContent) => {
+                 // Only update if it's different (prevents cursor jumping)
+                 if (newTextarea.value !== newContent) {
+                     newTextarea.value = newContent;
+                 }
+             });
+         };
+         list.appendChild(d);
+    });
+}
         // Invite/Logout
         function showInviteModal() { document.getElementById('invite-link-input').value = `${window.location.origin}${window.location.pathname}?invite=${currentChannel.inviteCode}`; document.getElementById('invite-modal-overlay').style.display = 'flex'; }
         function hideInviteModal() { document.getElementById('invite-modal-overlay').style.display = 'none'; }
