@@ -17,10 +17,8 @@
             --text-primary: #111827;
             --text-secondary: #4b5563;
             --text-tertiary: #6b7280;
-                        --accent-purple: #3e399b;
-
-                        --accent-blue: #95508f;
-
+            --accent-purple: #3e399b;
+            --accent-blue: #95508f;
             --accent-gradient: linear-gradient(45deg, var(--accent-purple), var(--accent-blue));
             --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
             --danger-color: #ef4444;
@@ -33,9 +31,7 @@
             padding: 0;
         }
 
-        html {
-            font-size: 15px;
-        }
+        html { font-size: 15px; }
 
         body {
             font-family: 'Inter', sans-serif;
@@ -45,7 +41,7 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        /* Page-specific styles for profile layout */
+        /* Header */
         .profile-header {
             background-color: var(--bg-primary);
             padding: 1rem 1.5rem;
@@ -69,8 +65,9 @@
             font-weight: 500;
         }
 
+        /* Container */
         .profile-container {
-            max-width: 800px;
+            max-width: 600px; /* Reduced width since we removed the side-by-side layout */
             margin: 2rem auto;
             padding: 0 1rem;
         }
@@ -83,51 +80,46 @@
             box-shadow: var(--shadow-sm);
         }
 
-        .profile-layout {
+        /* ✨ NEW: Initials Avatar Style */
+        .avatar-section {
             display: flex;
-            gap: 2rem;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 2rem;
         }
 
-        @media (max-width: 640px) {
-            .profile-layout {
-                flex-direction: column;
-            }
-        }
-
-       
-        
-        
-        
-
-        
-        
-        .profile-details-section button {
-             background: var(--accent-gradient);
-             color: white;
-        }
-        
-        /* ✨ Style for the new logout button */
-        .logout-btn {
-            background-color: var(--danger-color);
+        .initials-circle {
+            width: 100px;
+            height: 100px;
+            background: var(--accent-gradient);
             color: white;
-            margin-top: 1rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 10px;
         }
 
-        .profile-details-section {
-            flex: 1;
+        .user-email-display {
+            color: var(--text-tertiary);
+            font-size: 0.9rem;
         }
 
+        /* Forms */
         h2 {
             font-size: 1.2rem;
             font-weight: 600;
             margin-bottom: 1.5rem;
             padding-bottom: 0.75rem;
             border-bottom: 1px solid var(--border-primary);
+            margin-top: 1rem;
         }
         
-        .input-group {
-            margin-bottom: 1.25rem;
-        }
+        .input-group { margin-bottom: 1.25rem; }
 
         label {
             display: block;
@@ -143,7 +135,6 @@
             border-radius: 6px;
             border: 1px solid var(--border-primary);
             background-color: var(--bg-secondary);
-            outline-color: var(--accent-blue);
             color: var(--text-primary);
         }
 
@@ -152,11 +143,38 @@
             opacity: 0.7;
         }
 
+        button[type="submit"] {
+            width: 100%;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            background: var(--accent-gradient);
+            color: white;
+            transition: opacity 0.2s;
+        }
+        button[type="submit"]:hover { opacity: 0.9; }
+
         hr {
             margin: 2rem 0;
             border: 0;
             border-top: 1px solid var(--border-primary);
         }
+
+        /* Logout Button */
+        .logout-btn {
+            width: 100%;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            background-color: var(--danger-color);
+            color: white;
+        }
+        .logout-btn:hover { background-color: #dc2626; }
+
     </style>
 </head>
 <body>
@@ -167,45 +185,42 @@
 
     <main class="profile-container">
         <div class="profile-card">
-            <div class="profile-layout">
+            
+            <div class="avatar-section">
+                <div id="initialsCircle" class="initials-circle">?</div>
+                <div id="emailDisplay" class="user-email-display">loading...</div>
+            </div>
+
+            <div class="profile-details-section">
                 
-                    
-                </div>
+                <h2>Edit Details</h2>
+                <form id="profileForm">
+                    <div class="input-group">
+                        <label for="name">Full Name</label>
+                        <input type="text" id="name" placeholder="Your Name" required>
+                    </div>
+                    <button type="submit">Save Name</button>
+                </form>
 
-                <div class="profile-details-section">
-                    <h2>Profile Information</h2>
-                    <form id="profileForm">
-                        <div class="input-group">
-                            <label for="name">Full Name</label>
-                            <input type="text" id="name" placeholder="Your Name">
-                        </div>
-                        <div class="input-group">
-                            <label for="email">Email</label>
-                            <input type="email" id="email" disabled>
-                        </div>
-                        <button type="submit">Save Changes</button>
-                    </form>
+                <hr>
 
-                    <hr>
+                <h2>Change Password</h2>
+                <form id="passwordForm">
+                     <div class="input-group">
+                        <label for="currentPassword">Current Password</label>
+                        <input type="password" id="currentPassword" placeholder="Enter current password" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="newPassword">New Password</label>
+                        <input type="password" id="newPassword" placeholder="Enter new password" required>
+                    </div>
+                    <button type="submit">Update Password</button>
+                </form>
 
-                    <h2>Change Password</h2>
-                    <form id="passwordForm">
-                         <div class="input-group">
-                            <label for="currentPassword">Current Password</label>
-                            <input type="password" id="currentPassword" placeholder="Enter current password" required>
-                        </div>
-                        <div class="input-group">
-                            <label for="newPassword">New Password</label>
-                            <input type="password" id="newPassword" placeholder="Enter new password" required>
-                        </div>
-                        <button type="submit">Update Password</button>
-                    </form>
+                <hr>
+                
+                <button class="logout-btn" onclick="logoutUser()">Logout</button>
 
-                    <!-- ✨ NEW LOGOUT BUTTON ADDED HERE -->
-                    <hr>
-                    <button class="logout-btn" onclick="logoutUser()">Logout</button>
-
-                </div>
             </div>
         </div>
     </main>
@@ -217,37 +232,48 @@
         }
         const API_BASE = "";
 
-        
-        
+        // Elements
         const nameInput = document.getElementById('name');
-        const emailInput = document.getElementById('email');
+        const initialsCircle = document.getElementById('initialsCircle');
+        const emailDisplay = document.getElementById('emailDisplay');
         const profileForm = document.getElementById('profileForm');
         const passwordForm = document.getElementById('passwordForm');
         const currentPasswordInput = document.getElementById('currentPassword');
         const newPasswordInput = document.getElementById('newPassword');
 
-        // Fetch user profile on page load
+        // 1. Fetch user profile on page load
         document.addEventListener('DOMContentLoaded', async () => {
             try {
                 const res = await fetch(`${API_BASE}/api/profile`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
+                
                 if (!res.ok) throw new Error('Failed to fetch profile');
 
                 const user = await res.json();
-                nameInput.value = user.name;
-                emailInput.value = user.email;
                 
+                // Populate Inputs
+                nameInput.value = user.name;
+                emailDisplay.innerText = user.email;
 
-        // ✨ NEW LOGOUT FUNCTION
+                // ✨ Set Initials (Visual Only)
+                const initial = user.name ? user.name.charAt(0).toUpperCase() : '?';
+                initialsCircle.innerText = initial;
+
+            } catch (e) {
+                console.error(e);
+                // Fail silently or show minor log, don't popup alert to annoy user
+                console.log('Could not load profile data');
+            }
+        });
+
+        // 2. Logout Function
         function logoutUser() {
             localStorage.clear();
             window.location.href = "index.html";
         }
 
-        
-
-        // Handle profile information update
+        // 3. Handle Name Update
         profileForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const name = nameInput.value.trim();
@@ -260,12 +286,14 @@
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ name })
+                    body: JSON.stringify({ name }) // Only sending name, no image
                 });
 
                 if (!res.ok) throw new Error('Failed to update profile');
                 
-                localStorage.setItem('user_name', name); // Update local storage too
+                // Success
+                localStorage.setItem('user_name', name);
+                initialsCircle.innerText = name.charAt(0).toUpperCase(); // Update circle immediately
                 alert('Profile updated successfully!');
 
             } catch (e) {
@@ -274,7 +302,7 @@
             }
         });
 
-        // Handle password change
+        // 4. Handle Password Update
         passwordForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const currentPassword = currentPasswordInput.value;
