@@ -103,6 +103,12 @@ const ProjectSchema = new mongoose.Schema({
     name: { type: String, required: true },
     creator: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     members: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    // ✨ NEW: Store users waiting for approval
+    pendingRequests: [{ 
+        user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+        name: String,
+        email: String
+    }],
     inviteCode: { type: String, unique: true }
 }, { timestamps: true });
 
@@ -377,6 +383,73 @@ apiRouter.post('/join', authMiddleware, async (req, res) => {
             });
         }
         res.json({ message: 'Joined', project });
+    } catch (err) { res.status(500).json({ error: 'Server error' }); }
+});
+// 1. REQUEST TO JOIN (User clicks invite link)
+apiRouter.post('/request-join', authMiddleware, async (req, res) => {
+    try {
+        const { inviteCode } = req.body;
+        const project = await Project.findOne({ inviteCode });
+        
+        if (!project) return res.status(404).json({ error: 'Invalid invite link' });
+        if (project.members.includes(req.user.id)) return res.status(400).json({ error: 'You are already a member' });
+
+        // Check if already requested
+        const alreadyRequested = project.pendingRequests.some(r => r.user.toString() === req.user.id);
+        if (alreadyRequested) return res.json({ message: 'Request already sent. Please wait for approval.' });
+
+        // Add to pending list
+        project.pendingRequests.push({ 
+            user: req.user.id, 
+            name: req.user.name, 
+            email: req.user.email 
+        });
+        await project.save();
+
+        // Notify Creator via Socket (Real-time!)
+        io.to(project.creator.toString()).emit('new-join-request', {
+            projectId: project._id,
+            projectName: project.name,
+            requesterName: req.user.name
+        });
+
+        res.json({ message: 'Request sent! Waiting for admin approval.' });
+
+    } catch (err) { res.status(500).json({ error: 'Server error' }); }
+});
+
+// 2. APPROVE/DENY REQUEST (Creator clicks button)
+apiRouter.post('/handle-request', authMiddleware, async (req, res) => {
+    try {
+        const { projectId, userIdToApprove, action } = req.body; // action = 'approve' or 'reject'
+        const project = await Project.findById(projectId);
+
+        if (!project) return res.status(404).json({ error: 'Project not found' });
+        if (project.creator.toString() !== req.user.id) return res.status(403).json({ error: 'Only the creator can approve members' });
+
+        // Remove from pending
+        project.pendingRequests = project.pendingRequests.filter(r => r.user.toString() !== userIdToApprove);
+
+        if (action === 'approve') {
+            if (!project.members.includes(userIdToApprove)) {
+                project.members.push(userIdToApprove);
+                
+                // Notify the new member they got in!
+                io.to(userIdToApprove).emit('request-approved', { 
+                    projectId: project._id, 
+                    projectName: project.name 
+                });
+            }
+        }
+
+        await project.save();
+        
+        // Refresh the member list for everyone in the project
+        const updatedProject = await Project.findById(projectId).populate('members', 'name profile_picture_url');
+        io.to(projectId).emit('member-updated', updatedProject.members);
+
+        res.json({ message: `User ${action}d` });
+
     } catch (err) { res.status(500).json({ error: 'Server error' }); }
 });
 apiRouter.delete('/projects/:projectId', authMiddleware, async (req, res) => {

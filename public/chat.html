@@ -187,6 +187,10 @@
 <body>
     <div class="app-container">
         <aside class="sidebar">
+            <div id="admin-notifications" style="display:none; background:#fff3cd; color:#856404; padding:10px; margin:10px; border-radius:5px; font-size:0.9rem;">
+    <strong>🔔 Join Requests:</strong>
+    <div id="request-list"></div>
+</div>
             <header class="sidebar-header">
                 <a href="index.html" class="logo">
                     <div class="logo-icon"></div>
@@ -374,6 +378,17 @@
         // --- INIT ---
         document.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('username-display-sidebar').innerText = userName;
+            document.addEventListener('DOMContentLoaded', async () => {
+    // ... other code ...
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('invite')) {
+        // ✅ Make sure this line exists!
+        await joinProjectWithCode(urlParams.get('invite'));
+    }
+    
+    // ... other code ...
+});
             
             const userBtn = document.getElementById('user-profile-button');
             const userMenu = document.getElementById('user-menu');
@@ -737,6 +752,140 @@
         function hideInviteModal() { document.getElementById('invite-modal-overlay').style.display = 'none'; }
         function copyInviteLink() { document.getElementById('invite-link-input').select(); document.execCommand('copy'); }
         function logoutUser() { localStorage.clear(); window.location.href = "index.html"; }
+        // --- PASTE THIS AT THE BOTTOM OF YOUR SCRIPT SECTION ---
+
+async function startVideoCall() {
+    if (!currentChannel) return;
+    document.getElementById('video-call-overlay').style.display = 'flex';
+    
+    try {
+        // 1. Get permissions for both Audio & Video
+        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+
+        // 2. FORCE CAMERA OFF INITIALLY
+        const videoTrack = localStream.getVideoTracks()[0];
+        if (videoTrack) {
+            videoTrack.enabled = false; 
+            isCameraOff = true;         
+        }
+
+        // 3. Turn the UI Button Red
+        const cameraBtn = document.getElementById('camera-btn');
+        if (cameraBtn) {
+            cameraBtn.classList.add('active-off'); 
+            cameraBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M16 16v1a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2m5.66 0H14a2 2 0 0 1 2 2v3.34l1 1L23 7v10"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
+        }
+
+        // 4. Add my own stream to the grid
+        addVideoStream(localStream, 'You', true);
+
+        // 5. Connect to the room
+        socket.emit('join-voice-room', currentChannel._id, currentUserId);
+
+    } catch (err) {
+        console.error(err);
+        alert("Could not access microphone/camera. Please allow permissions.");
+        leaveVideoCall();
+    }
+}
+// --- PASTE THIS AT THE BOTTOM OF YOUR SCRIPT TAG ---
+
+async function joinProjectWithCode(code) {
+    if (!confirm("Do you want to request to join this project?")) return;
+
+    try {
+        const res = await fetch(`${API_BASE}/api/request-join`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}` 
+            },
+            body: JSON.stringify({ inviteCode: code })
+        });
+        
+        const data = await res.json();
+        alert(data.message || data.error);
+        
+        // Clear the URL invite param so it doesn't ask again on refresh
+        window.history.replaceState({}, document.title, window.location.pathname);
+    } catch (e) {
+        console.error(e);
+        alert("Error sending request");
+    }
+}
+// --- ADMIN NOTIFICATION LOGIC ---
+
+// 1. Listen for new requests (Real-time)
+socket.on('new-join-request', data => {
+    alert(`🔔 ${data.requesterName} wants to join ${data.projectName}!`);
+    fetchProjects(); // Reload sidebar to potentially show the notification icon
+});
+
+// 2. Listen for MY request being approved
+socket.on('request-approved', data => {
+    alert(`🎉 You have been approved for ${data.projectName}!`);
+    fetchProjects(); // Reload sidebar so the new project appears
+});
+
+// 3. Logic to show Pending Requests in the Sidebar
+// (Call this inside your existing openProject function)
+async function checkPendingRequests(project) {
+    const adminArea = document.getElementById('admin-notifications');
+    const requestList = document.getElementById('request-list');
+    
+    // Only show if I am the creator
+    if (project.creator !== currentUserId) {
+        adminArea.style.display = 'none';
+        return;
+    }
+
+    // Fetch latest project data to get requests
+    const res = await fetch(`${API_BASE}/api/projects/${project._id}`, { headers: { 'Authorization': `Bearer ${token}` } });
+    const data = await res.json();
+
+    if (data.pendingRequests && data.pendingRequests.length > 0) {
+        adminArea.style.display = 'block';
+        requestList.innerHTML = '';
+        
+        data.pendingRequests.forEach(req => {
+            const div = document.createElement('div');
+            div.style.marginTop = '5px';
+            div.innerHTML = `
+                <span>${req.name}</span>
+                <div style="display:flex; gap:5px; margin-top:3px;">
+                    <button onclick="handleJoinRequest('${project._id}', '${req.user}', 'approve')" style="background:green; color:white; border:none; border-radius:3px; cursor:pointer;">✓</button>
+                    <button onclick="handleJoinRequest('${project._id}', '${req.user}', 'reject')" style="background:red; color:white; border:none; border-radius:3px; cursor:pointer;">✗</button>
+                </div>
+            `;
+            requestList.appendChild(div);
+        });
+    } else {
+        adminArea.style.display = 'none';
+    }
+}
+
+// 4. Function to Approve/Deny
+async function handleJoinRequest(projectId, userIdToApprove, action) {
+    await fetch(`${API_BASE}/api/handle-request`, {
+        method: 'POST',
+        headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}` 
+        },
+        body: JSON.stringify({ projectId, userIdToApprove, action })
+    });
+    
+    // Reload UI
+    if (currentChannel && currentChannel._id === projectId) {
+        checkPendingRequests(currentChannel);
+        // If approved, refresh member list
+        if (action === 'approve') {
+             const res = await fetch(`${API_BASE}/api/projects/${projectId}`, { headers: { 'Authorization': `Bearer ${token}` } });
+             const data = await res.json();
+             renderMembers(data.members);
+        }
+    }
+}
     </script>
 </body>
 </html>
