@@ -307,6 +307,7 @@ app.post('/resend-code', async (req, res) => {
 // ==========================================
 const apiRouter = express.Router();
 app.use('/api', apiRouter);
+app.use('/', apiRouter);
 
 // Profile
 apiRouter.get('/profile', authMiddleware, (req, res) => {
