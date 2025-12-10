@@ -362,12 +362,27 @@ apiRouter.post('/projects', authMiddleware, async (req, res) => {
         res.status(201).json(newProject);
     } catch (err) { res.status(500).json({ error: 'Server error' }); }
 });
+// GET Single Project (with populated members)
 apiRouter.get('/projects/:projectId', authMiddleware, async (req, res) => {
     try {
-        const project = await Project.findOne({ _id: req.params.projectId, members: req.user.id }).populate('members', 'name profile_picture_url');
-        if (!project) return res.status(404).json({ error: 'Not found' });
+        const project = await Project.findById(req.params.projectId)
+            .populate('creator', 'name email') 
+            .populate('members', 'name email profile_picture_url'); // ✨ THIS LINE FIXES THE "UNDEFINED"
+
+        if (!project) return res.status(404).json({ error: 'Project not found' });
+        
+        // Security: Ensure user is a member or creator
+        const isMember = project.members.some(m => m._id.toString() === req.user.id);
+        const isCreator = project.creator._id.toString() === req.user.id;
+        
+        if (!isMember && !isCreator) {
+            return res.status(403).json({ error: 'Access denied' });
+        }
+
         res.json(project);
-    } catch (err) { res.status(500).json({ error: 'Server error' }); }
+    } catch (err) {
+        res.status(500).json({ error: 'Server error' });
+    }
 });
 apiRouter.post('/join', authMiddleware, async (req, res) => {
     try {
