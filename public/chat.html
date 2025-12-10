@@ -488,30 +488,55 @@
             });
         }
 
-        async function openProject(project) {
-    // 1. DISCONNECT from any old document socket
+      async function openProject(project) {
+    currentChannel = project;
+    renderProjects();
+
+    // 1. Leave old document room
     if (currentDocument) {
         socket.emit('leaveDocument', currentDocument);
-        currentDocument = null; // Forget the old ID
+        currentDocument = null;
     }
 
-    // 2. ✨ WIPE THE EDITOR CLEAN (This fixes your visual issue)
+    // ✨ 2. NEW FIX: Wipe the editor UI clean immediately
     const textarea = document.getElementById('doc-editor');
     if (textarea) {
-        textarea.value = ""; // Clear the text
-        textarea.placeholder = "Select a document to start editing..."; // Reset placeholder
-        
-        // Remove old listeners by cloning (nuclear option to be safe)
+        textarea.value = ""; 
+        textarea.placeholder = "Select a document to start editing...";
+        // Clone to strip old listeners so previous document's events don't fire
         const newTextarea = textarea.cloneNode(true);
         textarea.parentNode.replaceChild(newTextarea, textarea);
     }
 
-    // 3. Set the new project and load everything else
-    currentChannel = project;
-    
-    // ... (rest of your code: welcome screen, view tabs, fetching data) ...
+    // 3. Continue with existing logic...
     document.getElementById('welcome-screen').style.display = 'none';
-    // ...
+    document.getElementById('view-tabs').style.display = 'flex';
+    document.getElementById('members-sidebar').style.display = 'flex';
+    document.getElementById('header-actions').style.display = 'flex'; 
+    document.getElementById('chat-input-area').style.display = 'block';
+    document.getElementById('task-fab').style.display = 'flex';
+    checkPendingRequests(project);
+
+    switchView('chat');
+    document.getElementById('chat-title').innerText = project.name;
+    
+    const [msgRes, detailRes, docRes] = await Promise.all([
+        fetch(`${API_BASE}/api/projects/${project._id}/messages`, { headers: { 'Authorization': `Bearer ${token}` } }),
+        fetch(`${API_BASE}/api/projects/${project._id}`, { headers: { 'Authorization': `Bearer ${token}` } }),
+        fetch(`${API_BASE}/api/projects/${project._id}/documents`, { headers: { 'Authorization': `Bearer ${token}` } })
+    ]);
+
+    const messages = await msgRes.json();
+    const projectDetails = await detailRes.json();
+    documents = await docRes.json();
+    currentChannel = projectDetails; 
+
+    messagesWrapper.innerHTML = '';
+    messages.forEach(addMessageToUI);
+    renderMembers(projectDetails.members);
+    renderDocuments();
+    loadTasks(project._id);
+    currentChannel = project;
 }
 
         // --- VIDEO CALL LOGIC ---
