@@ -103,3 +103,62 @@ document.addEventListener("keypress", function(event) {
     }
 });
 
+let userEmail = ""; // Needed to remember who is verifying
+
+// 1. REGISTER FUNCTION
+async function registerUser(event) {
+    event.preventDefault();
+
+    const name = document.getElementById('name').value;
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+
+    try {
+        const res = await fetch('/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, email, password })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+            // ✅ Success: Show the OTP Box
+            userEmail = email; 
+            document.getElementById('otpModal').style.display = 'flex'; 
+        } else {
+            alert(data.error || "Registration failed");
+        }
+    } catch (err) {
+        console.error(err);
+        alert("Something went wrong. Check console.");
+    }
+}
+
+// 2. VERIFY FUNCTION
+async function verifyOtp() {
+    const code = document.getElementById('otpInput').value;
+    
+    try {
+        const res = await fetch('/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: userEmail, code })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+            alert("Verification Successful! Logging you in...");
+            window.location.href = 'index.html'; // Redirect to home/login
+        } else {
+            alert(data.error || "Invalid Code");
+        }
+    } catch (err) {
+        alert("Verification failed.");
+    }
+}
+
+function closeOtpModal() {
+    document.getElementById('otpModal').style.display = 'none';
+}

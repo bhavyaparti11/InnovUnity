@@ -13,17 +13,13 @@
         --primary-text: #111827;
         --secondary-text: #4B5563;
         --accent-purple: #3e399b;
-            --accent-blue: #95508f;
+        --accent-blue: #95508f;
         --border-color: #E5E7EB;
         --error-color: #EF4444;
         --success-color: #10B981;
     }
 
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
         font-family: 'Inter', sans-serif;
@@ -64,32 +60,12 @@
         border-radius: 8px;
     }
 
-    .auth-header {
-        text-align: center;
-        margin-bottom: 2rem;
-    }
+    .auth-header { text-align: center; margin-bottom: 2rem; }
+    .auth-header h1 { font-size: 1.75rem; font-weight: 700; margin-bottom: 0.25rem; }
+    .auth-header p { color: var(--secondary-text); }
 
-    .auth-header h1 {
-        font-size: 1.75rem;
-        font-weight: 700;
-        margin-bottom: 0.25rem;
-    }
-
-    .auth-header p {
-        color: var(--secondary-text);
-    }
-
-    .input-group {
-        margin-bottom: 1.25rem;
-    }
-
-    .input-group label {
-        display: block;
-        font-weight: 600;
-        font-size: 0.875rem;
-        margin-bottom: 0.5rem;
-    }
-
+    .input-group { margin-bottom: 1.25rem; }
+    .input-group label { display: block; font-weight: 600; font-size: 0.875rem; margin-bottom: 0.5rem; }
     .input-group input {
         width: 100%;
         padding: 0.75rem 1rem;
@@ -116,25 +92,11 @@
         color: white;
         transition: opacity 0.2s;
     }
-    .btn:hover {
-        opacity: 0.9;
-    }
+    .btn:hover { opacity: 0.9; }
 
-    .toggle-section {
-        text-align: center;
-        margin-top: 1.5rem;
-        font-size: 0.875rem;
-        color: var(--secondary-text);
-    }
-    .toggle-section a {
-        color: var(--accent-purple);
-        font-weight: 600;
-        text-decoration: none;
-        cursor: pointer;
-    }
-    .toggle-section a:hover {
-        text-decoration: underline;
-    }
+    .toggle-section { text-align: center; margin-top: 1.5rem; font-size: 0.875rem; color: var(--secondary-text); }
+    .toggle-section a { color: var(--accent-purple); font-weight: 600; text-decoration: none; cursor: pointer; }
+    .toggle-section a:hover { text-decoration: underline; }
 
     /* OTP Modal Styles */
     #otpModal {
@@ -154,6 +116,7 @@
         text-align: center;
         width: 90%;
         max-width: 380px;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
     }
     .otp-box h3 { font-size: 1.5rem; margin-bottom: 0.5rem; }
     .otp-box p { color: var(--secondary-text); margin-bottom: 1.5rem; }
@@ -173,12 +136,9 @@
       color: var(--secondary-text);
       cursor: pointer;
       margin-top: 1rem;
+      text-decoration: underline;
     }
-    #otpMsg {
-        margin-top: 1rem;
-        font-weight: 500;
-        color: var(--error-color);
-    }
+    #otpMsg { margin-top: 1rem; font-weight: 500; color: var(--error-color); }
   </style>
 </head>
 <body>
@@ -189,7 +149,6 @@
         <span>InnovUnity</span>
     </a>
 
-    <!-- LOGIN FORM -->
     <form id="loginForm" onsubmit="return loginUser(event)">
       <div class="auth-header">
         <h1 id="formTitle">Welcome back</h1>
@@ -209,7 +168,6 @@
       </div>
     </form>
 
-    <!-- REGISTER FORM -->
     <form id="registerForm" onsubmit="return registerUser(event)" style="display: none;">
       <div class="auth-header">
         <h1>Create an account</h1>
@@ -238,7 +196,6 @@
     </form>
   </div>
 
-  <!-- OTP MODAL -->
   <div id="otpModal">
     <div class="otp-box">
       <h3>Verify your email</h3>
@@ -251,9 +208,7 @@
   </div>
 
   <script>
-    // --- THIS JAVASCRIPT IS THE SAME AS YOUR ORIGINAL FILE ---
-    // --- It is already connected to the new HTML IDs above ---
-    const API_BASE = "";
+    const API_BASE = ""; // Automatically points to current domain on Render
 
     let pendingEmail = "";
     let pendingName = "";
@@ -261,7 +216,6 @@
     function toggleForm() {
       const loginForm = document.getElementById("loginForm");
       const registerForm = document.getElementById("registerForm");
-      const formTitle = document.getElementById("formTitle"); // Note: This only exists on the login form now.
 
       if (loginForm.style.display === "none") {
         loginForm.style.display = "block";
@@ -272,6 +226,7 @@
       }
     }
 
+    // 1. REGISTER
     async function registerUser(event) {
       event.preventDefault();
       const name = document.getElementById("name").value.trim();
@@ -297,9 +252,9 @@
           return;
         }
 
+        // Success: Show OTP Modal
         pendingEmail = email;
         pendingName = name;
-
         document.getElementById("otpModal").style.display = "flex";
       } catch (e) {
         console.error(e);
@@ -307,9 +262,17 @@
       }
     }
 
+    // 2. VERIFY
     async function verifyCode() {
-      const code = document.getElementById("otpCode").value.trim();
       const otpMsg = document.getElementById("otpMsg");
+
+      // SAFETY CHECK: No email saved = user refreshed the page
+      if (!pendingEmail) {
+        otpMsg.textContent = "Your session expired. Please register again.";
+        return;
+      }
+
+      const code = document.getElementById("otpCode").value.trim();
       otpMsg.textContent = "";
 
       if (code.length !== 6) {
@@ -332,15 +295,23 @@
 
         alert("Email verified! You can log in now.");
         document.getElementById("otpModal").style.display = "none";
-        toggleForm();
+        toggleForm(); // Switch to Login view
       } catch (e) {
         console.error(e);
         otpMsg.textContent = "Network error";
       }
     }
 
+    // 3. RESEND CODE
     async function resendCode() {
       const otpMsg = document.getElementById("otpMsg");
+
+      // SAFETY CHECK: Prevent calling resend with empty email
+      if (!pendingEmail) {
+        otpMsg.textContent = "No email found. Please register again.";
+        return;
+      }
+
       otpMsg.textContent = "";
       try {
         const res = await fetch(`${API_BASE}/resend-code`, {
@@ -353,15 +324,16 @@
           otpMsg.textContent = data.error || "Could not resend";
           return;
         }
-        otpMsg.style.color = "#10B981"; // Success color
+        otpMsg.style.color = "#10B981"; 
         otpMsg.textContent = "Code sent!";
-        setTimeout(() => { otpMsg.textContent = ''; otpMsg.style.color = '#EF4444'; }, 3000); // Error color
+        setTimeout(() => { otpMsg.textContent = ''; otpMsg.style.color = '#EF4444'; }, 3000);
       } catch (e) {
         console.error(e);
         otpMsg.textContent = "Network error";
       }
     }
 
+    // 4. LOGIN
     async function loginUser(event) {
       event.preventDefault();
       const email = document.getElementById("loginEmail").value.trim();
@@ -380,9 +352,17 @@
           return;
         }
 
+        // --- CRITICAL FIX: Save ID for Chat System ---
         localStorage.setItem("token", data.token);
         localStorage.setItem("user_name", data.user?.name || "");
         localStorage.setItem("user_email", data.user?.email || "");
+        
+        // Ensure user ID is saved correctly
+        if (data.userId) {
+            localStorage.setItem("user_id", data.userId);
+        } else if (data.user && data.user.id) {
+            localStorage.setItem("user_id", data.user.id);
+        }
 
         window.location.href = "chat.html";
       } catch (e) {
@@ -393,4 +373,3 @@
   </script>
 </body>
 </html>
-

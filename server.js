@@ -26,31 +26,69 @@ app.use(cors());
 app.use(express.static('public'));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// Ensure upload directory exists
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir);
 }
 
+// Database Connection
 mongoose.connect(process.env.MONGO_URI, {})
   .then(() => console.log('✅ MongoDB Connected'))
   .catch(err => console.log('MongoDB error:', err));
 
-// ✨ FINAL FIX: Brevo on Port 2525 (Bypasses Blocks) + Force IPv4
+// ==========================================
+// 1. EMAIL SETUP (Brevo + Port 2525)
+// ==========================================
 const transporter = nodemailer.createTransport({
-  host: 'smtp-relay.brevo.com',
-  port: 2525,           // CHANGED: Port 2525 is the "fallback" port for blocked networks
-  secure: false,        // False for port 2525
+  host: process.env.SMTP_HOST || 'smtp-relay.brevo.com',
+  port: Number(process.env.SMTP_PORT) || 2525, // Port 2525 often works on hosts
+  secure: process.env.SMTP_PORT === '465',     // true for 465, false otherwise
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS
   },
-  family: 4,            // ✨ FORCE IPv4: Crucial for fixing timeouts on Render
+  family: 4,            // FORCE IPv4
   connectionTimeout: 10000,
   logger: true,
   debug: true
 });
 
-// --- SCHEMAS ---
+// Verify transporter at startup so errors surface immediately in logs
+transporter.verify()
+  .then(() => console.log('✅ Mailer connected and ready'))
+  .catch(err => console.error('❌ Mailer verify failed on startup:', err));
+
+function genOtp() { return Math.floor(100000 + Math.random() * 900000).toString(); }
+
+async function sendOtpEmail(to, name, code) {
+  const html = `
+    <div style="font-family: Arial, sans-serif; color: #111">
+      <p>Hi ${name || ''},</p>
+      <p>Your InnovUnity verification code is:</p>
+      <div style="font-size:22px;font-weight:700;letter-spacing:3px">${code}</div>
+      <p>This code expires in 10 minutes.</p>
+    </div>
+  `;
+  try {
+    const info = await transporter.sendMail({
+      from: `InnovUnity <${process.env.SMTP_USER}>`,
+      to,
+      subject: 'Your InnovUnity verification code',
+      html
+    });
+    console.log(`✅ Email sent to ${to}`, info && info.messageId ? `messageId=${info.messageId}` : '');
+  } catch (e) {
+    // log full error object to surface SMTP/Brevo reasons
+    console.error("❌ Email failed:", e);
+  }
+}
+
+function generateInviteCode() { return crypto.randomBytes(5).toString('hex'); }
+
+// ==========================================
+// 2. SCHEMAS & MODELS
+// ==========================================
 const UserSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, unique: true, required: true },
@@ -83,11 +121,10 @@ const DocumentSchema = new mongoose.Schema({
     projectId: { type: mongoose.Schema.Types.ObjectId, ref: 'Project', required: true, index: true },
 }, { timestamps: true });
 
-// ✨ --- NEW TASK SCHEMA --- ✨
 const TaskSchema = new mongoose.Schema({
     projectId: { type: mongoose.Schema.Types.ObjectId, ref: 'Project', required: true, index: true },
     description: { type: String, required: true },
-    assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Optional: null means unassigned
+    assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     status: { type: String, enum: ['pending', 'completed'], default: 'pending' },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
 }, { timestamps: true });
@@ -96,26 +133,7 @@ const User = mongoose.model('User', UserSchema);
 const Project = mongoose.model('Project', ProjectSchema);
 const Message = mongoose.model('Message', MessageSchema);
 const Document = mongoose.model('Document', DocumentSchema);
-const Task = mongoose.model('Task', TaskSchema); // ✨ Add Task model
-
-
-// --- HELPERS ---
-function genOtp() { return Math.floor(100000 + Math.random() * 900000).toString(); }
-
-async function sendOtpEmail(to, name, code) {
-  const html = `
-    <div style="font-family: Arial, sans-serif; color: #111">
-      <p>Hi ${name || ''},</p>
-      <p>Your InnovUnity verification code is:</p>
-      <div style="font-size:22px;font-weight:700;letter-spacing:3px">${code}</div>
-      <p>This code expires in ${process.env.OTP_EXPIPIRES_MIN || 10} minutes.</p>
-    </div>
-  `;
-  await transporter.sendMail({ from: process.env.FROM_EMAIL || process.env.SMTP_USER, to, subject: 'Your InnovUnity verification code', html });
-}
-
-function generateInviteCode() { return crypto.randomBytes(5).toString('hex'); }
-
+const Task = mongoose.model('Task', TaskSchema);
 
 // --- MIDDLEWARE ---
 const authMiddleware = async (req, res, next) => {
@@ -127,58 +145,65 @@ const authMiddleware = async (req, res, next) => {
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
         const user = await User.findById(decoded.id).select('-passwordHash');
-        if (!user) {
-            return res.status(401).json({ error: 'Unauthorized: User not found' });
-        }
+        if (!user) return res.status(401).json({ error: 'Unauthorized: User not found' });
         req.user = user;
         next();
     } catch (err) {
         return res.status(401).json({ error: 'Unauthorized: Invalid token' });
     }
 };
+
 const storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, 'uploads/'),
     filename: (req, file, cb) => cb(null, `${req.user.id}-${Date.now()}${path.extname(file.originalname)}`)
 });
 const upload = multer({ storage: storage });
 
-
 // ==========================================
-// AUTH ROUTE REPLACEMENT (Auto-Verify + Allow All)
+// 3. AUTH ROUTES (With Email Verification)
 // ==========================================
 
-// 1. REGISTER (Auto-verifies new users)
+// REGISTER
 app.post('/register', async (req, res) => {
     try {
         const { name, email, password } = req.body;
-        
-        if (!name || !email || !password) {
-            return res.status(400).json({ error: 'All fields are required' });
-        }
+        if (!name || !email || !password) return res.status(400).json({ error: 'All fields required' });
 
         const normalizedEmail = email.toLowerCase().trim();
-        const existingUser = await User.findOne({ email: normalizedEmail });
+        const existing = await User.findOne({ email: normalizedEmail });
         
-        if (existingUser) {
-            // ✨ FIX: Tell them to login immediately (since we fixed login)
-            return res.status(409).json({ error: 'Email already exists. Please go to Login.' });
+        if (existing) {
+            if (!existing.verified) {
+                // Resend code if unverified
+                const code = genOtp();
+                existing.verificationCodeHash = await bcrypt.hash(code, 10);
+                existing.verificationCodeExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
+                // NOTE: keeping existing password handling — update if you want reset flow
+                existing.passwordHash = await bcrypt.hash(password, 10);
+                await existing.save();
+                await sendOtpEmail(existing.email, existing.name, code);
+                return res.json({ message: 'Account exists but unverified. New code sent!' });
+            }
+            return res.status(409).json({ error: 'Email already registered. Please login.' });
         }
 
         const passwordHash = await bcrypt.hash(password, 10);
+        const code = genOtp();
+        const codeHash = await bcrypt.hash(code, 10);
 
         const user = new User({
             name,
             email: normalizedEmail,
             passwordHash,
-            verified: true, // ✨ Auto-Verify immediately
-            verificationCodeHash: null,
-            verificationCodeExpiresAt: null
+            verified: false, // Enforce verification
+            verificationCodeHash: codeHash,
+            verificationCodeExpiresAt: new Date(Date.now() + 10 * 60 * 1000)
         });
 
         await user.save();
+        await sendOtpEmail(user.email, user.name, code);
         
-        console.log(`✅ User Registered: ${normalizedEmail}`);
-        res.status(201).json({ message: 'Registration successful! logging in...' });
+        res.status(201).json({ message: 'Registration successful! Check your email for the code.' });
 
     } catch (err) {
         console.error(err);
@@ -186,28 +211,56 @@ app.post('/register', async (req, res) => {
     }
 });
 
-// 2. LOGIN (Removed verification check)
+// VERIFY
+app.post('/verify', async (req, res) => {
+    try {
+        const { email, code } = req.body;
+        if (!email || !code) return res.status(400).json({ error: 'Email and code required' });
+
+        const user = await User.findOne({ email: email.toLowerCase().trim() });
+        if (!user) return res.status(400).json({ error: 'User not found' });
+        if (user.verified) return res.json({ message: 'Already verified' });
+
+        // safer expiry check
+        if (!user.verificationCodeExpiresAt || new Date() > new Date(user.verificationCodeExpiresAt)) {
+            return res.status(400).json({ error: 'Code expired or not found. Please request a new one.' });
+        }
+
+        const isMatch = await bcrypt.compare(code, user.verificationCodeHash || '');
+        if (!isMatch) return res.status(400).json({ error: 'Invalid Code' });
+
+        user.verified = true;
+        user.verificationCodeHash = null;
+        user.verificationCodeExpiresAt = null;
+        await user.save();
+
+        res.json({ message: 'Email verified! You can now log in.' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Server Error' });
+    }
+});
+
+// LOGIN
 app.post('/login', async (req, res) => {
     try {
-        const { email, password } = req.body || {};
-        if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
+        const { email, password } = req.body;
+        const user = await User.findOne({ email: email.toLowerCase().trim() });
         
-        const normalizedEmail = email.toLowerCase().trim();
-        const user = await User.findOne({ email: normalizedEmail });
+        if (!user) return res.status(400).json({ error: 'User not found' });
         
-        if (!user) return res.status(400).json({ error: 'Invalid email or password' });
-        
-        const ok = await bcrypt.compare(password, user.passwordHash);
-        if (!ok) return res.status(400).json({ error: 'Invalid email or password' });
+        const isMatch = await bcrypt.compare(password, user.passwordHash);
+        if (!isMatch) return res.status(400).json({ error: 'Invalid credentials' });
 
-        // ❌ DELETED: "if (!user.verified)" is gone. 
-        // Now you can login even if the database says verified: false.
+        if (!user.verified) {
+            return res.status(400).json({ error: 'Please verify your email first.' });
+        }
 
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'secret', { expiresIn: '7d' });
-        
+        const token = jwt.sign({ id: user._id, name: user.name }, process.env.JWT_SECRET || 'secret', { expiresIn: '7d' });
         res.json({ 
             message: 'Login successful', 
             token, 
+            userId: user._id, 
             user: { name: user.name, email: user.email, id: user._id } 
         });
 
@@ -217,14 +270,45 @@ app.post('/login', async (req, res) => {
     }
 });
 
-// (You can delete the /verify and /resend-code routes completely, they are not needed anymore)
+// RESEND CODE (with cooldown)
+app.post('/resend-code', async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) return res.status(400).json({ error: 'Email required' });
 
+        const user = await User.findOne({ email: email.toLowerCase().trim() });
+        if (!user) return res.status(400).json({ error: 'User not found' });
+        if (user.verified) return res.status(400).json({ error: 'Already verified' });
 
-// --- API ROUTES (PROTECTED) ---
+        const COOLDOWN_MS = 60 * 1000; // 1 minute
+        let lastIssuedAt = 0;
+        if (user.verificationCodeExpiresAt) {
+          lastIssuedAt = new Date(user.verificationCodeExpiresAt).getTime() - (10 * 60 * 1000);
+        }
+        if (Date.now() - lastIssuedAt < COOLDOWN_MS) {
+          return res.status(429).json({ error: 'Please wait before requesting another code' });
+        }
+
+        const code = genOtp();
+        user.verificationCodeHash = await bcrypt.hash(code, 10);
+        user.verificationCodeExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
+        await user.save();
+
+        await sendOtpEmail(user.email, user.name, code);
+        res.json({ message: 'New code sent!' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Server Error' });
+    }
+});
+
+// ==========================================
+// 4. API ROUTES (Projects, Tasks, Docs)
+// ==========================================
 const apiRouter = express.Router();
 app.use('/api', apiRouter);
 
-// --- Profile & Project Routes (Unchanged) ---
+// Profile
 apiRouter.get('/profile', authMiddleware, (req, res) => {
     const user = req.user.toObject();
     if (user.profile_picture_url) {
@@ -235,349 +319,204 @@ apiRouter.get('/profile', authMiddleware, (req, res) => {
 apiRouter.put('/profile', authMiddleware, async (req, res) => { 
     try {
         const { name } = req.body;
-        if (!name) {
-            return res.status(400).json({ error: 'Name is required' });
-        }
+        if (!name) return res.status(400).json({ error: 'Name is required' });
         const user = await User.findById(req.user.id);
         user.name = name;
         await user.save();
-        res.json({ message: 'Profile updated successfully' });
-    } catch (err) {
-        res.status(500).json({ error: 'Server error while updating profile' });
-    }
+        res.json({ message: 'Profile updated' });
+    } catch (err) { res.status(500).json({ error: 'Server error' }); }
 });
 apiRouter.post('/profile/picture', authMiddleware, upload.single('profilePicture'), async (req, res) => {
     try {
-        if (!req.file) {
-            return res.status(400).json({ error: 'No file uploaded' });
-        }
+        if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
         const user = await User.findById(req.user.id);
         user.profile_picture_url = req.file.path;
         await user.save();
         const fullUrl = `${req.protocol}://${req.get('host')}/${req.file.path.replace(/\\/g, "/")}`;
         res.json({ message: 'Profile picture updated', url: fullUrl });
-    } catch (err) {
-        res.status(500).json({ error: 'Server error while uploading picture' });
-    }
+    } catch (err) { res.status(500).json({ error: 'Server error' }); }
 });
-apiRouter.put('/profile/password', authMiddleware, async (req, res) => {
-    try {
-        const { currentPassword, newPassword } = req.body;
-        if (!currentPassword || !newPassword) {
-            return res.status(400).json({ error: 'Both current and new passwords are required' });
-        }
-        const user = await User.findById(req.user.id).select('+passwordHash');
-        const isMatch = await bcrypt.compare(currentPassword, user.passwordHash);
-        if (!isMatch) {
-            return res.status(400).json({ error: 'Incorrect current password' });
-        }
-        user.passwordHash = await bcrypt.hash(newPassword, 10);
-        await user.save();
-        res.json({ message: 'Password updated successfully' });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Server error while updating password' });
-    }
-});
+
+// Projects
 apiRouter.get('/projects', authMiddleware, async (req, res) => {
     try {
         const projects = await Project.find({ members: req.user.id }).sort({ createdAt: -1 });
         res.json(projects);
-    } catch (err) {
-        res.status(500).json({ error: 'Server error fetching projects' });
-    }
+    } catch (err) { res.status(500).json({ error: 'Server error' }); }
 });
 apiRouter.post('/projects', authMiddleware, async (req, res) => {
     try {
         const { name } = req.body;
-        if (!name) {
-            return res.status(400).json({ error: 'Project name is required' });
-        }
+        if (!name) return res.status(400).json({ error: 'Name required' });
         const newProject = new Project({
-            name,
-            creator: req.user.id,
-            members: [req.user.id],
-            inviteCode: generateInviteCode()
+            name, creator: req.user.id, members: [req.user.id], inviteCode: generateInviteCode()
         });
         await newProject.save();
         res.status(201).json(newProject);
-    } catch (err) {
-        res.status(500).json({ error: 'Server error creating project' });
-    }
-});
-apiRouter.get('/projects/:projectId/messages', authMiddleware, async (req, res) => {
-    try {
-        const { projectId } = req.params;
-        const project = await Project.findOne({ _id: projectId, members: req.user.id });
-        if (!project) {
-            return res.status(403).json({ error: 'Access denied' });
-        }
-        const messages = await Message.find({ projectId }).sort({ createdAt: 'asc' });
-        res.json(messages);
-    } catch (err) {
-        res.status(500).json({ error: 'Server error fetching messages' });
-    }
+    } catch (err) { res.status(500).json({ error: 'Server error' }); }
 });
 apiRouter.get('/projects/:projectId', authMiddleware, async (req, res) => {
     try {
-        const { projectId } = req.params;
-        const project = await Project.findOne({ _id: projectId, members: req.user.id })
-                                     .populate('members', 'name profile_picture_url');
-        if (!project) {
-            return res.status(404).json({ error: 'Project not found or access denied' });
-        }
+        const project = await Project.findOne({ _id: req.params.projectId, members: req.user.id }).populate('members', 'name profile_picture_url');
+        if (!project) return res.status(404).json({ error: 'Not found' });
         res.json(project);
-    } catch (err) {
-        res.status(500).json({ error: 'Server error' });
-    }
+    } catch (err) { res.status(500).json({ error: 'Server error' }); }
 });
 apiRouter.post('/join', authMiddleware, async (req, res) => {
     try {
         const { inviteCode } = req.body;
-        if (!inviteCode) {
-            return res.status(400).json({ error: 'Invite code is required' });
-        }
         const project = await Project.findOne({ inviteCode });
-        if (!project) {
-            return res.status(404).json({ error: 'Invalid invite code' });
-        }
+        if (!project) return res.status(404).json({ error: 'Invalid code' });
         if (!project.members.includes(req.user.id)) {
             project.members.push(req.user.id);
             await project.save();
             io.to(project._id.toString()).emit('userJoined', { 
                 projectId: project._id.toString(), 
-                newUser: { _id: req.user.id, name: req.user.name, profile_picture_url: req.user.profile_picture_url }
+                newUser: { _id: req.user.id, name: req.user.name }
             });
         }
-        res.json({ message: 'Successfully joined project', project });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Server error joining project' });
-    }
+        res.json({ message: 'Joined', project });
+    } catch (err) { res.status(500).json({ error: 'Server error' }); }
 });
 apiRouter.delete('/projects/:projectId', authMiddleware, async (req, res) => {
     try {
-        const { projectId } = req.params;
-        const project = await Project.findById(projectId);
-
-        if (!project) {
-            return res.status(404).json({ error: 'Project not found' });
-        }
-
-        if (project.creator.toString() !== req.user.id) {
-            return res.status(403).json({ error: 'Forbidden: Only the project creator can delete this project.' });
-        }
-        
-        await Message.deleteMany({ projectId: projectId });
-        
-        await Document.deleteMany({ projectId: projectId });
-
-        // ✨ NEW: Delete associated tasks when project is deleted
-        await Task.deleteMany({ projectId: projectId });
-
-        await Project.findByIdAndDelete(projectId);
-
-        res.json({ message: 'Project and all its content have been deleted successfully.' });
-    } catch (err) {
-        console.error('Error deleting project:', err);
-        res.status(500).json({ error: 'Server error while deleting project' });
-    }
+        const project = await Project.findById(req.params.projectId);
+        if (!project) return res.status(404).json({ error: 'Not found' });
+        if (project.creator.toString() !== req.user.id) return res.status(403).json({ error: 'Forbidden' });
+        await Message.deleteMany({ projectId: req.params.projectId });
+        await Document.deleteMany({ projectId: req.params.projectId });
+        await Task.deleteMany({ projectId: req.params.projectId });
+        await Project.findByIdAndDelete(req.params.projectId);
+        res.json({ message: 'Deleted' });
+    } catch (err) { res.status(500).json({ error: 'Server error' }); }
 });
 
+// Messages
+apiRouter.get('/projects/:projectId/messages', authMiddleware, async (req, res) => {
+    try {
+        const messages = await Message.find({ projectId: req.params.projectId }).sort({ createdAt: 'asc' });
+        res.json(messages);
+    } catch (err) { res.status(500).json({ error: 'Server error' }); }
+});
 
-// --- DOCUMENT API ROUTES ---
-
-// GET all documents for a project
+// Documents
 apiRouter.get('/projects/:projectId/documents', authMiddleware, async (req, res) => {
     try {
-        const { projectId } = req.params;
-        const project = await Project.findOne({ _id: projectId, members: req.user.id });
-        if (!project) {
-            return res.status(403).json({ error: 'Access denied' });
-        }
-        const documents = await Document.find({ projectId }).sort({ createdAt: -1 });
-        res.json(documents);
-    } catch (err) {
-        res.status(500).json({ error: 'Server error fetching documents' });
-    }
+        const docs = await Document.find({ projectId: req.params.projectId }).sort({ createdAt: -1 });
+        res.json(docs);
+    } catch (err) { res.status(500).json({ error: 'Server error' }); }
 });
-
-// POST (create) a new document in a project
 apiRouter.post('/projects/:projectId/documents', authMiddleware, async (req, res) => {
     try {
-        const { projectId } = req.params;
-        const { title } = req.body;
-        if (!title) {
-            return res.status(400).json({ error: 'Document title is required' });
-        }
-        const project = await Project.findOne({ _id: projectId, members: req.user.id });
-        if (!project) {
-            return res.status(403).json({ error: 'Access denied' });
-        }
-        const newDocument = new Document({
-            title,
-            projectId,
-        });
-        await newDocument.save();
-        res.status(201).json(newDocument);
-    } catch (err) {
-        res.status(500).json({ error: 'Server error creating document' });
-    }
+        const newDoc = new Document({ title: req.body.title, projectId: req.params.projectId });
+        await newDoc.save();
+        res.status(201).json(newDoc);
+    } catch (err) { res.status(500).json({ error: 'Server error' }); }
 });
-
-// GET a single document's content
 apiRouter.get('/documents/:documentId', authMiddleware, async (req, res) => {
     try {
-        const { documentId } = req.params;
-        const document = await Document.findById(documentId);
-        if (!document) {
-            return res.status(404).json({ error: 'Document not found' });
-        }
-        const project = await Project.findOne({ _id: document.projectId, members: req.user.id });
-        if (!project) {
-            return res.status(403).json({ error: 'Access denied' });
-        }
-        res.json(document);
-    } catch (err) {
-        res.status(500).json({ error: 'Server error fetching document' });
-    }
+        const doc = await Document.findById(req.params.documentId);
+        if (!doc) return res.status(404).json({ error: 'Not found' });
+        res.json(doc);
+    } catch (err) { res.status(500).json({ error: 'Server error' }); }
 });
 
-
-// ✨ --- NEW: TASK API ROUTES --- ✨
-
-// GET all tasks for a project
+// Tasks
 apiRouter.get('/projects/:projectId/tasks', authMiddleware, async (req, res) => {
     try {
-        const { projectId } = req.params;
-        const project = await Project.findOne({ _id: projectId, members: req.user.id });
-        if (!project) return res.status(403).json({ error: 'Access denied' });
-
-        const tasks = await Task.find({ projectId }).populate('assignedTo', 'name');
+        const tasks = await Task.find({ projectId: req.params.projectId }).populate('assignedTo', 'name');
         res.json(tasks);
-    } catch (err) {
-        res.status(500).json({ error: 'Server error fetching tasks' });
-    }
+    } catch (err) { res.status(500).json({ error: 'Server error' }); }
 });
-
-// POST (create) a new task
 apiRouter.post('/projects/:projectId/tasks', authMiddleware, async (req, res) => {
     try {
-        const { projectId } = req.params;
         const { description, assignedTo } = req.body;
-        
-        const project = await Project.findOne({ _id: projectId, members: req.user.id });
-        if (!project) return res.status(403).json({ error: 'Access denied' });
-
         const newTask = new Task({
-            projectId,
+            projectId: req.params.projectId,
             description,
             assignedTo: assignedTo || null,
             createdBy: req.user.id
         });
         await newTask.save();
-        
-        // Populate assignee name before sending back
-        const populatedTask = await newTask.populate('assignedTo', 'name');
-        res.json(populatedTask);
-    } catch (err) {
-        res.status(500).json({ error: 'Server error creating task' });
-    }
+        const populated = await newTask.populate('assignedTo', 'name');
+        res.json(populated);
+    } catch (err) { res.status(500).json({ error: 'Server error' }); }
 });
-
-// PUT (update/toggle) a task
 apiRouter.put('/tasks/:taskId', authMiddleware, async (req, res) => {
     try {
-        const { status } = req.body;
-        const task = await Task.findById(req.params.taskId);
-        if (!task) return res.status(404).json({ error: 'Task not found' });
-
-        // Check if user has access to the project this task belongs to
-        const project = await Project.findOne({ _id: task.projectId, members: req.user.id });
-        if (!project) return res.status(403).json({ error: 'Access denied' });
-
-        task.status = status;
-        await task.save();
+        const task = await Task.findByIdAndUpdate(req.params.taskId, { status: req.body.status }, { new: true });
         res.json(task);
-    } catch (err) {
-        res.status(500).json({ error: 'Server error updating task' });
-    }
+    } catch (err) { res.status(500).json({ error: 'Server error' }); }
 });
-
-// DELETE a task
 apiRouter.delete('/tasks/:taskId', authMiddleware, async (req, res) => {
     try {
-        const task = await Task.findById(req.params.taskId);
-        if (!task) return res.status(404).json({ error: 'Task not found' });
-
-        const project = await Project.findOne({ _id: task.projectId, members: req.user.id });
-        if (!project) return res.status(403).json({ error: 'Access denied' });
-
         await Task.findByIdAndDelete(req.params.taskId);
         res.json({ message: "Task deleted" });
-    } catch (err) {
-        res.status(500).json({ error: 'Server error deleting task' });
-    }
+    } catch (err) { res.status(500).json({ error: 'Server error' }); }
 });
 
-
-// --- SOCKET.IO ---
+// ==========================================
+// 5. SOCKET.IO (Chat, Video, Docs)
+// ==========================================
 io.on('connection', (socket) => {
     console.log('User connected:', socket.id);
     
+    // Project Rooms
     socket.on('joinProjectRooms', async (userId) => {
         const userProjects = await Project.find({ members: userId });
         userProjects.forEach(p => socket.join(p._id.toString()));
     });
+    // Alternative naming (compatibility)
+    socket.on('join-project', (projectId) => {
+        socket.join(projectId);
+    });
     
+    // Chat (Support both casing styles for compatibility)
     socket.on('sendMessage', async (data) => {
-        const { projectId, text, authorName, userId } = data;
-        if (!socket.rooms.has(projectId)) {
-            return console.log('Unauthorized message attempt');
-        }
-        const message = new Message({
-            projectId,
-            text,
-            author: { id: userId, name: authorName }
-        });
-        await message.save();
-        io.to(projectId).emit('receiveMessage', message);
+        try {
+            const { projectId, text, authorName, userId } = data;
+            if (!projectId || !text) return;
+            const message = new Message({ projectId, text, author: { id: userId, name: authorName } });
+            await message.save();
+            io.to(projectId).emit('receiveMessage', message);
+        } catch (e) { console.error('sendMessage error', e); }
+    });
+    socket.on('send-message', async (data) => {
+        try {
+            const { projectId, sender, text, fileUrl, fileType, fileName } = data;
+            io.to(projectId).emit('receive-message', {
+                sender, text, fileUrl, fileType, fileName, timestamp: new Date()
+            });
+            // Optional save for this style
+            try {
+                 await new Message({ projectId, sender, text, fileUrl, fileType, fileName }).save();
+            } catch(e) {}
+        } catch(e) {}
     });
 
-    
-    socket.on('joinDocument', (documentId) => {
-        socket.join(documentId);
-    });
-
-    socket.on('leaveDocument', (documentId) => {
-        socket.leave(documentId);
-    });
-
+    // Documents
+    socket.on('joinDocument', (documentId) => { socket.join(documentId); });
+    socket.on('leaveDocument', (documentId) => { socket.leave(documentId); });
     socket.on('documentUpdate', async ({ documentId, content }) => {
-        await Document.findByIdAndUpdate(documentId, { content });
-        socket.to(documentId).emit('documentChange', content);
+        try {
+            await Document.findByIdAndUpdate(documentId, { content });
+            socket.to(documentId).emit('documentChange', content);
+        } catch(e) { console.error('documentUpdate error', e); }
     });
 
-    // ✨ NEW: WebRTC SIGNALING (Video/Voice Calls) ---
-    // Join a voice room (specific to project)
+    // WebRTC Signaling (Video)
     socket.on('join-voice-room', (roomId, userId) => {
         socket.join(roomId);
-        // Tell others in this room that I connected
         socket.to(roomId).emit('user-connected', userId);
-
         socket.on('disconnect', () => {
             socket.to(roomId).emit('user-disconnected', userId);
         });
     });
-    // ✨ THIS FIXES THE HANG UP BUG
     socket.on('leave-voice-room', (roomId, userId) => {
         socket.leave(roomId);
         socket.to(roomId).emit('user-disconnected', userId);
     });
-
-    // Relay signaling data (Offer, Answer, ICE Candidates)
     socket.on('signal-peer', (data) => {
-        // data contains: { userToSignal, signal, callerId }
         io.to(data.userToSignal).emit('peer-signal', {
             signal: data.signal,
             callerId: data.callerId
@@ -589,6 +528,37 @@ io.on('connection', (socket) => {
     });
 });
 
-// --- SERVER START ---
+// ==========================================
+// Debug endpoints (useful for Render logs)
+// ==========================================
+app.get('/_debug/email-verify', async (req, res) => {
+  try {
+    await transporter.verify();
+    return res.json({ ok: true, msg: 'Transporter OK' });
+  } catch (err) {
+    console.error('Transport verify failed:', err);
+    return res.status(500).json({ ok: false, error: err.message || err });
+  }
+});
+
+app.get('/_debug/email-send', async (req, res) => {
+  const to = req.query.to || process.env.SMTP_USER;
+  try {
+    const info = await transporter.sendMail({
+      from: `InnovUnity <${process.env.SMTP_USER}>`,
+      to,
+      subject: 'InnovUnity test',
+      text: 'Test email from InnovUnity'
+    });
+    return res.json({ ok: true, info });
+  } catch (err) {
+    console.error('Debug sendMail error:', err);
+    return res.status(500).json({ ok: false, error: err.message || err });
+  }
+});
+
+// ==========================================
+// 6. SERVER START
+// ==========================================
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
