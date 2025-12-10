@@ -498,6 +498,7 @@
             document.getElementById('header-actions').style.display = 'flex'; 
             document.getElementById('chat-input-area').style.display = 'block';
             document.getElementById('task-fab').style.display = 'flex';
+            checkPendingRequests(project);
 
             switchView('chat');
             document.getElementById('chat-title').innerText = project.name;
@@ -886,6 +887,26 @@ async function handleJoinRequest(projectId, userIdToApprove, action) {
         }
     }
 }
+// --- PASTE THIS AT THE BOTTOM OF YOUR SCRIPT TAG ---
+
+// 1. LISTEN FOR NEW REQUESTS (Real-time Notification)
+socket.on('new-join-request', (data) => {
+    // Check if I am currently looking at this project
+    if (currentChannel && currentChannel._id === data.projectId) {
+        // Refresh the sidebar to show the "Approve" buttons
+        checkPendingRequests(currentChannel);
+    }
+    
+    // Show a popup alert no matter where I am
+    alert(`🔔 New Request: ${data.requesterName} wants to join project "${data.projectName}"`);
+});
+
+// 2. LISTEN FOR APPROVAL (Notify the person who asked)
+socket.on('request-approved', (data) => {
+    alert(`🎉 Good news! You have been approved to join "${data.projectName}".`);
+    // Refresh the project list so the new project appears in the sidebar
+    fetchProjects(); 
+});
     </script>
 </body>
 </html>
