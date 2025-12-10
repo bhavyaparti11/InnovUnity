@@ -684,13 +684,31 @@
             });
         }
         function renderTasks(tasks) {
-            const list = document.getElementById('task-list'); list.innerHTML = '';
-            tasks.forEach(task => {
-                const el = document.createElement('div'); el.className = `task-item ${task.status === 'completed' ? 'completed' : ''}`;
-                el.innerHTML = `<input type="checkbox" ${task.status === 'completed' ? 'checked' : ''} onchange="toggleTask('${task._id}', this.checked)"><span>${task.description}</span>${task.assignedTo ? `<div class="task-assignee">${task.assignedTo.name}</div>` : ''}<button onclick="deleteTask('${task._id}')" style="margin-left:auto;border:none;background:none;color:red;cursor:pointer;">×</button>`;
-                list.appendChild(el);
-            });
+    const list = document.getElementById('task-list'); 
+    list.innerHTML = '';
+    
+    tasks.forEach(task => {
+        const el = document.createElement('div'); 
+        el.className = `task-item ${task.status === 'completed' ? 'completed' : ''}`;
+        
+        // Simple text-only badge
+        let assigneeHtml = '';
+        if (task.assignedTo) {
+             assigneeHtml = `
+                <div class="task-assignee" style="font-size:0.75rem; background:#e0e7ff; color:#3e399b; padding:2px 6px; border-radius:4px; margin-left:auto;">
+                    ${task.assignedTo.name}
+                </div>`;
         }
+
+        el.innerHTML = `
+            <input type="checkbox" ${task.status === 'completed' ? 'checked' : ''} onchange="toggleTask('${task._id}', this.checked)">
+            <span style="flex:1; margin-left:8px;">${task.description}</span>
+            ${assigneeHtml}
+            <button onclick="deleteTask('${task._id}')" style="margin-left:10px; border:none; background:none; color:red; cursor:pointer; font-weight:bold;">×</button>
+        `;
+        list.appendChild(el);
+    });
+}
         async function addTask() {
             const desc = document.getElementById('task-desc-input').value; 
             const assignee = document.getElementById('task-assign-select').value;

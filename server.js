@@ -511,11 +511,16 @@ apiRouter.get('/documents/:documentId', authMiddleware, async (req, res) => {
 });
 
 // Tasks
+// GET Project Tasks (Populate assignee so name shows up)
 apiRouter.get('/projects/:projectId/tasks', authMiddleware, async (req, res) => {
     try {
-        const tasks = await Task.find({ projectId: req.params.projectId }).populate('assignedTo', 'name');
+        const tasks = await Task.find({ project: req.params.projectId })
+            .populate('assignedTo', 'name email'); // ✅ MUST HAVE THIS
+
         res.json(tasks);
-    } catch (err) { res.status(500).json({ error: 'Server error' }); }
+    } catch (err) {
+        res.status(500).json({ error: 'Server error' });
+    }
 });
 apiRouter.post('/projects/:projectId/tasks', authMiddleware, async (req, res) => {
     try {
