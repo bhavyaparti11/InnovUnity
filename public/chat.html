@@ -489,37 +489,30 @@
         }
 
         async function openProject(project) {
-            currentChannel = project;
-            renderProjects();
-            
-            document.getElementById('welcome-screen').style.display = 'none';
-            document.getElementById('view-tabs').style.display = 'flex';
-            document.getElementById('members-sidebar').style.display = 'flex';
-            document.getElementById('header-actions').style.display = 'flex'; 
-            document.getElementById('chat-input-area').style.display = 'block';
-            document.getElementById('task-fab').style.display = 'flex';
-            checkPendingRequests(project);
+    // 1. DISCONNECT from any old document socket
+    if (currentDocument) {
+        socket.emit('leaveDocument', currentDocument);
+        currentDocument = null; // Forget the old ID
+    }
 
-            switchView('chat');
-            document.getElementById('chat-title').innerText = project.name;
-            
-            const [msgRes, detailRes, docRes] = await Promise.all([
-                fetch(`${API_BASE}/api/projects/${project._id}/messages`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                fetch(`${API_BASE}/api/projects/${project._id}`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                fetch(`${API_BASE}/api/projects/${project._id}/documents`, { headers: { 'Authorization': `Bearer ${token}` } })
-            ]);
+    // 2. ✨ WIPE THE EDITOR CLEAN (This fixes your visual issue)
+    const textarea = document.getElementById('doc-editor');
+    if (textarea) {
+        textarea.value = ""; // Clear the text
+        textarea.placeholder = "Select a document to start editing..."; // Reset placeholder
+        
+        // Remove old listeners by cloning (nuclear option to be safe)
+        const newTextarea = textarea.cloneNode(true);
+        textarea.parentNode.replaceChild(newTextarea, textarea);
+    }
 
-            const messages = await msgRes.json();
-            const projectDetails = await detailRes.json();
-            documents = await docRes.json();
-            currentChannel = projectDetails; 
-
-            messagesWrapper.innerHTML = '';
-            messages.forEach(addMessageToUI);
-            renderMembers(projectDetails.members);
-            renderDocuments();
-            loadTasks(project._id);
-        }
+    // 3. Set the new project and load everything else
+    currentChannel = project;
+    
+    // ... (rest of your code: welcome screen, view tabs, fetching data) ...
+    document.getElementById('welcome-screen').style.display = 'none';
+    // ...
+}
 
         // --- VIDEO CALL LOGIC ---
         async function startVideoCall() {
@@ -745,30 +738,34 @@
          d.innerText = doc.title;
          
          d.onclick = async () => {
-             // 1. Highlight the active document
+             // ✨ FIX 2: Leave the OLD document room before joining the new one
+             if (currentDocument) {
+                 socket.emit('leaveDocument', currentDocument);
+             }
+
+             // UI Updates
              document.querySelectorAll('.doc-item').forEach(i => i.style.background = '');
              d.style.background = '#e0e7ff';
 
-             // 2. Fetch the latest content
+             // Fetch Content
              const res = await fetch(`${API_BASE}/api/documents/${doc._id}`, { 
                  headers: { 'Authorization': `Bearer ${token}` } 
              });
              const data = await res.json();
              
-             // 3. Load content into the textarea
+             // Update Editor
              const textarea = document.getElementById('doc-editor');
              textarea.value = data.content;
-             currentDocument = doc._id; // Important: Track which doc we are on
-
-             // 4. Join the Socket Room for this specific document
+             
+             // Update Current ID & Join New Room
+             currentDocument = doc._id; 
              socket.emit('joinDocument', doc._id);
 
-             // 5. ✨ THE FIX: Remove old listeners first to prevent duplicates
-             // (Cloning the node effectively strips old event listeners)
+             // Reset Listeners (Prevent duplicates)
              const newTextarea = textarea.cloneNode(true);
              textarea.parentNode.replaceChild(newTextarea, textarea);
              
-             // 6. Re-attach the 'input' listener for real-time typing
+             // Re-attach typing listener
              newTextarea.addEventListener('input', (e) => {
                  socket.emit('documentUpdate', { 
                      documentId: currentDocument, 
@@ -776,10 +773,9 @@
                  });
              });
 
-             // 7. Listen for updates coming from OTHER users
-             socket.off('documentChange'); // Turn off old listeners
+             // Listen for changes
+             socket.off('documentChange');
              socket.on('documentChange', (newContent) => {
-                 // Only update if it's different (prevents cursor jumping)
                  if (newTextarea.value !== newContent) {
                      newTextarea.value = newContent;
                  }
