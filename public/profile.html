@@ -94,38 +94,12 @@
             }
         }
 
-        .profile-picture-section {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 1rem;
-            width: 150px;
-            flex-shrink: 0;
-            margin: 0 auto;
-        }
-
-        #profileImage {
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid var(--border-primary);
-        }
+       
         
-        .profile-picture-section button, .profile-details-section button {
-            width: 100%;
-            padding: 0.6rem 1rem;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 500;
-        }
+        
+        
 
-        .profile-picture-section button {
-            background-color: var(--bg-tertiary);
-            border: 1px solid var(--border-primary);
-            color: var(--text-primary);
-        }
+        
         
         .profile-details-section button {
              background: var(--accent-gradient);
@@ -194,7 +168,7 @@
     <main class="profile-container">
         <div class="profile-card">
             <div class="profile-layout">
-                <div class="profile-picture-section">
+                
                     
                 </div>
 
@@ -243,8 +217,8 @@
         }
         const API_BASE = "";
 
-        const profileImage = document.getElementById('profileImage');
-        const imageUpload = document.getElementById('imageUpload');
+        
+        
         const nameInput = document.getElementById('name');
         const emailInput = document.getElementById('email');
         const profileForm = document.getElementById('profileForm');
@@ -263,14 +237,7 @@
                 const user = await res.json();
                 nameInput.value = user.name;
                 emailInput.value = user.email;
-                if (user.profile_picture_url) {
-                    profileImage.src = user.profile_picture_url;
-                }
-            } catch (e) {
-                console.error(e);
-                alert('Could not load your profile data.');
-            }
-        });
+                
 
         // ✨ NEW LOGOUT FUNCTION
         function logoutUser() {
@@ -278,32 +245,7 @@
             window.location.href = "index.html";
         }
 
-        // Handle profile picture update
-        imageUpload.addEventListener('change', async () => {
-            const file = imageUpload.files[0];
-            if (!file) return;
-
-            const formData = new FormData();
-            formData.append('profilePicture', file);
-
-            try {
-                const res = await fetch(`${API_BASE}/api/profile/picture`, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token}` },
-                    body: formData
-                });
-
-                if (!res.ok) throw new Error('Image upload failed');
-                
-                const data = await res.json();
-                profileImage.src = data.url;
-                alert('Profile picture updated!');
-
-            } catch (e) {
-                console.error(e);
-                alert('Error uploading image.');
-            }
-        });
+        
 
         // Handle profile information update
         profileForm.addEventListener('submit', async (e) => {
