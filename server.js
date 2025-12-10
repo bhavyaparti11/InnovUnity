@@ -72,7 +72,7 @@ async function sendOtpEmail(to, name, code) {
   `;
   try {
     const info = await transporter.sendMail({
-      from: `InnovUnity <${process.env.SMTP_USER}>`,
+      from: `InnovUnity <bhavya110105@gmail.com>`,
       to,
       subject: 'Your InnovUnity verification code',
       html
