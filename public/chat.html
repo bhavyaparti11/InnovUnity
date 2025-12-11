@@ -469,6 +469,7 @@
         }
 
       async function openProject(project) {
+        
         currentChannel = project;
         renderProjects();
 
@@ -676,32 +677,58 @@
         }
 
         async function loadTasks(projectId) {
-            try {
-                // 1. Fetch Tasks
-                const res = await fetch(`${API_BASE}/api/projects/${projectId}/tasks`, { 
-                    headers: { 'Authorization': `Bearer ${token}` } 
-                });
-                const tasks = await res.json();
-                renderTasks(tasks);
+    try {
+        // 1. Fetch Tasks
+        const res = await fetch(`${API_BASE}/api/projects/${projectId}/tasks`, { 
+            headers: { 'Authorization': `Bearer ${token}` } 
+        });
+        const tasks = await res.json();
+        renderTasks(tasks);
 
-                // 2. Populate Dropdown
-                const taskAssignSelect = document.getElementById('task-assign-select');
-                if (taskAssignSelect) {
-                    taskAssignSelect.innerHTML = '<option value="">Unassigned</option>';
+        // 2. Populate Dropdown (THE FIX)
+        const taskAssignSelect = document.getElementById('task-assign-select');
+        if (taskAssignSelect) {
+            // Reset the dropdown
+            taskAssignSelect.innerHTML = '<option value="">Unassigned</option>';
 
-                    if (currentChannel && currentChannel.members) {
-                        currentChannel.members.forEach(m => {
-                            const name = m.name || "Unknown";
-                            const id = m._id || m; 
-                            const opt = document.createElement('option');
-                            opt.value = id; 
-                            opt.innerText = name;
-                            taskAssignSelect.appendChild(opt);
-                        });
+            // Safety check: Ensure we have members
+            if (currentChannel && currentChannel.members) {
+                currentChannel.members.forEach(m => {
+                    // DEBUG: If you open Console (F12), you'll see exactly what 'm' looks like
+                    // console.log("Member Data:", m); 
+
+                    // LOGIC: Try to find the name in every possible place
+                    let name = "Unknown";
+                    let id = "";
+
+                    if (typeof m === 'object' && m !== null) {
+                        // It's a full user object
+                        name = m.name || m.email || "Unnamed Member";
+                        id = m._id;
+                    } else {
+                        // It's just an ID string (This is usually why it fails!)
+                        // If it's just an ID, checking if it matches YOU helps
+                        if (m === currentUserId) {
+                             name = userName; // Use your own name variable
+                             id = m;
+                        } else {
+                             // If it's a raw ID string for someone else, we can't guess the name easily
+                             // without a fetch, but let's try to label it
+                             name = "Member " + m.toString().substr(-4); // e.g. "Member a1b2"
+                             id = m;
+                        }
                     }
-                }
-            } catch (e) { console.error("Error loading tasks:", e); }
+                    
+                    // Create the option
+                    const opt = document.createElement('option');
+                    opt.value = id; 
+                    opt.innerText = name;
+                    taskAssignSelect.appendChild(opt);
+                });
+            }
         }
+    } catch (e) { console.error("Error loading tasks:", e); }
+}
 
         function renderTasks(tasks) {
             const list = document.getElementById('task-list'); 
