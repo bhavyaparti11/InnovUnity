@@ -688,7 +688,7 @@
 
             if (currentChannel && currentChannel.members) {
                 currentChannel.members.forEach(m => {
-                    // Handle potential data issues safely
+                    // Check if we have a name object or just an ID string
                     const name = m.name || "Unknown";
                     const id = m._id || m; 
                     
@@ -714,7 +714,7 @@
         const el = document.createElement('div'); 
         el.className = `task-item ${task.status === 'completed' ? 'completed' : ''}`;
         
-        // Create the Blue Name Badge (Text Only)
+        // ✨ Just the simple Blue Name Box
         let assigneeHtml = '';
         if (task.assignedTo && task.assignedTo.name) {
              assigneeHtml = `

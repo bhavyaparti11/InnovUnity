@@ -522,6 +522,7 @@ apiRouter.get('/projects/:projectId/tasks', authMiddleware, async (req, res) => 
     }
 });
 // CREATE Task
+// CREATE Task
 apiRouter.post('/projects/:projectId/tasks', authMiddleware, async (req, res) => {
     try {
         const { description, assignedTo } = req.body;
@@ -532,14 +533,14 @@ apiRouter.post('/projects/:projectId/tasks', authMiddleware, async (req, res) =>
             status: 'pending'
         };
 
-        // Only add assignedTo if it is a real ID (prevents crashes)
-        if (assignedTo && assignedTo !== "") {
+        // Only add assignedTo if it is a real ID
+        if (assignedTo && assignedTo !== "" && assignedTo !== "undefined") {
             taskData.assignedTo = assignedTo;
         }
 
         const task = await Task.create(taskData);
         
-        // Populate immediately so the UI updates without refresh
+        // Populate immediately so the name shows up instantly
         const populatedTask = await Task.findById(task._id).populate('assignedTo', 'name');
         
         res.json(populatedTask);
