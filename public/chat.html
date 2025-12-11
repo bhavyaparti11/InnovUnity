@@ -11,6 +11,54 @@
     <link rel="stylesheet" href="style.css">
     
     <style>
+        /* Context Menu for Members */
+.member-menu {
+    position: absolute;
+    background: white;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    border-radius: 8px;
+    display: none; /* Hidden by default */
+    flex-direction: column;
+    z-index: 5000;
+    min-width: 160px;
+    overflow: hidden;
+}
+
+.member-menu-btn {
+    padding: 10px 15px;
+    background: none;
+    border: none;
+    text-align: left;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: #374151;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.2s;
+}
+
+.member-menu-btn:hover {
+    background-color: #f3f4f6;
+}
+
+.member-menu-btn.danger {
+    color: #ef4444;
+}
+.member-menu-btn.danger:hover {
+    background-color: #fee2e2;
+}
+
+/* Make member items look clickable */
+.member-item {
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.member-item:hover {
+    background-color: #f9fafb;
+}
         /* =========================================
            ✨ INLINE STYLES FOR VIDEO & WIDGETS
            ========================================= */
@@ -800,56 +848,110 @@ async function loadTasks(projectId) {
             document.querySelector(`button[onclick="switchView('${view}')"]`).classList.add('active');
             document.getElementById('chat-input-area').style.display = view === 'chat' ? 'block' : 'none';
         }
-       function renderMembers(members) {
+       // --- 1. GLOBAL VARIABLES FOR MENU ---
+let selectedMemberId = null; // Tracks who we clicked on
+
+// --- 2. UPDATE RENDER MEMBERS (Click instead of Buttons) ---
+function renderMembers(members) {
     const membersList = document.getElementById('members-list');
     membersList.innerHTML = '';
     
     if (!members) return;
 
-    // ✨ FIX: Safely get the Creator ID string
-    let creatorId = "";
-    if (currentChannel && currentChannel.creator) {
-        // If it's an object (populated), get ._id. If it's a string, use it directly.
-        creatorId = currentChannel.creator._id || currentChannel.creator;
-    }
-    
-    // Convert both to strings to be 100% sure they match
-    const iAmCreator = String(creatorId) === String(currentUserId);
-
     members.forEach(member => {
         const item = document.createElement('div'); 
         item.className = 'member-item';
         
-        // Handle name data safely
+        // Handle names safely
         const name = member.name || "Unknown";
         const id = member._id || member;
 
-        // Metadata for dropdowns
+        // Metadata for dropdowns (Critical for the task feature)
         item.setAttribute('data-user-id', id); 
         item.setAttribute('data-user-name', name);
 
-        // Build HTML
-        let html = `<span style="padding: 10px; font-weight: 500;">${name}</span>`;
-
-        // ✨ KICK BUTTON LOGIC:
-        // Show button ONLY if: I am Creator AND This member is not me
-        if (iAmCreator && String(id) !== String(currentUserId)) {
-            html += `
-            <button onclick="kickMember('${id}')" 
-                    style="margin-left:auto; background:none; border:none; color:#ef4444; cursor:pointer; font-weight:bold; font-size:18px; padding:0 10px;" 
-                    title="Remove Member">
-                ×
-            </button>`;
+        // Simple Layout (No Buttons, just Name + Role badge)
+        let ownerBadge = '';
+        // Check if this member is the creator
+        if (currentChannel && (currentChannel.creator._id === id || currentChannel.creator === id)) {
+            ownerBadge = '<span style="font-size:0.7em; background:#e0e7ff; color:#3e399b; padding:2px 5px; border-radius:4px; margin-left:auto;">OWNER</span>';
         }
+
+        item.innerHTML = `
+            <div style="display:flex; align-items:center; gap:10px; width:100%; justify-content: space-between;">
+                <span style="font-weight: 500;">${name}</span>
+                ${ownerBadge}
+            </div>
+        `;
+
+        // ✨ CLICK EVENT: Open the menu
+        item.onclick = (e) => showMemberMenu(e, id, name);
         
-        // Layout tweak to keep button on the right
-        item.style.display = "flex";
-        item.style.justifyContent = "space-between";
-        item.style.alignItems = "center";
-        
-        item.innerHTML = html;
         membersList.appendChild(item);
     });
+}
+
+// --- 3. SHOW MENU LOGIC ---
+function showMemberMenu(e, userId, userName) {
+    e.stopPropagation(); // Stop click from closing immediately
+    selectedMemberId = userId; // Remember who we clicked
+
+    const menu = document.getElementById('member-context-menu');
+    const kickBtn = document.getElementById('kick-btn-menu');
+
+    // Position the menu right where the mouse clicked
+    menu.style.left = `${e.pageX}px`;
+    menu.style.top = `${e.pageY}px`;
+    menu.style.display = 'flex';
+
+    // LOGIC: Show "Remove" only if I am Creator AND target is not me
+    // Handle both object and string formats for creator ID
+    let creatorId = "";
+    if (currentChannel.creator && currentChannel.creator._id) {
+        creatorId = currentChannel.creator._id;
+    } else {
+        creatorId = currentChannel.creator;
+    }
+
+    const iAmCreator = String(creatorId) === String(currentUserId);
+    
+    if (iAmCreator && String(userId) !== String(currentUserId)) {
+        kickBtn.style.display = 'flex'; // Show kick button
+    } else {
+        kickBtn.style.display = 'none'; // Hide kick button
+    }
+}
+
+// --- 4. CLOSE MENU ON CLICK ELSEWHERE ---
+document.addEventListener('click', () => {
+    const menu = document.getElementById('member-context-menu');
+    if (menu) menu.style.display = 'none';
+});
+
+// --- 5. ACTION: ASSIGN TASK ---
+function openAssignTaskMode() {
+    if (!selectedMemberId) return;
+
+    // 1. Open the Task Panel if it's closed
+    const panel = document.getElementById('task-panel');
+    panel.style.display = 'flex';
+
+    // 2. Find the dropdown and Select this user
+    const select = document.getElementById('task-assign-select');
+    if (select) {
+        select.value = selectedMemberId;
+    }
+
+    // 3. Focus the input so you can type immediately
+    const input = document.getElementById('task-desc-input');
+    if (input) input.focus();
+}
+
+// --- 6. ACTION: REMOVE MEMBER ---
+function confirmKickMember() {
+    if (selectedMemberId) {
+        kickMember(selectedMemberId); // Uses your existing kick function
+    }
 }
         messageInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
         function sendMessage() {
@@ -1109,6 +1211,14 @@ socket.on('you-were-kicked', (projectId) => {
         window.location.reload(); 
     }
 });
+<div id="member-context-menu" class="member-menu">
+    <button class="member-menu-btn" onclick="openAssignTaskMode()">
+        <span>📝 Assign Task</span>
+    </button>
+    <button id="kick-btn-menu" class="member-menu-btn danger" onclick="confirmKickMember()">
+        <span>× Remove Member</span>
+    </button>
+</div>
     </script>
 </body>
 </html>
