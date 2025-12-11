@@ -685,41 +685,37 @@
         const tasks = await res.json();
         renderTasks(tasks);
 
-        // 2. Populate Dropdown (THE FIX)
+        // 2. Populate Dropdown
         const taskAssignSelect = document.getElementById('task-assign-select');
         if (taskAssignSelect) {
-            // Reset the dropdown
             taskAssignSelect.innerHTML = '<option value="">Unassigned</option>';
 
-            // Safety check: Ensure we have members
+            // CRITICAL: Ensure we are using the fully populated currentChannel
+            // If currentChannel is missing or members are just strings, we might be loading too early.
             if (currentChannel && currentChannel.members) {
                 currentChannel.members.forEach(m => {
-                    // DEBUG: If you open Console (F12), you'll see exactly what 'm' looks like
-                    // console.log("Member Data:", m); 
-
-                    // LOGIC: Try to find the name in every possible place
                     let name = "Unknown";
                     let id = "";
 
-                    if (typeof m === 'object' && m !== null) {
-                        // It's a full user object
-                        name = m.name || m.email || "Unnamed Member";
+                    // CHECK 1: Is 'm' a full object with a name? (Ideal case)
+                    if (typeof m === 'object' && m !== null && m.name) {
+                        name = m.name;
                         id = m._id;
-                    } else {
-                        // It's just an ID string (This is usually why it fails!)
-                        // If it's just an ID, checking if it matches YOU helps
-                        if (m === currentUserId) {
-                             name = userName; // Use your own name variable
-                             id = m;
+                    } 
+                    // CHECK 2: Is 'm' just a string ID?
+                    else if (typeof m === 'string') {
+                        id = m;
+                        // Try to find this ID in the DOM (Member Sidebar) to get the name
+                        // This is a "hack" to find the name if the data is missing
+                        if (id === currentUserId) {
+                            name = userName;
                         } else {
-                             // If it's a raw ID string for someone else, we can't guess the name easily
-                             // without a fetch, but let's try to label it
-                             name = "Member " + m.toString().substr(-4); // e.g. "Member a1b2"
-                             id = m;
+                            // If we really can't find the name, just show "Member" temporarily
+                            // But usually, the openProject() fix I gave earlier prevents this case.
+                            name = "Member " + id.substring(0, 4); 
                         }
                     }
-                    
-                    // Create the option
+
                     const opt = document.createElement('option');
                     opt.value = id; 
                     opt.innerText = name;
