@@ -678,34 +678,45 @@
 
         async function loadTasks(projectId) {
     try {
+        // 1. Fetch Tasks
         const res = await fetch(`${API_BASE}/api/projects/${projectId}/tasks`, { 
             headers: { 'Authorization': `Bearer ${token}` } 
         });
         const tasks = await res.json();
         renderTasks(tasks);
 
+        // 2. Populate Dropdown (SIDEBAR SYNC FIX)
         const taskAssignSelect = document.getElementById('task-assign-select');
         if (taskAssignSelect) {
             taskAssignSelect.innerHTML = '<option value="">Unassigned</option>';
 
+            // We use the exact same list that populates the sidebar
             if (currentChannel && currentChannel.members) {
                 currentChannel.members.forEach(m => {
-                    // 1. Is it a valid, populated user?
-                    if (typeof m === 'object' && m !== null && m.name) {
-                        const opt = document.createElement('option');
-                        opt.value = m._id; 
-                        opt.innerText = m.name;
-                        taskAssignSelect.appendChild(opt);
-                    } 
-                    // 2. Is it ME? (Fallback if populate failed for self)
-                    else if ((typeof m === 'string' && m === currentUserId) || (m._id === currentUserId)) {
-                         const opt = document.createElement('option');
-                         opt.value = currentUserId; 
-                         opt.innerText = userName;
-                         taskAssignSelect.appendChild(opt);
+                    let name = "Unknown";
+                    let id = "";
+
+                    // Case A: Standard populated object (Most common)
+                    if (m && m.name) {
+                        name = m.name;
+                        id = m._id;
                     }
-                    // 3. If it is a string ID for someone else ("Member be2b..."), IGNORE IT.
-                    // This hides the ghost users.
+                    // Case B: It's just an ID string
+                    else if (typeof m === 'string') {
+                        id = m;
+                        // If it's me, I know my name
+                        if (id === currentUserId) name = userName;
+                        // If it's someone else, just show the ID for now so they are selectable
+                        else name = "Member " + id.substring(0, 4);
+                    }
+
+                    // FORCE ADD: As long as we have an ID, put them in the list.
+                    if (id) {
+                        const opt = document.createElement('option');
+                        opt.value = id;
+                        opt.innerText = name;
+                        taskAssignSelect.appendChild(opt);
+                    }
                 });
             }
         }
