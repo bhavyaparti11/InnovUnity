@@ -679,46 +679,35 @@
         // --- LOAD TASKS + POPULATE DROPDOWN SAFELY ---
 async function loadTasks(projectId) {
     try {
-        // 1. Fetch Tasks (Standard)
+        // 1. Fetch Tasks
         const res = await fetch(`${API_BASE}/api/projects/${projectId}/tasks`, { 
             headers: { 'Authorization': `Bearer ${token}` } 
         });
         const tasks = await res.json();
         renderTasks(tasks);
 
-        // 2. Populate Dropdown (BY READING THE SIDEBAR DATA)
+        // 2. Populate Dropdown (BY READING THE SIDEBAR)
         const taskAssignSelect = document.getElementById('task-assign-select');
         if (!taskAssignSelect) return;
 
         taskAssignSelect.innerHTML = '<option value="">Unassigned</option>';
 
-        // We use the exact member list data that populated the sidebar
-        if (currentChannel && currentChannel.members) {
-            currentChannel.members.forEach(member => {
-                // If the sidebar has a name, we use it. 
-                // We trust 'member.name' because if it was missing, the sidebar would look broken too.
-                
-                let name = "Unknown";
-                let id = "";
+        // Grab all the member items from the sidebar
+        const sidebarItems = document.querySelectorAll('#members-list .member-item');
+        
+        sidebarItems.forEach(item => {
+            const name = item.getAttribute('data-user-name');
+            const id = item.getAttribute('data-user-id');
 
-                if (typeof member === 'object') {
-                    name = member.name; // This is what the sidebar uses
-                    id = member._id;
-                } else {
-                    // Fallback for ID-only strings (rare if openProject works)
-                    id = member;
-                    // If it's me, use my name. If not, just label it so it's clickable.
-                    if (id === currentUserId) name = userName;
-                    else name = "Member"; 
-                }
-
-                // Force add it to the list
+            // If the sidebar has it, we add it. No questions asked.
+            if (id && name) {
                 const opt = document.createElement('option');
-                opt.value = id;
+                opt.value = id; 
                 opt.innerText = name;
                 taskAssignSelect.appendChild(opt);
-            });
-        }
+            }
+        });
+
     } catch (e) { console.error("Error loading tasks:", e); }
 }
 
@@ -801,14 +790,29 @@ async function loadTasks(projectId) {
             document.getElementById('chat-input-area').style.display = view === 'chat' ? 'block' : 'none';
         }
         function renderMembers(members) {
-             membersList.innerHTML = '';
-             members.forEach(member => {
-                const item = document.createElement('div'); item.className = 'member-item';
-                // Just the name, simple and clean (No Profile Pic)
-                item.innerHTML = `<span style="padding: 10px; font-weight: 500;">${member.name}</span>`;
-                membersList.appendChild(item);
-             });
-        }
+    const membersList = document.getElementById('members-list');
+    membersList.innerHTML = '';
+    
+    if (!members) return;
+
+    members.forEach(member => {
+        const item = document.createElement('div'); 
+        item.className = 'member-item';
+        
+        // Handle data safely
+        const name = member.name || "Unknown";
+        const id = member._id || member;
+
+        // ✨ TRICK: Store the ID inside the HTML element so we can find it later
+        item.setAttribute('data-user-id', id); 
+        item.setAttribute('data-user-name', name);
+
+        // Render the name text
+        item.innerHTML = `<span style="padding: 10px; font-weight: 500;">${name}</span>`;
+        
+        membersList.appendChild(item);
+    });
+}
         messageInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
         function sendMessage() {
             const text = messageInput.value.trim(); if(!text || !currentChannel) return;
