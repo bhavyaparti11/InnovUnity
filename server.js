@@ -363,21 +363,20 @@ apiRouter.post('/projects', authMiddleware, async (req, res) => {
     } catch (err) { res.status(500).json({ error: 'Server error' }); }
 });
 // GET Single Project (with populated members)
+// GET Single Project (Populates members for the dropdown)
 apiRouter.get('/projects/:projectId', authMiddleware, async (req, res) => {
     try {
         const project = await Project.findById(req.params.projectId)
             .populate('creator', 'name email') 
-            .populate('members', 'name email profile_picture_url'); // ✨ THIS LINE FIXES THE "UNDEFINED"
+            .populate('members', 'name email'); // ✅ This ensures names show up in the "Assign To" list
 
         if (!project) return res.status(404).json({ error: 'Project not found' });
         
-        // Security: Ensure user is a member or creator
+        // Security Check
         const isMember = project.members.some(m => m._id.toString() === req.user.id);
         const isCreator = project.creator._id.toString() === req.user.id;
         
-        if (!isMember && !isCreator) {
-            return res.status(403).json({ error: 'Access denied' });
-        }
+        if (!isMember && !isCreator) return res.status(403).json({ error: 'Access denied' });
 
         res.json(project);
     } catch (err) {
@@ -512,29 +511,42 @@ apiRouter.get('/documents/:documentId', authMiddleware, async (req, res) => {
 
 // Tasks
 // GET Project Tasks (Populate assignee so name shows up)
+// GET Tasks
 apiRouter.get('/projects/:projectId/tasks', authMiddleware, async (req, res) => {
     try {
         const tasks = await Task.find({ project: req.params.projectId })
-            .populate('assignedTo', 'name email'); // ✅ MUST HAVE THIS
-
+            .populate('assignedTo', 'name email'); // ✅ This ensures the blue box says "Bhavya"
         res.json(tasks);
     } catch (err) {
         res.status(500).json({ error: 'Server error' });
     }
 });
+// CREATE Task
 apiRouter.post('/projects/:projectId/tasks', authMiddleware, async (req, res) => {
     try {
         const { description, assignedTo } = req.body;
-        const newTask = new Task({
-            projectId: req.params.projectId,
+        
+        const taskData = {
             description,
-            assignedTo: assignedTo || null,
-            createdBy: req.user.id
-        });
-        await newTask.save();
-        const populated = await newTask.populate('assignedTo', 'name');
-        res.json(populated);
-    } catch (err) { res.status(500).json({ error: 'Server error' }); }
+            project: req.params.projectId,
+            status: 'pending'
+        };
+
+        // Only add assignedTo if it is a real ID (prevents crashes)
+        if (assignedTo && assignedTo !== "") {
+            taskData.assignedTo = assignedTo;
+        }
+
+        const task = await Task.create(taskData);
+        
+        // Populate immediately so the UI updates without refresh
+        const populatedTask = await Task.findById(task._id).populate('assignedTo', 'name');
+        
+        res.json(populatedTask);
+    } catch (err) {
+        console.error("Task Error:", err);
+        res.status(500).json({ error: 'Server error' });
+    }
 });
 apiRouter.put('/tasks/:taskId', authMiddleware, async (req, res) => {
     try {

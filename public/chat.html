@@ -673,19 +673,65 @@
             panel.style.display = panel.style.display === 'flex' ? 'none' : 'flex';
         }
         async function loadTasks(projectId) {
-            const res = await fetch(`${API_BASE}/api/projects/${projectId}/tasks`, { headers: { 'Authorization': `Bearer ${token}` } });
-            const tasks = await res.json();
-            renderTasks(tasks);
-            const taskAssignSelect = document.getElementById('task-assign-select');
+    try {
+        // 1. Fetch Tasks
+        const res = await fetch(`${API_BASE}/api/projects/${projectId}/tasks`, { 
+            headers: { 'Authorization': `Bearer ${token}` } 
+        });
+        const tasks = await res.json();
+        renderTasks(tasks);
+
+        // 2. Populate Dropdown
+        const taskAssignSelect = document.getElementById('task-assign-select');
+        if (taskAssignSelect) {
             taskAssignSelect.innerHTML = '<option value="">Unassigned</option>';
-            currentChannel.members.forEach(m => {
-                const opt = document.createElement('option'); opt.value = m._id; opt.innerText = m.name;
-                taskAssignSelect.appendChild(opt);
-            });
+
+            if (currentChannel && currentChannel.members) {
+                currentChannel.members.forEach(m => {
+                    // Handle potential data issues safely
+                    const name = m.name || "Unknown";
+                    const id = m._id || m; 
+                    
+                    const opt = document.createElement('option');
+                    opt.value = id; 
+                    opt.innerText = name;
+                    taskAssignSelect.appendChild(opt);
+                });
+            }
         }
+    } catch (e) { console.error("Error loading tasks:", e); }
+}
         function renderTasks(tasks) {
     const list = document.getElementById('task-list'); 
     list.innerHTML = '';
+    
+    if (!tasks || tasks.length === 0) {
+        list.innerHTML = '<div style="padding:15px; color:#666; text-align:center;">No tasks yet.</div>';
+        return;
+    }
+
+    tasks.forEach(task => {
+        const el = document.createElement('div'); 
+        el.className = `task-item ${task.status === 'completed' ? 'completed' : ''}`;
+        
+        // Create the Blue Name Badge (Text Only)
+        let assigneeHtml = '';
+        if (task.assignedTo && task.assignedTo.name) {
+             assigneeHtml = `
+                <div class="task-assignee" style="font-size:0.75rem; background:#e0e7ff; color:#3e399b; padding:2px 8px; border-radius:4px; margin-left:auto; font-weight:500;">
+                    ${task.assignedTo.name}
+                </div>`;
+        }
+
+        el.innerHTML = `
+            <input type="checkbox" ${task.status === 'completed' ? 'checked' : ''} onchange="toggleTask('${task._id}', this.checked)">
+            <span style="flex:1; margin-left:10px;">${task.description}</span>
+            ${assigneeHtml}
+            <button onclick="deleteTask('${task._id}')" style="margin-left:10px; border:none; background:none; color:#ef4444; cursor:pointer; font-weight:bold; font-size:18px;">×</button>
+        `;
+        list.appendChild(el);
+    });
+}
     
     tasks.forEach(task => {
         const el = document.createElement('div'); 
@@ -710,15 +756,32 @@
     });
 }
         async function addTask() {
-            const desc = document.getElementById('task-desc-input').value; 
-            const assignee = document.getElementById('task-assign-select').value;
-            if(!desc) return;
-            await fetch(`${API_BASE}/api/projects/${currentChannel._id}/tasks`, {
-                method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify({ description: desc, assignedTo: assignee })
-            });
-            document.getElementById('task-desc-input').value = ''; loadTasks(currentChannel._id);
+    const descInput = document.getElementById('task-desc-input');
+    const assignSelect = document.getElementById('task-assign-select');
+    
+    const description = descInput.value.trim();
+    const assignedTo = assignSelect.value; 
+
+    if (!description) return alert("Please enter a task description");
+
+    try {
+        const res = await fetch(`${API_BASE}/api/projects/${currentChannel._id}/tasks`, {
+            method: 'POST', 
+            headers: { 
+                'Authorization': `Bearer ${token}`, 
+                'Content-Type': 'application/json' 
+            },
+            body: JSON.stringify({ description, assignedTo })
+        });
+
+        if (res.ok) {
+            descInput.value = ''; // Clear input
+            loadTasks(currentChannel._id); // Refresh list
+        } else {
+            alert("Failed to add task");
         }
+    } catch (e) { console.error(e); }
+}
         async function toggleTask(taskId, isDone) {
             await fetch(`${API_BASE}/api/tasks/${taskId}`, { method: 'PUT', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ status: isDone ? 'completed' : 'pending' }) });
             loadTasks(currentChannel._id);
