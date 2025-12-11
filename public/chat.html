@@ -679,99 +679,47 @@
         // --- LOAD TASKS + POPULATE DROPDOWN SAFELY ---
 async function loadTasks(projectId) {
     try {
-        // 1. Fetch Tasks
-        const res = await fetch(`${API_BASE}/api/projects/${projectId}/tasks`, {
-            headers: { 'Authorization': `Bearer ${token}` }
+        // 1. Fetch Tasks (Standard)
+        const res = await fetch(`${API_BASE}/api/projects/${projectId}/tasks`, { 
+            headers: { 'Authorization': `Bearer ${token}` } 
         });
         const tasks = await res.json();
         renderTasks(tasks);
 
-        // 2. Populate Dropdown (clear first and dedupe)
+        // 2. Populate Dropdown (BY READING THE SIDEBAR DATA)
         const taskAssignSelect = document.getElementById('task-assign-select');
         if (!taskAssignSelect) return;
 
-        // clear
-        taskAssignSelect.innerHTML = '';
-        const seen = new Set();
+        taskAssignSelect.innerHTML = '<option value="">Unassigned</option>';
 
-        // always show Unassigned option
-        const unopt = document.createElement('option');
-        unopt.value = '';
-        unopt.innerText = 'Unassigned';
-        taskAssignSelect.appendChild(unopt);
+        // We use the exact member list data that populated the sidebar
+        if (currentChannel && currentChannel.members) {
+            currentChannel.members.forEach(member => {
+                // If the sidebar has a name, we use it. 
+                // We trust 'member.name' because if it was missing, the sidebar would look broken too.
+                
+                let name = "Unknown";
+                let id = "";
 
-        // If currentChannel has members, use those for dropdown
-        if (currentChannel && currentChannel.members && currentChannel.members.length) {
-            currentChannel.members.forEach(m => {
-                // m might be an object { _id, name } or just an id string
-                const id = (m && (m._id || m)) ? String(m._id || m) : null;
-                if (!id || seen.has(id)) return;
-                seen.add(id);
-
-                // Friendly name fallback: prefer name -> email prefix -> id suffix
-                let name = 'Member';
-                if (m && typeof m === 'object') {
-                    if (m.name && String(m.name).trim()) name = m.name;
-                    else if (m.email && String(m.email).includes('@')) name = String(m.email).split('@')[0];
-                    else name = 'Member ' + id.slice(-4);
+                if (typeof member === 'object') {
+                    name = member.name; // This is what the sidebar uses
+                    id = member._id;
                 } else {
-                    // m is just an id string
-                    name = 'Member ' + id.slice(-4);
+                    // Fallback for ID-only strings (rare if openProject works)
+                    id = member;
+                    // If it's me, use my name. If not, just label it so it's clickable.
+                    if (id === currentUserId) name = userName;
+                    else name = "Member"; 
                 }
 
+                // Force add it to the list
                 const opt = document.createElement('option');
                 opt.value = id;
                 opt.innerText = name;
                 taskAssignSelect.appendChild(opt);
             });
         }
-    } catch (e) {
-        console.error("Error loading tasks:", e);
-    }
-}
-
-// --- RENDER TASKS (single, clean implementation) ---
-function renderTasks(tasks) {
-    const list = document.getElementById('task-list');
-    list.innerHTML = '';
-
-    if (!tasks || tasks.length === 0) {
-        list.innerHTML = '<div style="padding:15px; color:#666; text-align:center;">No tasks yet.</div>';
-        return;
-    }
-
-    tasks.forEach(task => {
-        const el = document.createElement('div');
-        el.className = `task-item ${task.status === 'completed' ? 'completed' : ''}`;
-
-        // If populated, show assignedTo.name; otherwise nothing
-        let assigneeHtml = '';
-        if (task.assignedTo && typeof task.assignedTo === 'object' && task.assignedTo.name) {
-            assigneeHtml = `
-                <div class="task-assignee" style="font-size:0.75rem; background:#e0e7ff; color:#3e399b; padding:2px 8px; border-radius:4px; margin-left:auto; font-weight:500;">
-                    ${task.assignedTo.name}
-                </div>`;
-        }
-
-        el.innerHTML = `
-            <input type="checkbox" ${task.status === 'completed' ? 'checked' : ''} onchange="toggleTask('${task._id}', this.checked)">
-            <span style="flex:1; margin-left:10px;">${escapeHtml(task.description)}</span>
-            ${assigneeHtml}
-            <button onclick="deleteTask('${task._id}')" style="margin-left:10px; border:none; background:none; color:#ef4444; cursor:pointer; font-weight:bold; font-size:18px;">×</button>
-        `;
-        list.appendChild(el);
-    });
-}
-
-// small helper to avoid HTML injection when inserting description
-function escapeHtml(str) {
-    if (!str) return '';
-    return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
+    } catch (e) { console.error("Error loading tasks:", e); }
 }
 
 
