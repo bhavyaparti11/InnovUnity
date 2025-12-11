@@ -188,9 +188,10 @@
     <div class="app-container">
         <aside class="sidebar">
             <div id="admin-notifications" style="display:none; background:#fff3cd; color:#856404; padding:10px; margin:10px; border-radius:5px; font-size:0.9rem;">
-    <strong>🔔 Join Requests:</strong>
-    <div id="request-list"></div>
-</div>
+                <strong>🔔 Join Requests:</strong>
+                <div id="request-list"></div>
+            </div>
+
             <header class="sidebar-header">
                 <a href="index.html" class="logo">
                     <div class="logo-icon"></div>
@@ -198,17 +199,14 @@
                 </a>
             </header>
             <div class="sidebar-content">
-                
                 <div class="projects-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding-right: 10px;">
-    <span style="font-weight: bold; color: #333;">Projects</span>
-    <button onclick="openProjectModal()" style="background:none; border:none; color: #3e399b; font-size: 28px; font-weight: bold; cursor:pointer; line-height: 1;" title="Create a new project">+</button>
-</div>
-                
+                    <span style="font-weight: bold; color: #333;">Projects</span>
+                    <button onclick="openProjectModal()" style="background:none; border:none; color: #3e399b; font-size: 28px; font-weight: bold; cursor:pointer; line-height: 1;" title="Create a new project">+</button>
+                </div>
                 <div id="channel-list" class="channel-list"></div>
             </div>
              <footer class="sidebar-footer">
                 <div id="user-profile-button" class="user-profile-button">
-                    
                     <span id="username-display-sidebar" class="username">Guest</span>
                 </div>
                 <div class="user-menu" id="user-menu">
@@ -226,7 +224,6 @@
                 </div>
                 
                 <div class="header-actions" id="header-actions" style="display: none;">
-                    
                     <button class="start-call-btn" onclick="startVideoCall()">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M23 7l-7 5 7 5V7z"></path>
@@ -287,19 +284,14 @@
     </div>
 
     <div id="video-call-overlay" class="video-call-overlay">
-        
-        <div class="video-grid" id="video-grid">
-            </div>
-        
+        <div class="video-grid" id="video-grid"></div>
         <div class="video-controls-bar">
             <button id="mic-btn" class="control-btn" onclick="toggleMute()" title="Toggle Microphone">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
             </button>
-            
             <button id="camera-btn" class="control-btn" onclick="toggleCamera()" title="Toggle Camera">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M23 7l-7 5 7 5V7z"></path><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
             </button>
-            
             <button class="control-btn end-call-btn" onclick="leaveVideoCall()" title="End Call">
                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.42 19.42 0 0 1-3.33-2.67m-2.67-3.34a19.79 19.79 0 0 1-3.07-8.63A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91"></path></svg>
             </button>
@@ -349,7 +341,7 @@
         const token = localStorage.getItem("token");
         if (!token) window.location.href = "register.html";
         const userName = localStorage.getItem("user_name") || "Guest";
-        let currentUserId = localStorage.getItem("user_id"); // Ensure this matches login
+        let currentUserId = localStorage.getItem("user_id"); 
         
         const API_BASE = "";
         const socket = io(API_BASE, { auth: { token } });
@@ -362,7 +354,7 @@
         
         // --- VIDEO CALL VARS ---
         let localStream;
-        let peers = {}; // WebRTC Peers
+        let peers = {}; 
         let isMuted = false;
         let isCameraOff = false;
 
@@ -378,17 +370,11 @@
         // --- INIT ---
         document.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('username-display-sidebar').innerText = userName;
-            document.addEventListener('DOMContentLoaded', async () => {
-    // ... other code ...
-    
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('invite')) {
-        // ✅ Make sure this line exists!
-        await joinProjectWithCode(urlParams.get('invite'));
-    }
-    
-    // ... other code ...
-});
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('invite')) {
+                await joinProjectWithCode(urlParams.get('invite'));
+            }
             
             const userBtn = document.getElementById('user-profile-button');
             const userMenu = document.getElementById('user-menu');
@@ -403,12 +389,6 @@
             }
 
             await loadUserProfile();
-            
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('invite')) {
-                await joinProjectWithCode(urlParams.get('invite'));
-                window.history.replaceState({}, document.title, window.location.pathname);
-            }
             await fetchProjects();
             if (currentUserId) socket.emit('joinProjectRooms', currentUserId);
         });
@@ -418,7 +398,7 @@
                 const res = await fetch(`${API_BASE}/api/profile`, { headers: { 'Authorization': `Bearer ${token}` } });
                 if (res.ok) {
                     const user = await res.json();
-                    
+                    document.getElementById('username-display-sidebar').innerText = user.name;
                     currentUserId = user._id;
                 }
             } catch (e) {}
@@ -430,7 +410,7 @@
             renderProjects();
         }
 
-        // --- NEW PROJECT MODAL LOGIC (✨ ADDED HERE) ---
+        // --- NEW PROJECT MODAL LOGIC ---
         function openProjectModal() {
             document.getElementById('projectModal').style.display = 'flex';
         }
@@ -459,7 +439,7 @@
                 if (res.ok) {
                     alert("Project Created!");
                     closeProjectModal();
-                    fetchProjects(); // Refresh the list
+                    fetchProjects(); 
                 } else {
                     const data = await res.json();
                     alert(data.error || "Failed to create project");
@@ -489,55 +469,54 @@
         }
 
       async function openProject(project) {
-    currentChannel = project;
-    renderProjects();
+        currentChannel = project;
+        renderProjects();
 
-    // 1. Leave old document room
-    if (currentDocument) {
-        socket.emit('leaveDocument', currentDocument);
-        currentDocument = null;
+        // 1. Leave old document room
+        if (currentDocument) {
+            socket.emit('leaveDocument', currentDocument);
+            currentDocument = null;
+        }
+
+        // 2. Wipe the editor UI clean immediately
+        const textarea = document.getElementById('doc-editor');
+        if (textarea) {
+            textarea.value = ""; 
+            textarea.placeholder = "Select a document to start editing...";
+            const newTextarea = textarea.cloneNode(true);
+            textarea.parentNode.replaceChild(newTextarea, textarea);
+        }
+
+        // 3. UI Updates
+        document.getElementById('welcome-screen').style.display = 'none';
+        document.getElementById('view-tabs').style.display = 'flex';
+        document.getElementById('members-sidebar').style.display = 'flex';
+        document.getElementById('header-actions').style.display = 'flex'; 
+        document.getElementById('chat-input-area').style.display = 'block';
+        document.getElementById('task-fab').style.display = 'flex';
+        checkPendingRequests(project);
+
+        switchView('chat');
+        document.getElementById('chat-title').innerText = project.name;
+        
+        const [msgRes, detailRes, docRes] = await Promise.all([
+            fetch(`${API_BASE}/api/projects/${project._id}/messages`, { headers: { 'Authorization': `Bearer ${token}` } }),
+            fetch(`${API_BASE}/api/projects/${project._id}`, { headers: { 'Authorization': `Bearer ${token}` } }),
+            fetch(`${API_BASE}/api/projects/${project._id}/documents`, { headers: { 'Authorization': `Bearer ${token}` } })
+        ]);
+
+        const messages = await msgRes.json();
+        const projectDetails = await detailRes.json();
+        documents = await docRes.json();
+        currentChannel = projectDetails; 
+
+        messagesWrapper.innerHTML = '';
+        messages.forEach(addMessageToUI);
+        renderMembers(projectDetails.members);
+        renderDocuments();
+        loadTasks(project._id);
+        currentChannel = project;
     }
-
-    // ✨ 2. NEW FIX: Wipe the editor UI clean immediately
-    const textarea = document.getElementById('doc-editor');
-    if (textarea) {
-        textarea.value = ""; 
-        textarea.placeholder = "Select a document to start editing...";
-        // Clone to strip old listeners so previous document's events don't fire
-        const newTextarea = textarea.cloneNode(true);
-        textarea.parentNode.replaceChild(newTextarea, textarea);
-    }
-
-    // 3. Continue with existing logic...
-    document.getElementById('welcome-screen').style.display = 'none';
-    document.getElementById('view-tabs').style.display = 'flex';
-    document.getElementById('members-sidebar').style.display = 'flex';
-    document.getElementById('header-actions').style.display = 'flex'; 
-    document.getElementById('chat-input-area').style.display = 'block';
-    document.getElementById('task-fab').style.display = 'flex';
-    checkPendingRequests(project);
-
-    switchView('chat');
-    document.getElementById('chat-title').innerText = project.name;
-    
-    const [msgRes, detailRes, docRes] = await Promise.all([
-        fetch(`${API_BASE}/api/projects/${project._id}/messages`, { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch(`${API_BASE}/api/projects/${project._id}`, { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch(`${API_BASE}/api/projects/${project._id}/documents`, { headers: { 'Authorization': `Bearer ${token}` } })
-    ]);
-
-    const messages = await msgRes.json();
-    const projectDetails = await detailRes.json();
-    documents = await docRes.json();
-    currentChannel = projectDetails; 
-
-    messagesWrapper.innerHTML = '';
-    messages.forEach(addMessageToUI);
-    renderMembers(projectDetails.members);
-    renderDocuments();
-    loadTasks(project._id);
-    currentChannel = project;
-}
 
         // --- VIDEO CALL LOGIC ---
         async function startVideoCall() {
@@ -546,6 +525,21 @@
             
             try {
                 localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                
+                // FORCE CAMERA OFF INITIALLY
+                const videoTrack = localStream.getVideoTracks()[0];
+                if (videoTrack) {
+                    videoTrack.enabled = false; 
+                    isCameraOff = true;         
+                }
+
+                // Turn the UI Button Red
+                const cameraBtn = document.getElementById('camera-btn');
+                if (cameraBtn) {
+                    cameraBtn.classList.add('active-off'); 
+                    cameraBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M16 16v1a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2m5.66 0H14a2 2 0 0 1 2 2v3.34l1 1L23 7v10"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
+                }
+
                 addVideoStream(localStream, 'You', true);
                 socket.emit('join-voice-room', currentChannel._id, currentUserId);
             } catch (err) {
@@ -603,6 +597,14 @@
         // --- WEBRTC SIGNALING ---
         socket.on('user-connected', userId => {
             console.log("New user connected:", userId);
+            
+            // Notify active call
+            const btn = document.querySelector('.start-call-btn');
+            if (btn && document.getElementById('video-call-overlay').style.display === 'none') {
+                btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 7l-7 5 7 5V7z"></path><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg><span>Join Active Call</span>`;
+                btn.style.backgroundColor = '#ef4444';
+            }
+
             const peer = new SimplePeer({ initiator: true, trickl: false, stream: localStream });
             
             peer.on('signal', signal => {
@@ -667,125 +669,105 @@
         }
 
 
-        // --- TASK LOGIC ---
+        // --- TASK LOGIC (FIXED) ---
         function toggleTaskPanel() {
             const panel = document.getElementById('task-panel');
             panel.style.display = panel.style.display === 'flex' ? 'none' : 'flex';
         }
+
         async function loadTasks(projectId) {
-    try {
-        // 1. Fetch Tasks
-        const res = await fetch(`${API_BASE}/api/projects/${projectId}/tasks`, { 
-            headers: { 'Authorization': `Bearer ${token}` } 
-        });
-        const tasks = await res.json();
-        renderTasks(tasks);
-
-        // 2. Populate Dropdown
-        const taskAssignSelect = document.getElementById('task-assign-select');
-        if (taskAssignSelect) {
-            taskAssignSelect.innerHTML = '<option value="">Unassigned</option>';
-
-            if (currentChannel && currentChannel.members) {
-                currentChannel.members.forEach(m => {
-                    // Check if we have a name object or just an ID string
-                    const name = m.name || "Unknown";
-                    const id = m._id || m; 
-                    
-                    const opt = document.createElement('option');
-                    opt.value = id; 
-                    opt.innerText = name;
-                    taskAssignSelect.appendChild(opt);
+            try {
+                // 1. Fetch Tasks
+                const res = await fetch(`${API_BASE}/api/projects/${projectId}/tasks`, { 
+                    headers: { 'Authorization': `Bearer ${token}` } 
                 });
-            }
+                const tasks = await res.json();
+                renderTasks(tasks);
+
+                // 2. Populate Dropdown
+                const taskAssignSelect = document.getElementById('task-assign-select');
+                if (taskAssignSelect) {
+                    taskAssignSelect.innerHTML = '<option value="">Unassigned</option>';
+
+                    if (currentChannel && currentChannel.members) {
+                        currentChannel.members.forEach(m => {
+                            const name = m.name || "Unknown";
+                            const id = m._id || m; 
+                            const opt = document.createElement('option');
+                            opt.value = id; 
+                            opt.innerText = name;
+                            taskAssignSelect.appendChild(opt);
+                        });
+                    }
+                }
+            } catch (e) { console.error("Error loading tasks:", e); }
         }
-    } catch (e) { console.error("Error loading tasks:", e); }
-}
+
         function renderTasks(tasks) {
-    const list = document.getElementById('task-list'); 
-    list.innerHTML = '';
-    
-    if (!tasks || tasks.length === 0) {
-        list.innerHTML = '<div style="padding:15px; color:#666; text-align:center;">No tasks yet.</div>';
-        return;
-    }
+            const list = document.getElementById('task-list'); 
+            list.innerHTML = '';
+            
+            if (!tasks || tasks.length === 0) {
+                list.innerHTML = '<div style="padding:15px; color:#666; text-align:center;">No tasks yet.</div>';
+                return;
+            }
 
-    tasks.forEach(task => {
-        const el = document.createElement('div'); 
-        el.className = `task-item ${task.status === 'completed' ? 'completed' : ''}`;
-        
-        // ✨ Just the simple Blue Name Box
-        let assigneeHtml = '';
-        if (task.assignedTo && task.assignedTo.name) {
-             assigneeHtml = `
-                <div class="task-assignee" style="font-size:0.75rem; background:#e0e7ff; color:#3e399b; padding:2px 8px; border-radius:4px; margin-left:auto; font-weight:500;">
-                    ${task.assignedTo.name}
-                </div>`;
+            tasks.forEach(task => {
+                const el = document.createElement('div'); 
+                el.className = `task-item ${task.status === 'completed' ? 'completed' : ''}`;
+                
+                // ✨ Just the simple Blue Name Box
+                let assigneeHtml = '';
+                if (task.assignedTo && task.assignedTo.name) {
+                     assigneeHtml = `
+                        <div class="task-assignee" style="font-size:0.75rem; background:#e0e7ff; color:#3e399b; padding:2px 8px; border-radius:4px; margin-left:auto; font-weight:500;">
+                            ${task.assignedTo.name}
+                        </div>`;
+                }
+
+                el.innerHTML = `
+                    <input type="checkbox" ${task.status === 'completed' ? 'checked' : ''} onchange="toggleTask('${task._id}', this.checked)">
+                    <span style="flex:1; margin-left:10px;">${task.description}</span>
+                    ${assigneeHtml}
+                    <button onclick="deleteTask('${task._id}')" style="margin-left:10px; border:none; background:none; color:#ef4444; cursor:pointer; font-weight:bold; font-size:18px;">×</button>
+                `;
+                list.appendChild(el);
+            });
         }
-
-        el.innerHTML = `
-            <input type="checkbox" ${task.status === 'completed' ? 'checked' : ''} onchange="toggleTask('${task._id}', this.checked)">
-            <span style="flex:1; margin-left:10px;">${task.description}</span>
-            ${assigneeHtml}
-            <button onclick="deleteTask('${task._id}')" style="margin-left:10px; border:none; background:none; color:#ef4444; cursor:pointer; font-weight:bold; font-size:18px;">×</button>
-        `;
-        list.appendChild(el);
-    });
-}
-    
-    tasks.forEach(task => {
-        const el = document.createElement('div'); 
-        el.className = `task-item ${task.status === 'completed' ? 'completed' : ''}`;
-        
-        // Simple text-only badge
-        let assigneeHtml = '';
-        if (task.assignedTo) {
-             assigneeHtml = `
-                <div class="task-assignee" style="font-size:0.75rem; background:#e0e7ff; color:#3e399b; padding:2px 6px; border-radius:4px; margin-left:auto;">
-                    ${task.assignedTo.name}
-                </div>`;
-        }
-
-        el.innerHTML = `
-            <input type="checkbox" ${task.status === 'completed' ? 'checked' : ''} onchange="toggleTask('${task._id}', this.checked)">
-            <span style="flex:1; margin-left:8px;">${task.description}</span>
-            ${assigneeHtml}
-            <button onclick="deleteTask('${task._id}')" style="margin-left:10px; border:none; background:none; color:red; cursor:pointer; font-weight:bold;">×</button>
-        `;
-        list.appendChild(el);
-    });
 
         async function addTask() {
-    const descInput = document.getElementById('task-desc-input');
-    const assignSelect = document.getElementById('task-assign-select');
-    
-    const description = descInput.value.trim();
-    const assignedTo = assignSelect.value; 
+            const descInput = document.getElementById('task-desc-input');
+            const assignSelect = document.getElementById('task-assign-select');
+            
+            const description = descInput.value.trim();
+            const assignedTo = assignSelect.value; 
 
-    if (!description) return alert("Please enter a task description");
+            if (!description) return alert("Please enter a task description");
 
-    try {
-        const res = await fetch(`${API_BASE}/api/projects/${currentChannel._id}/tasks`, {
-            method: 'POST', 
-            headers: { 
-                'Authorization': `Bearer ${token}`, 
-                'Content-Type': 'application/json' 
-            },
-            body: JSON.stringify({ description, assignedTo })
-        });
+            try {
+                const res = await fetch(`${API_BASE}/api/projects/${currentChannel._id}/tasks`, {
+                    method: 'POST', 
+                    headers: { 
+                        'Authorization': `Bearer ${token}`, 
+                        'Content-Type': 'application/json' 
+                    },
+                    body: JSON.stringify({ description, assignedTo })
+                });
 
-        if (res.ok) {
-            descInput.value = ''; // Clear input
-            loadTasks(currentChannel._id); // Refresh list
-        } else {
-            alert("Failed to add task");
+                if (res.ok) {
+                    descInput.value = ''; 
+                    loadTasks(currentChannel._id); 
+                } else {
+                    alert("Failed to add task");
+                }
+            } catch (e) { console.error(e); }
         }
-    } catch (e) { console.error(e); }
-}
+
         async function toggleTask(taskId, isDone) {
             await fetch(`${API_BASE}/api/tasks/${taskId}`, { method: 'PUT', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ status: isDone ? 'completed' : 'pending' }) });
             loadTasks(currentChannel._id);
         }
+        
         async function deleteTask(taskId) {
             if(confirm('Delete task?')) { await fetch(`${API_BASE}/api/tasks/${taskId}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } }); loadTasks(currentChannel._id); }
         }
@@ -802,9 +784,8 @@
              membersList.innerHTML = '';
              members.forEach(member => {
                 const item = document.createElement('div'); item.className = 'member-item';
-                const img = member.profile_picture_url || 'https://via.placeholder.com/32';
-                // Just the name, simple and clean
-item.innerHTML = `<span style="padding: 10px; font-weight: 500;">${member.name}</span>`;
+                // Just the name, simple and clean (No Profile Pic)
+                item.innerHTML = `<span style="padding: 10px; font-weight: 500;">${member.name}</span>`;
                 membersList.appendChild(item);
              });
         }
@@ -827,6 +808,7 @@ item.innerHTML = `<span style="padding: 10px; font-weight: 500;">${member.name}<
                 channels = channels.filter(p => p._id !== projectId); renderProjects();
             }
         }
+        
         // Documents
         document.getElementById('add-doc-btn').onclick = () => { document.getElementById('new-doc-container').style.display = 'block'; };
         document.getElementById('new-doc-input').addEventListener('keypress', async (e) => {
@@ -836,220 +818,157 @@ item.innerHTML = `<span style="padding: 10px; font-weight: 500;">${member.name}<
             }
         });
         function renderDocuments() {
-    const list = document.getElementById('doc-list'); 
-    list.innerHTML = '';
-    
-    documents.forEach(doc => {
-         const d = document.createElement('div'); 
-         d.className = 'doc-item'; 
-         d.innerText = doc.title;
-         
-         d.onclick = async () => {
-             // ✨ FIX 2: Leave the OLD document room before joining the new one
-             if (currentDocument) {
-                 socket.emit('leaveDocument', currentDocument);
-             }
+            const list = document.getElementById('doc-list'); 
+            list.innerHTML = '';
+            
+            documents.forEach(doc => {
+                 const d = document.createElement('div'); 
+                 d.className = 'doc-item'; 
+                 d.innerText = doc.title;
+                 
+                 d.onclick = async () => {
+                     // Leave old document room
+                     if (currentDocument) {
+                         socket.emit('leaveDocument', currentDocument);
+                     }
 
-             // UI Updates
-             document.querySelectorAll('.doc-item').forEach(i => i.style.background = '');
-             d.style.background = '#e0e7ff';
+                     // UI Updates
+                     document.querySelectorAll('.doc-item').forEach(i => i.style.background = '');
+                     d.style.background = '#e0e7ff';
 
-             // Fetch Content
-             const res = await fetch(`${API_BASE}/api/documents/${doc._id}`, { 
-                 headers: { 'Authorization': `Bearer ${token}` } 
-             });
-             const data = await res.json();
-             
-             // Update Editor
-             const textarea = document.getElementById('doc-editor');
-             textarea.value = data.content;
-             
-             // Update Current ID & Join New Room
-             currentDocument = doc._id; 
-             socket.emit('joinDocument', doc._id);
+                     // Fetch Content
+                     const res = await fetch(`${API_BASE}/api/documents/${doc._id}`, { 
+                         headers: { 'Authorization': `Bearer ${token}` } 
+                     });
+                     const data = await res.json();
+                     
+                     // Update Editor
+                     const textarea = document.getElementById('doc-editor');
+                     textarea.value = data.content;
+                     
+                     // Update Current ID & Join New Room
+                     currentDocument = doc._id; 
+                     socket.emit('joinDocument', doc._id);
 
-             // Reset Listeners (Prevent duplicates)
-             const newTextarea = textarea.cloneNode(true);
-             textarea.parentNode.replaceChild(newTextarea, textarea);
-             
-             // Re-attach typing listener
-             newTextarea.addEventListener('input', (e) => {
-                 socket.emit('documentUpdate', { 
-                     documentId: currentDocument, 
-                     content: e.target.value 
-                 });
-             });
+                     // Reset Listeners (Prevent duplicates)
+                     const newTextarea = textarea.cloneNode(true);
+                     textarea.parentNode.replaceChild(newTextarea, textarea);
+                     
+                     // Re-attach typing listener
+                     newTextarea.addEventListener('input', (e) => {
+                         socket.emit('documentUpdate', { 
+                             documentId: currentDocument, 
+                             content: e.target.value 
+                         });
+                     });
 
-             // Listen for changes
-             socket.off('documentChange');
-             socket.on('documentChange', (newContent) => {
-                 if (newTextarea.value !== newContent) {
-                     newTextarea.value = newContent;
-                 }
-             });
-         };
-         list.appendChild(d);
-    });
-}
-        // Invite/Logout
+                     // Listen for changes
+                     socket.off('documentChange');
+                     socket.on('documentChange', (newContent) => {
+                         if (newTextarea.value !== newContent) {
+                             newTextarea.value = newContent;
+                         }
+                     });
+                 };
+                 list.appendChild(d);
+            });
+        }
+        
+        // Invite/Logout/Join
         function showInviteModal() { document.getElementById('invite-link-input').value = `${window.location.origin}${window.location.pathname}?invite=${currentChannel.inviteCode}`; document.getElementById('invite-modal-overlay').style.display = 'flex'; }
         function hideInviteModal() { document.getElementById('invite-modal-overlay').style.display = 'none'; }
         function copyInviteLink() { document.getElementById('invite-link-input').select(); document.execCommand('copy'); }
         function logoutUser() { localStorage.clear(); window.location.href = "index.html"; }
-        // --- PASTE THIS AT THE BOTTOM OF YOUR SCRIPT SECTION ---
 
-async function startVideoCall() {
-    if (!currentChannel) return;
-    document.getElementById('video-call-overlay').style.display = 'flex';
-    
-    try {
-        // 1. Get permissions for both Audio & Video
-        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        async function joinProjectWithCode(code) {
+            if (!confirm("Do you want to request to join this project?")) return;
 
-        // 2. FORCE CAMERA OFF INITIALLY
-        const videoTrack = localStream.getVideoTracks()[0];
-        if (videoTrack) {
-            videoTrack.enabled = false; 
-            isCameraOff = true;         
+            try {
+                const res = await fetch(`${API_BASE}/api/request-join`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}` 
+                    },
+                    body: JSON.stringify({ inviteCode: code })
+                });
+                
+                const data = await res.json();
+                alert(data.message || data.error);
+                
+                // Clear the URL invite param so it doesn't ask again on refresh
+                window.history.replaceState({}, document.title, window.location.pathname);
+            } catch (e) {
+                console.error(e);
+                alert("Error sending request");
+            }
         }
 
-        // 3. Turn the UI Button Red
-        const cameraBtn = document.getElementById('camera-btn');
-        if (cameraBtn) {
-            cameraBtn.classList.add('active-off'); 
-            cameraBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M16 16v1a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2m5.66 0H14a2 2 0 0 1 2 2v3.34l1 1L23 7v10"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
-        }
-
-        // 4. Add my own stream to the grid
-        addVideoStream(localStream, 'You', true);
-
-        // 5. Connect to the room
-        socket.emit('join-voice-room', currentChannel._id, currentUserId);
-
-    } catch (err) {
-        console.error(err);
-        alert("Could not access microphone/camera. Please allow permissions.");
-        leaveVideoCall();
-    }
-}
-// --- PASTE THIS AT THE BOTTOM OF YOUR SCRIPT TAG ---
-
-async function joinProjectWithCode(code) {
-    if (!confirm("Do you want to request to join this project?")) return;
-
-    try {
-        const res = await fetch(`${API_BASE}/api/request-join`, {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}` 
-            },
-            body: JSON.stringify({ inviteCode: code })
+        // --- ADMIN NOTIFICATION LOGIC ---
+        socket.on('new-join-request', data => {
+            if (currentChannel && currentChannel._id === data.projectId) {
+                checkPendingRequests(currentChannel);
+            }
+            alert(`🔔 New Request: ${data.requesterName} wants to join project "${data.projectName}"`);
         });
-        
-        const data = await res.json();
-        alert(data.message || data.error);
-        
-        // Clear the URL invite param so it doesn't ask again on refresh
-        window.history.replaceState({}, document.title, window.location.pathname);
-    } catch (e) {
-        console.error(e);
-        alert("Error sending request");
-    }
-}
-// --- ADMIN NOTIFICATION LOGIC ---
 
-// 1. Listen for new requests (Real-time)
-socket.on('new-join-request', data => {
-    alert(`🔔 ${data.requesterName} wants to join ${data.projectName}!`);
-    fetchProjects(); // Reload sidebar to potentially show the notification icon
-});
-
-// 2. Listen for MY request being approved
-socket.on('request-approved', data => {
-    alert(`🎉 You have been approved for ${data.projectName}!`);
-    fetchProjects(); // Reload sidebar so the new project appears
-});
-
-// 3. Logic to show Pending Requests in the Sidebar
-// (Call this inside your existing openProject function)
-async function checkPendingRequests(project) {
-    const adminArea = document.getElementById('admin-notifications');
-    const requestList = document.getElementById('request-list');
-    
-    // Only show if I am the creator
-    if (project.creator !== currentUserId) {
-        adminArea.style.display = 'none';
-        return;
-    }
-
-    // Fetch latest project data to get requests
-    const res = await fetch(`${API_BASE}/api/projects/${project._id}`, { headers: { 'Authorization': `Bearer ${token}` } });
-    const data = await res.json();
-
-    if (data.pendingRequests && data.pendingRequests.length > 0) {
-        adminArea.style.display = 'block';
-        requestList.innerHTML = '';
-        
-        data.pendingRequests.forEach(req => {
-            const div = document.createElement('div');
-            div.style.marginTop = '5px';
-            div.innerHTML = `
-                <span>${req.name}</span>
-                <div style="display:flex; gap:5px; margin-top:3px;">
-                    <button onclick="handleJoinRequest('${project._id}', '${req.user}', 'approve')" style="background:green; color:white; border:none; border-radius:3px; cursor:pointer;">✓</button>
-                    <button onclick="handleJoinRequest('${project._id}', '${req.user}', 'reject')" style="background:red; color:white; border:none; border-radius:3px; cursor:pointer;">✗</button>
-                </div>
-            `;
-            requestList.appendChild(div);
+        socket.on('request-approved', data => {
+            alert(`🎉 You have been approved to join "${data.projectName}".`);
+            fetchProjects(); 
         });
-    } else {
-        adminArea.style.display = 'none';
-    }
-}
 
-// 4. Function to Approve/Deny
-async function handleJoinRequest(projectId, userIdToApprove, action) {
-    await fetch(`${API_BASE}/api/handle-request`, {
-        method: 'POST',
-        headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}` 
-        },
-        body: JSON.stringify({ projectId, userIdToApprove, action })
-    });
-    
-    // Reload UI
-    if (currentChannel && currentChannel._id === projectId) {
-        checkPendingRequests(currentChannel);
-        // If approved, refresh member list
-        if (action === 'approve') {
-             const res = await fetch(`${API_BASE}/api/projects/${projectId}`, { headers: { 'Authorization': `Bearer ${token}` } });
-             const data = await res.json();
-             renderMembers(data.members);
+        async function checkPendingRequests(project) {
+            const adminArea = document.getElementById('admin-notifications');
+            const requestList = document.getElementById('request-list');
+            
+            if (project.creator !== currentUserId) {
+                adminArea.style.display = 'none';
+                return;
+            }
+
+            const res = await fetch(`${API_BASE}/api/projects/${project._id}`, { headers: { 'Authorization': `Bearer ${token}` } });
+            const data = await res.json();
+
+            if (data.pendingRequests && data.pendingRequests.length > 0) {
+                adminArea.style.display = 'block';
+                requestList.innerHTML = '';
+                
+                data.pendingRequests.forEach(req => {
+                    const div = document.createElement('div');
+                    div.style.marginTop = '5px';
+                    div.innerHTML = `
+                        <span>${req.name}</span>
+                        <div style="display:flex; gap:5px; margin-top:3px;">
+                            <button onclick="handleJoinRequest('${project._id}', '${req.user}', 'approve')" style="background:green; color:white; border:none; border-radius:3px; cursor:pointer;">✓</button>
+                            <button onclick="handleJoinRequest('${project._id}', '${req.user}', 'reject')" style="background:red; color:white; border:none; border-radius:3px; cursor:pointer;">✗</button>
+                        </div>
+                    `;
+                    requestList.appendChild(div);
+                });
+            } else {
+                adminArea.style.display = 'none';
+            }
         }
-    }
-}
-// --- PASTE THIS AT THE BOTTOM OF YOUR SCRIPT TAG ---
 
-// 1. LISTEN FOR NEW REQUESTS (Real-time Notification)
-socket.on('new-join-request', (data) => {
-    // Check if I am currently looking at this project
-    if (currentChannel && currentChannel._id === data.projectId) {
-        // Refresh the sidebar to show the "Approve" buttons
-        checkPendingRequests(currentChannel);
-    }
-    
-    // Show a popup alert no matter where I am
-    alert(`🔔 New Request: ${data.requesterName} wants to join project "${data.projectName}"`);
-});
-
-// 2. LISTEN FOR APPROVAL (Notify the person who asked)
-socket.on('request-approved', (data) => {
-    alert(`🎉 Good news! You have been approved to join "${data.projectName}".`);
-    // Refresh the project list so the new project appears in the sidebar
-    fetchProjects(); 
-});
+        async function handleJoinRequest(projectId, userIdToApprove, action) {
+            await fetch(`${API_BASE}/api/handle-request`, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}` 
+                },
+                body: JSON.stringify({ projectId, userIdToApprove, action })
+            });
+            
+            if (currentChannel && currentChannel._id === projectId) {
+                checkPendingRequests(currentChannel);
+                if (action === 'approve') {
+                     const res = await fetch(`${API_BASE}/api/projects/${projectId}`, { headers: { 'Authorization': `Bearer ${token}` } });
+                     const data = await res.json();
+                     renderMembers(data.members);
+                }
+            }
+        }
     </script>
 </body>
 </html>

@@ -42,19 +42,18 @@ mongoose.connect(process.env.MONGO_URI, {})
 // ==========================================
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || 'smtp-relay.brevo.com',
-  port: Number(process.env.SMTP_PORT) || 2525, // Port 2525 often works on hosts
-  secure: process.env.SMTP_PORT === '465',     // true for 465, false otherwise
+  port: Number(process.env.SMTP_PORT) || 2525,
+  secure: process.env.SMTP_PORT === '465', 
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS
   },
-  family: 4,            // FORCE IPv4
+  family: 4, 
   connectionTimeout: 10000,
   logger: true,
   debug: true
 });
 
-// Verify transporter at startup so errors surface immediately in logs
 transporter.verify()
   .then(() => console.log('✅ Mailer connected and ready'))
   .catch(err => console.error('❌ Mailer verify failed on startup:', err));
@@ -72,14 +71,13 @@ async function sendOtpEmail(to, name, code) {
   `;
   try {
     const info = await transporter.sendMail({
-      from: `InnovUnity <bhavya110105@gmail.com>`,
+      from: `"InnovUnity" <bhavya110105@gmail.com>`,
       to,
       subject: 'Your InnovUnity verification code',
       html
     });
-    console.log(`✅ Email sent to ${to}`, info && info.messageId ? `messageId=${info.messageId}` : '');
+    console.log(`✅ Email sent to ${to}`);
   } catch (e) {
-    // log full error object to surface SMTP/Brevo reasons
     console.error("❌ Email failed:", e);
   }
 }
@@ -103,7 +101,6 @@ const ProjectSchema = new mongoose.Schema({
     name: { type: String, required: true },
     creator: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     members: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-    // ✨ NEW: Store users waiting for approval
     pendingRequests: [{ 
         user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
         name: String,
@@ -166,7 +163,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 // ==========================================
-// 3. AUTH ROUTES (With Email Verification)
+// 3. AUTH ROUTES
 // ==========================================
 
 // REGISTER
@@ -180,11 +177,9 @@ app.post('/register', async (req, res) => {
         
         if (existing) {
             if (!existing.verified) {
-                // Resend code if unverified
                 const code = genOtp();
                 existing.verificationCodeHash = await bcrypt.hash(code, 10);
                 existing.verificationCodeExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
-                // NOTE: keeping existing password handling — update if you want reset flow
                 existing.passwordHash = await bcrypt.hash(password, 10);
                 await existing.save();
                 await sendOtpEmail(existing.email, existing.name, code);
@@ -201,7 +196,7 @@ app.post('/register', async (req, res) => {
             name,
             email: normalizedEmail,
             passwordHash,
-            verified: false, // Enforce verification
+            verified: false, 
             verificationCodeHash: codeHash,
             verificationCodeExpiresAt: new Date(Date.now() + 10 * 60 * 1000)
         });
@@ -227,7 +222,6 @@ app.post('/verify', async (req, res) => {
         if (!user) return res.status(400).json({ error: 'User not found' });
         if (user.verified) return res.json({ message: 'Already verified' });
 
-        // safer expiry check
         if (!user.verificationCodeExpiresAt || new Date() > new Date(user.verificationCodeExpiresAt)) {
             return res.status(400).json({ error: 'Code expired or not found. Please request a new one.' });
         }
@@ -258,9 +252,7 @@ app.post('/login', async (req, res) => {
         const isMatch = await bcrypt.compare(password, user.passwordHash);
         if (!isMatch) return res.status(400).json({ error: 'Invalid credentials' });
 
-        if (!user.verified) {
-            return res.status(400).json({ error: 'Please verify your email first.' });
-        }
+        if (!user.verified) return res.status(400).json({ error: 'Please verify your email first.' });
 
         const token = jwt.sign({ id: user._id, name: user.name }, process.env.JWT_SECRET || 'secret', { expiresIn: '7d' });
         res.json({ 
@@ -276,7 +268,7 @@ app.post('/login', async (req, res) => {
     }
 });
 
-// RESEND CODE (with cooldown)
+// RESEND CODE
 app.post('/resend-code', async (req, res) => {
     try {
         const { email } = req.body;
@@ -285,15 +277,6 @@ app.post('/resend-code', async (req, res) => {
         const user = await User.findOne({ email: email.toLowerCase().trim() });
         if (!user) return res.status(400).json({ error: 'User not found' });
         if (user.verified) return res.status(400).json({ error: 'Already verified' });
-
-        const COOLDOWN_MS = 60 * 1000; // 1 minute
-        let lastIssuedAt = 0;
-        if (user.verificationCodeExpiresAt) {
-          lastIssuedAt = new Date(user.verificationCodeExpiresAt).getTime() - (10 * 60 * 1000);
-        }
-        if (Date.now() - lastIssuedAt < COOLDOWN_MS) {
-          return res.status(429).json({ error: 'Please wait before requesting another code' });
-        }
 
         const code = genOtp();
         user.verificationCodeHash = await bcrypt.hash(code, 10);
@@ -309,7 +292,7 @@ app.post('/resend-code', async (req, res) => {
 });
 
 // ==========================================
-// 4. API ROUTES (Projects, Tasks, Docs)
+// 4. API ROUTES
 // ==========================================
 const apiRouter = express.Router();
 app.use('/api', apiRouter);
@@ -333,16 +316,6 @@ apiRouter.put('/profile', authMiddleware, async (req, res) => {
         res.json({ message: 'Profile updated' });
     } catch (err) { res.status(500).json({ error: 'Server error' }); }
 });
-apiRouter.post('/profile/picture', authMiddleware, upload.single('profilePicture'), async (req, res) => {
-    try {
-        if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-        const user = await User.findById(req.user.id);
-        user.profile_picture_url = req.file.path;
-        await user.save();
-        const fullUrl = `${req.protocol}://${req.get('host')}/${req.file.path.replace(/\\/g, "/")}`;
-        res.json({ message: 'Profile picture updated', url: fullUrl });
-    } catch (err) { res.status(500).json({ error: 'Server error' }); }
-});
 
 // Projects
 apiRouter.get('/projects', authMiddleware, async (req, res) => {
@@ -362,17 +335,16 @@ apiRouter.post('/projects', authMiddleware, async (req, res) => {
         res.status(201).json(newProject);
     } catch (err) { res.status(500).json({ error: 'Server error' }); }
 });
-// GET Single Project (with populated members)
-// GET Single Project (Populates members for the dropdown)
+
+// GET Single Project (Populate members so dropdown names work)
 apiRouter.get('/projects/:projectId', authMiddleware, async (req, res) => {
     try {
         const project = await Project.findById(req.params.projectId)
             .populate('creator', 'name email') 
-            .populate('members', 'name email'); // ✅ This ensures names show up in the "Assign To" list
+            .populate('members', 'name email'); // ✅ Populates names for dropdown
 
         if (!project) return res.status(404).json({ error: 'Project not found' });
         
-        // Security Check
         const isMember = project.members.some(m => m._id.toString() === req.user.id);
         const isCreator = project.creator._id.toString() === req.user.id;
         
@@ -382,89 +354,6 @@ apiRouter.get('/projects/:projectId', authMiddleware, async (req, res) => {
     } catch (err) {
         res.status(500).json({ error: 'Server error' });
     }
-});
-apiRouter.post('/join', authMiddleware, async (req, res) => {
-    try {
-        const { inviteCode } = req.body;
-        const project = await Project.findOne({ inviteCode });
-        if (!project) return res.status(404).json({ error: 'Invalid code' });
-        if (!project.members.includes(req.user.id)) {
-            project.members.push(req.user.id);
-            await project.save();
-            io.to(project._id.toString()).emit('userJoined', { 
-                projectId: project._id.toString(), 
-                newUser: { _id: req.user.id, name: req.user.name }
-            });
-        }
-        res.json({ message: 'Joined', project });
-    } catch (err) { res.status(500).json({ error: 'Server error' }); }
-});
-// 1. REQUEST TO JOIN (User clicks invite link)
-apiRouter.post('/request-join', authMiddleware, async (req, res) => {
-    try {
-        const { inviteCode } = req.body;
-        const project = await Project.findOne({ inviteCode });
-        
-        if (!project) return res.status(404).json({ error: 'Invalid invite link' });
-        if (project.members.includes(req.user.id)) return res.status(400).json({ error: 'You are already a member' });
-
-        // Check if already requested
-        const alreadyRequested = project.pendingRequests.some(r => r.user.toString() === req.user.id);
-        if (alreadyRequested) return res.json({ message: 'Request already sent. Please wait for approval.' });
-
-        // Add to pending list
-        project.pendingRequests.push({ 
-            user: req.user.id, 
-            name: req.user.name, 
-            email: req.user.email 
-        });
-        await project.save();
-
-        // Notify Creator via Socket (Real-time!)
-        io.to(project.creator.toString()).emit('new-join-request', {
-            projectId: project._id,
-            projectName: project.name,
-            requesterName: req.user.name
-        });
-
-        res.json({ message: 'Request sent! Waiting for admin approval.' });
-
-    } catch (err) { res.status(500).json({ error: 'Server error' }); }
-});
-
-// 2. APPROVE/DENY REQUEST (Creator clicks button)
-apiRouter.post('/handle-request', authMiddleware, async (req, res) => {
-    try {
-        const { projectId, userIdToApprove, action } = req.body; // action = 'approve' or 'reject'
-        const project = await Project.findById(projectId);
-
-        if (!project) return res.status(404).json({ error: 'Project not found' });
-        if (project.creator.toString() !== req.user.id) return res.status(403).json({ error: 'Only the creator can approve members' });
-
-        // Remove from pending
-        project.pendingRequests = project.pendingRequests.filter(r => r.user.toString() !== userIdToApprove);
-
-        if (action === 'approve') {
-            if (!project.members.includes(userIdToApprove)) {
-                project.members.push(userIdToApprove);
-                
-                // Notify the new member they got in!
-                io.to(userIdToApprove).emit('request-approved', { 
-                    projectId: project._id, 
-                    projectName: project.name 
-                });
-            }
-        }
-
-        await project.save();
-        
-        // Refresh the member list for everyone in the project
-        const updatedProject = await Project.findById(projectId).populate('members', 'name profile_picture_url');
-        io.to(projectId).emit('member-updated', updatedProject.members);
-
-        res.json({ message: `User ${action}d` });
-
-    } catch (err) { res.status(500).json({ error: 'Server error' }); }
 });
 apiRouter.delete('/projects/:projectId', authMiddleware, async (req, res) => {
     try {
@@ -476,6 +365,58 @@ apiRouter.delete('/projects/:projectId', authMiddleware, async (req, res) => {
         await Task.deleteMany({ projectId: req.params.projectId });
         await Project.findByIdAndDelete(req.params.projectId);
         res.json({ message: 'Deleted' });
+    } catch (err) { res.status(500).json({ error: 'Server error' }); }
+});
+
+// Join & Requests
+apiRouter.post('/request-join', authMiddleware, async (req, res) => {
+    try {
+        const { inviteCode } = req.body;
+        const project = await Project.findOne({ inviteCode });
+        
+        if (!project) return res.status(404).json({ error: 'Invalid invite link' });
+        if (project.members.includes(req.user.id)) return res.status(400).json({ error: 'You are already a member' });
+
+        const alreadyRequested = project.pendingRequests.some(r => r.user.toString() === req.user.id);
+        if (alreadyRequested) return res.json({ message: 'Request already sent. Please wait for approval.' });
+
+        project.pendingRequests.push({ 
+            user: req.user.id, name: req.user.name, email: req.user.email 
+        });
+        await project.save();
+
+        io.to(project.creator.toString()).emit('new-join-request', {
+            projectId: project._id, projectName: project.name, requesterName: req.user.name
+        });
+
+        res.json({ message: 'Request sent! Waiting for admin approval.' });
+
+    } catch (err) { res.status(500).json({ error: 'Server error' }); }
+});
+apiRouter.post('/handle-request', authMiddleware, async (req, res) => {
+    try {
+        const { projectId, userIdToApprove, action } = req.body;
+        const project = await Project.findById(projectId);
+
+        if (!project) return res.status(404).json({ error: 'Project not found' });
+        if (project.creator.toString() !== req.user.id) return res.status(403).json({ error: 'Only the creator can approve members' });
+
+        project.pendingRequests = project.pendingRequests.filter(r => r.user.toString() !== userIdToApprove);
+
+        if (action === 'approve') {
+            if (!project.members.includes(userIdToApprove)) {
+                project.members.push(userIdToApprove);
+                io.to(userIdToApprove).emit('request-approved', { 
+                    projectId: project._id, projectName: project.name 
+                });
+            }
+        }
+        await project.save();
+        
+        const updatedProject = await Project.findById(projectId).populate('members', 'name profile_picture_url');
+        io.to(projectId).emit('member-updated', updatedProject.members);
+
+        res.json({ message: `User ${action}d` });
     } catch (err) { res.status(500).json({ error: 'Server error' }); }
 });
 
@@ -509,19 +450,21 @@ apiRouter.get('/documents/:documentId', authMiddleware, async (req, res) => {
     } catch (err) { res.status(500).json({ error: 'Server error' }); }
 });
 
-// Tasks
-// GET Project Tasks (Populate assignee so name shows up)
-// GET Tasks
+// --- TASKS (Fixing the Logic) ---
+
+// GET Tasks (Populates names for the blue badge)
 apiRouter.get('/projects/:projectId/tasks', authMiddleware, async (req, res) => {
     try {
-        const tasks = await Task.find({ project: req.params.projectId })
-            .populate('assignedTo', 'name email'); // ✅ This ensures the blue box says "Bhavya"
+        // Find tasks where projectId matches
+        const tasks = await Task.find({ projectId: req.params.projectId }) // NOTE: Schema uses projectId, not project
+            .populate('assignedTo', 'name email'); // ✅ Populates Name for Blue Box
         res.json(tasks);
     } catch (err) {
+        console.error(err);
         res.status(500).json({ error: 'Server error' });
     }
 });
-// CREATE Task
+
 // CREATE Task
 apiRouter.post('/projects/:projectId/tasks', authMiddleware, async (req, res) => {
     try {
@@ -529,8 +472,9 @@ apiRouter.post('/projects/:projectId/tasks', authMiddleware, async (req, res) =>
         
         const taskData = {
             description,
-            project: req.params.projectId,
-            status: 'pending'
+            projectId: req.params.projectId, // NOTE: Schema uses projectId
+            status: 'pending',
+            createdBy: req.user.id
         };
 
         // Only add assignedTo if it is a real ID
@@ -540,7 +484,7 @@ apiRouter.post('/projects/:projectId/tasks', authMiddleware, async (req, res) =>
 
         const task = await Task.create(taskData);
         
-        // Populate immediately so the name shows up instantly
+        // Populate immediately so the UI updates
         const populatedTask = await Task.findById(task._id).populate('assignedTo', 'name');
         
         res.json(populatedTask);
@@ -549,6 +493,7 @@ apiRouter.post('/projects/:projectId/tasks', authMiddleware, async (req, res) =>
         res.status(500).json({ error: 'Server error' });
     }
 });
+
 apiRouter.put('/tasks/:taskId', authMiddleware, async (req, res) => {
     try {
         const task = await Task.findByIdAndUpdate(req.params.taskId, { status: req.body.status }, { new: true });
@@ -563,7 +508,7 @@ apiRouter.delete('/tasks/:taskId', authMiddleware, async (req, res) => {
 });
 
 // ==========================================
-// 5. SOCKET.IO (Chat, Video, Docs)
+// 5. SOCKET.IO
 // ==========================================
 io.on('connection', (socket) => {
     console.log('User connected:', socket.id);
@@ -573,12 +518,8 @@ io.on('connection', (socket) => {
         const userProjects = await Project.find({ members: userId });
         userProjects.forEach(p => socket.join(p._id.toString()));
     });
-    // Alternative naming (compatibility)
-    socket.on('join-project', (projectId) => {
-        socket.join(projectId);
-    });
     
-    // Chat (Support both casing styles for compatibility)
+    // Chat
     socket.on('sendMessage', async (data) => {
         try {
             const { projectId, text, authorName, userId } = data;
@@ -587,18 +528,6 @@ io.on('connection', (socket) => {
             await message.save();
             io.to(projectId).emit('receiveMessage', message);
         } catch (e) { console.error('sendMessage error', e); }
-    });
-    socket.on('send-message', async (data) => {
-        try {
-            const { projectId, sender, text, fileUrl, fileType, fileName } = data;
-            io.to(projectId).emit('receive-message', {
-                sender, text, fileUrl, fileType, fileName, timestamp: new Date()
-            });
-            // Optional save for this style
-            try {
-                 await new Message({ projectId, sender, text, fileUrl, fileType, fileName }).save();
-            } catch(e) {}
-        } catch(e) {}
     });
 
     // Documents
@@ -611,13 +540,10 @@ io.on('connection', (socket) => {
         } catch(e) { console.error('documentUpdate error', e); }
     });
 
-    // WebRTC Signaling (Video)
+    // WebRTC (Video)
     socket.on('join-voice-room', (roomId, userId) => {
         socket.join(roomId);
         socket.to(roomId).emit('user-connected', userId);
-        socket.on('disconnect', () => {
-            socket.to(roomId).emit('user-disconnected', userId);
-        });
     });
     socket.on('leave-voice-room', (roomId, userId) => {
         socket.leave(roomId);
@@ -630,38 +556,7 @@ io.on('connection', (socket) => {
         });
     });
 
-    socket.on('disconnect', () => {
-        console.log('User disconnected:', socket.id);
-    });
-});
-
-// ==========================================
-// Debug endpoints (useful for Render logs)
-// ==========================================
-app.get('/_debug/email-verify', async (req, res) => {
-  try {
-    await transporter.verify();
-    return res.json({ ok: true, msg: 'Transporter OK' });
-  } catch (err) {
-    console.error('Transport verify failed:', err);
-    return res.status(500).json({ ok: false, error: err.message || err });
-  }
-});
-
-app.get('/_debug/email-send', async (req, res) => {
-  const to = req.query.to || process.env.SMTP_USER;
-  try {
-    const info = await transporter.sendMail({
-      from: `InnovUnity <${process.env.SMTP_USER}>`,
-      to,
-      subject: 'InnovUnity test',
-      text: 'Test email from InnovUnity'
-    });
-    return res.json({ ok: true, info });
-  } catch (err) {
-    console.error('Debug sendMail error:', err);
-    return res.status(500).json({ ok: false, error: err.message || err });
-  }
+    socket.on('disconnect', () => { /* Handle disconnect */ });
 });
 
 // ==========================================
