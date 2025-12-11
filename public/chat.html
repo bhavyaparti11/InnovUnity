@@ -452,21 +452,32 @@
 
         // --- PROJECT RENDERING ---
         function renderProjects() {
-            channelList.innerHTML = '';
-            channels.forEach(project => {
-                const item = document.createElement('div');
-                item.className = `channel-item ${currentChannel && currentChannel._id === project._id ? 'active' : ''}`;
-                
-                let deleteHtml = project.creator === currentUserId ? 
-                    `<button class="delete-project-btn" onclick="deleteProject('${project._id}', event)">×</button>` : '';
+    channelList.innerHTML = '';
+    channels.forEach(project => {
+        const item = document.createElement('div');
+        item.className = `channel-item ${currentChannel && currentChannel._id === project._id ? 'active' : ''}`;
+        
+        let actionBtn = '';
 
-                item.innerHTML = `<span class="channel-icon">#</span><span class="channel-name">${project.name}</span>${deleteHtml}`;
-                item.addEventListener('click', (e) => {
-                    if (!e.target.classList.contains('delete-project-btn')) openProject(project);
-                });
-                channelList.appendChild(item);
-            });
+        // LOGIC: 
+        // If I am Creator -> Show Delete (×)
+        // If I am Member  -> Show Leave (➜)
+        if (project.creator === currentUserId) {
+            actionBtn = `<button class="delete-project-btn" onclick="deleteProject('${project._id}', event)" title="Delete Project">×</button>`;
+        } else {
+            actionBtn = `<button class="delete-project-btn" onclick="leaveProject('${project._id}', event)" title="Leave Project" style="color:orange;">➜</button>`;
         }
+
+        item.innerHTML = `<span class="channel-icon">#</span><span class="channel-name">${project.name}</span>${actionBtn}`;
+        
+        item.addEventListener('click', (e) => {
+            // Only open if we didn't click the button
+            if (e.target.tagName !== 'BUTTON') openProject(project);
+        });
+        
+        channelList.appendChild(item);
+    });
+}
 
       async function openProject(project) {
         
@@ -793,23 +804,43 @@ async function loadTasks(projectId) {
     const membersList = document.getElementById('members-list');
     membersList.innerHTML = '';
     
+    // Check if I am the admin of this project
+    const iAmCreator = currentChannel && currentChannel.creator === currentUserId;
+
     if (!members) return;
 
     members.forEach(member => {
         const item = document.createElement('div'); 
         item.className = 'member-item';
         
-        // Handle data safely
+        // Handle name data safely
         const name = member.name || "Unknown";
         const id = member._id || member;
 
-        // ✨ TRICK: Store the ID inside the HTML element so we can find it later
+        // Metadata for dropdowns
         item.setAttribute('data-user-id', id); 
         item.setAttribute('data-user-name', name);
 
-        // Render the name text
-        item.innerHTML = `<span style="padding: 10px; font-weight: 500;">${name}</span>`;
+        // Build HTML
+        let html = `<span style="padding: 10px; font-weight: 500;">${name}</span>`;
+
+        // ✨ KICK BUTTON LOGIC:
+        // Show button ONLY if: I am Creator AND This member is not me
+        if (iAmCreator && id !== currentUserId) {
+            html += `
+            <button onclick="kickMember('${id}')" 
+                    style="margin-left:auto; background:none; border:none; color:#ef4444; cursor:pointer; font-weight:bold; font-size:18px; padding:0 10px;" 
+                    title="Remove Member">
+                ×
+            </button>`;
+        }
         
+        // Layout tweak to keep button on the right
+        item.style.display = "flex";
+        item.style.justifyContent = "space-between";
+        item.style.alignItems = "center";
+        
+        item.innerHTML = html;
         membersList.appendChild(item);
     });
 }
@@ -993,6 +1024,84 @@ async function loadTasks(projectId) {
                 }
             }
         }
+        // --- LEAVE & KICK LOGIC ---
+
+// 1. Leave Project Function
+async function leaveProject(projectId, event) {
+    if (event) event.stopPropagation(); // Stop click from opening the project
+    
+    if (!confirm("Are you sure you want to LEAVE this project?")) return;
+
+    try {
+        const res = await fetch(`${API_BASE}/api/projects/${projectId}/leave`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (res.ok) {
+            // Remove from my list and refresh
+            channels = channels.filter(p => p._id !== projectId);
+            renderProjects();
+            
+            // If I was looking at that project, clear the screen
+            if (currentChannel && currentChannel._id === projectId) {
+                document.getElementById('welcome-screen').style.display = 'flex';
+                document.getElementById('view-tabs').style.display = 'none';
+                document.getElementById('chat-input-area').style.display = 'none';
+                currentChannel = null;
+            }
+            alert("You left the project.");
+        } else {
+            const data = await res.json();
+            alert(data.error);
+        }
+    } catch (e) { console.error(e); }
+}
+
+// 2. Kick Member Function
+async function kickMember(userId) {
+    if (!confirm("Are you sure you want to REMOVE this member?")) return;
+
+    try {
+        const res = await fetch(`${API_BASE}/api/projects/${currentChannel._id}/kick`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}` 
+            },
+            body: JSON.stringify({ userIdToKick: userId })
+        });
+
+        if (res.ok) {
+            // The socket 'member-updated' will handle the UI refresh
+            alert("Member removed.");
+        } else {
+            alert("Failed to remove member.");
+        }
+    } catch (e) { console.error(e); }
+}
+
+// 3. Socket Listener: Refresh Member List
+socket.on('member-updated', (newMembers) => {
+    if (currentChannel) {
+        // Update local data
+        currentChannel.members = newMembers;
+        renderMembers(newMembers);
+        // Refresh task dropdown so the kicked user is gone
+        loadTasks(currentChannel._id); 
+    }
+});
+
+// 4. Socket Listener: If I get kicked
+socket.on('you-were-kicked', (projectId) => {
+    alert("You have been removed from a project.");
+    // Refresh project list to remove it
+    fetchProjects();
+    // If I'm looking at it, kick me to welcome screen
+    if (currentChannel && currentChannel._id === projectId) {
+        window.location.reload(); 
+    }
+});
     </script>
 </body>
 </html>

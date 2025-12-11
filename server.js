@@ -419,6 +419,58 @@ apiRouter.post('/handle-request', authMiddleware, async (req, res) => {
         res.json({ message: `User ${action}d` });
     } catch (err) { res.status(500).json({ error: 'Server error' }); }
 });
+// --- LEAVE & KICK ROUTES ---
+
+// 1. LEAVE PROJECT (User removes themselves)
+apiRouter.post('/projects/:projectId/leave', authMiddleware, async (req, res) => {
+    try {
+        const project = await Project.findById(req.params.projectId);
+        if (!project) return res.status(404).json({ error: 'Project not found' });
+
+        // Creators cannot leave their own project (they must delete it)
+        if (project.creator.toString() === req.user.id) {
+            return res.status(400).json({ error: 'Creators cannot leave. Delete the project instead.' });
+        }
+
+        // Remove user from members array
+        project.members = project.members.filter(id => id.toString() !== req.user.id);
+        await project.save();
+
+        // Notify remaining members
+        const updatedProject = await Project.findById(req.params.projectId).populate('members', 'name email');
+        io.to(project._id.toString()).emit('member-updated', updatedProject.members);
+
+        res.json({ message: 'Left project' });
+    } catch (err) { res.status(500).json({ error: 'Server error' }); }
+});
+
+// 2. KICK MEMBER (Creator removes someone else)
+apiRouter.post('/projects/:projectId/kick', authMiddleware, async (req, res) => {
+    try {
+        const { userIdToKick } = req.body;
+        const project = await Project.findById(req.params.projectId);
+        
+        if (!project) return res.status(404).json({ error: 'Project not found' });
+        
+        // Security Check: Only Creator can kick
+        if (project.creator.toString() !== req.user.id) {
+            return res.status(403).json({ error: 'Only the project creator can remove members' });
+        }
+
+        // Remove the specific user
+        project.members = project.members.filter(id => id.toString() !== userIdToKick);
+        await project.save();
+
+        // Notify everyone
+        const updatedProject = await Project.findById(req.params.projectId).populate('members', 'name email');
+        io.to(project._id.toString()).emit('member-updated', updatedProject.members);
+        
+        // Also tell the kicked user to refresh their sidebar (remove the project)
+        io.to(userIdToKick).emit('you-were-kicked', project._id);
+
+        res.json({ message: 'Member removed' });
+    } catch (err) { res.status(500).json({ error: 'Server error' }); }
+});
 
 // Messages
 apiRouter.get('/projects/:projectId/messages', authMiddleware, async (req, res) => {
