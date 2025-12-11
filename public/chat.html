@@ -800,14 +800,21 @@ async function loadTasks(projectId) {
             document.querySelector(`button[onclick="switchView('${view}')"]`).classList.add('active');
             document.getElementById('chat-input-area').style.display = view === 'chat' ? 'block' : 'none';
         }
-        function renderMembers(members) {
+       function renderMembers(members) {
     const membersList = document.getElementById('members-list');
     membersList.innerHTML = '';
     
-    // Check if I am the admin of this project
-    const iAmCreator = currentChannel && currentChannel.creator === currentUserId;
-
     if (!members) return;
+
+    // ✨ FIX: Safely get the Creator ID string
+    let creatorId = "";
+    if (currentChannel && currentChannel.creator) {
+        // If it's an object (populated), get ._id. If it's a string, use it directly.
+        creatorId = currentChannel.creator._id || currentChannel.creator;
+    }
+    
+    // Convert both to strings to be 100% sure they match
+    const iAmCreator = String(creatorId) === String(currentUserId);
 
     members.forEach(member => {
         const item = document.createElement('div'); 
@@ -826,7 +833,7 @@ async function loadTasks(projectId) {
 
         // ✨ KICK BUTTON LOGIC:
         // Show button ONLY if: I am Creator AND This member is not me
-        if (iAmCreator && id !== currentUserId) {
+        if (iAmCreator && String(id) !== String(currentUserId)) {
             html += `
             <button onclick="kickMember('${id}')" 
                     style="margin-left:auto; background:none; border:none; color:#ef4444; cursor:pointer; font-weight:bold; font-size:18px; padding:0 10px;" 
