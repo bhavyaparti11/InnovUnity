@@ -1181,46 +1181,71 @@ socket.on('you-were-kicked', (projectId) => {
 });
 async function openFileLibrary() {
     if (!currentChannel) return alert("Select a project first!");
+    
+    // 1. Get the modal and the grid using the EXACT ID from your HTML
     const modal = document.getElementById('file-library-modal');
-    const grid = document.getElementById('file-grid');
+    const grid = document.getElementById('file-grid'); 
+    
+    // 2. Clear previous error state and show loading
     modal.style.display = 'flex';
-    grid.innerHTML = '<p>Loading assets...</p>';
+    grid.innerHTML = '<p style="grid-column: 1/-1; text-align:center;">Loading assets...</p>';
 
     try {
         const res = await fetch(`${API_BASE}/api/files/${currentChannel._id}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const files = await res.json();
-        grid.innerHTML = files.length ? '' : '<p>No files uploaded yet.</p>';
+
+        grid.innerHTML = '';
+        if (!files || files.length === 0) {
+            grid.innerHTML = '<p style="grid-column: 1/-1; text-align:center; color:#666;">No files yet.</p>';
+            return;
+        }
 
         files.forEach(file => {
             const card = document.createElement('div');
-            card.style = "border:1px solid #ddd; padding:10px; border-radius:8px; text-align:center; position:relative;";
+            card.style = "border:1px solid #ddd; border-radius:8px; padding:10px; text-align:center; background:#fff; display:flex; flex-direction:column; align-items:center; gap:5px;";
             
-            const isOwner = file.uploaderId === currentUserId;
+            // SECURITY: Only show delete if the logged-in ID matches uploaderId
+            const myId = localStorage.getItem("user_id");
+            const isOwner = String(file.uploaderId) === String(myId);
 
             card.innerHTML = `
                 <div onclick="window.open('${file.url}', '_blank')" style="cursor:pointer">
-                    <div style="font-size:30px">📄</div>
-                    <div style="font-size:11px; overflow:hidden; text-overflow:ellipsis;">${file.name}</div>
+                    <div style="font-size:30px;">📄</div>
+                    <div style="font-size:10px; color:#333; max-width:80px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${file.name}">${file.name}</div>
                 </div>
-                ${isOwner ? `<button onclick="deleteFile('${file.id}')" style="color:red; background:none; border:none; cursor:pointer; font-size:10px; margin-top:5px;">🗑️ Delete</button>` : `<div style="font-size:9px; color:gray;">By: ${file.uploaderName}</div>`}
+                ${isOwner ? 
+                    `<button onclick="deleteFile('${file.id}')" style="color:#ef4444; border:none; background:none; cursor:pointer; font-size:10px; font-weight:bold;">Delete</button>` : 
+                    `<span style="font-size:9px; color:gray;">By ${file.uploaderName || 'User'}</span>`
+                }
             `;
             grid.appendChild(card);
         });
     } catch (e) {
-        grid.innerHTML = '<p style="color:red;">Error loading library.</p>';
+        console.error("Library Error:", e);
+        grid.innerHTML = '<p style="grid-column: 1/-1; color:red; text-align:center;">Error loading library.</p>';
     }
 }
 
 async function deleteFile(fileId) {
-    if (!confirm("Delete this file permanently?")) return;
-    const res = await fetch(`${API_BASE}/api/files/${fileId}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-    });
-    if (res.ok) openFileLibrary();
-    else alert("Delete failed.");
+    if (!confirm("Are you sure? This will delete the file from the project and AWS S3.")) return;
+    
+    try {
+        const res = await fetch(`${API_BASE}/api/files/${fileId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (res.ok) {
+            openFileLibrary(); // Refresh the grid
+        } else {
+            const data = await res.json();
+            alert(data.error || "Delete failed");
+        }
+    } catch (e) {
+        alert("Server error during deletion");
+    }
 }
 
 async function deleteFile(fileId) {
