@@ -1,6 +1,18 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
+//  DEFINE THE SCHEMA FIRST
+const MessageSchema = new mongoose.Schema({
+    projectId: { type: mongoose.Schema.Types.ObjectId, ref: 'Project', required: true },
+    author: {
+        id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+        name: { type: String, required: true }
+    },
+    text: { type: String, required: true }
+}, { timestamps: true });
+
+
 const Message = mongoose.model('Message', MessageSchema);
+
 const authMiddleware = require('./middleware/auth'); 
 const fileRoutes = require('./routes/fileRoutes');
 const express = require('express');
@@ -119,14 +131,7 @@ const ProjectSchema = new mongoose.Schema({
     inviteCode: { type: String, unique: true }
 }, { timestamps: true });
 
-const MessageSchema = new mongoose.Schema({
-    projectId: { type: mongoose.Schema.Types.ObjectId, ref: 'Project', required: true, index: true },
-    author: {
-        id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-        name: { type: String, required: true }
-    },
-    text: { type: String, required: true }
-}, { timestamps: true });
+
 
 const DocumentSchema = new mongoose.Schema({
     title: { type: String, required: true },
