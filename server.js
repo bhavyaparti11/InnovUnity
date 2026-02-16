@@ -1,4 +1,6 @@
 require('dotenv').config();
+const authMiddleware = require('./middleware/auth'); 
+const fileRoutes = require('./routes/fileRoutes');
 const express = require('express');
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
@@ -11,7 +13,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
-const fileRoutes = require('./routes/fileRoutes');
+
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -28,7 +30,7 @@ app.use(express.static('public'));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // ... existing routes ...
 
-// Add this line:
+
 // We pass 'authMiddleware' here so only logged-in users can upload
 app.use('/api/files', authMiddleware, fileRoutes);
 
