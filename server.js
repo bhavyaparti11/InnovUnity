@@ -1,4 +1,5 @@
 require('dotenv').config();
+const Message = mongoose.model('Message', MessageSchema);
 const authMiddleware = require('./middleware/auth'); 
 const fileRoutes = require('./routes/fileRoutes');
 const express = require('express');
@@ -22,7 +23,7 @@ const io = new Server(server, {
     methods: ['GET', 'POST', 'PUT', 'DELETE']
   }
 });
-app.use('/api/files', fileRoutes);
+
 
 app.use(express.json());
 app.use(cors());
@@ -143,7 +144,7 @@ const TaskSchema = new mongoose.Schema({
 
 const User = mongoose.model('User', UserSchema);
 const Project = mongoose.model('Project', ProjectSchema);
-const Message = mongoose.model('Message', MessageSchema);
+
 const Document = mongoose.model('Document', DocumentSchema);
 const Task = mongoose.model('Task', TaskSchema);
 
