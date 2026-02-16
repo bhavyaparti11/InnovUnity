@@ -1180,30 +1180,48 @@ socket.on('you-were-kicked', (projectId) => {
     }
 });
 async function openFileLibrary() {
-            if (!currentChannel) return alert("Select a project first!");
-            
-            const modal = document.getElementById('file-library-modal');
-            const grid = document.getElementById('file-grid');
-            modal.style.display = 'flex';
-            grid.innerHTML = '<p style="grid-column: 1/-1; text-align:center;">Loading assets...</p>';
-files.forEach(file => {
-    const card = document.createElement('div');
-    card.className = "file-card";
-    
-    // Permission logic: Only show delete if I am the owner
-    const deleteBtn = (file.uploaderId === currentUserId) 
-        ? `<button onclick="deleteFile('${file.id}')" style="color:red; border:none; background:none; cursor:pointer; font-size:10px;">🗑️ Delete</button>` 
-        : `<span style="font-size:9px; color:gray;">By: ${file.uploaderName}</span>`;
+    if (!currentChannel) return alert("Select a project first!");
+    const modal = document.getElementById('file-library-modal');
+    const grid = document.getElementById('file-grid');
+    modal.style.display = 'flex';
+    grid.innerHTML = '<p>Loading assets...</p>';
 
-    card.innerHTML = `
-        <div onclick="window.open('${file.url}', '_blank')" style="cursor:pointer">
-            <div style="font-size:30px">📄</div>
-            <div style="font-size:11px; font-weight:bold;">${file.name}</div>
-        </div>
-        ${deleteBtn}
-    `;
-    grid.appendChild(card);
-});
+    try {
+        const res = await fetch(`${API_BASE}/api/files/${currentChannel._id}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const files = await res.json();
+        grid.innerHTML = files.length ? '' : '<p>No files uploaded yet.</p>';
+
+        files.forEach(file => {
+            const card = document.createElement('div');
+            card.style = "border:1px solid #ddd; padding:10px; border-radius:8px; text-align:center; position:relative;";
+            
+            const isOwner = file.uploaderId === currentUserId;
+
+            card.innerHTML = `
+                <div onclick="window.open('${file.url}', '_blank')" style="cursor:pointer">
+                    <div style="font-size:30px">📄</div>
+                    <div style="font-size:11px; overflow:hidden; text-overflow:ellipsis;">${file.name}</div>
+                </div>
+                ${isOwner ? `<button onclick="deleteFile('${file.id}')" style="color:red; background:none; border:none; cursor:pointer; font-size:10px; margin-top:5px;">🗑️ Delete</button>` : `<div style="font-size:9px; color:gray;">By: ${file.uploaderName}</div>`}
+            `;
+            grid.appendChild(card);
+        });
+    } catch (e) {
+        grid.innerHTML = '<p style="color:red;">Error loading library.</p>';
+    }
+}
+
+async function deleteFile(fileId) {
+    if (!confirm("Delete this file permanently?")) return;
+    const res = await fetch(`${API_BASE}/api/files/${fileId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (res.ok) openFileLibrary();
+    else alert("Delete failed.");
+}
 
 async function deleteFile(fileId) {
     if(!confirm("Delete this file permanently?")) return;
@@ -1245,7 +1263,7 @@ async function deleteFile(fileId) {
             } catch (e) {
                 grid.innerHTML = '<p style="color:red; grid-column:1/-1;">Error loading library.</p>';
             }
-        }
+        
 
         function closeFileLibrary() {
             document.getElementById('file-library-modal').style.display = 'none';
