@@ -270,12 +270,22 @@
                 <p>Select a project to start collaborating.</p>
             </div>
             
-            <div class="chat-input-area" id="chat-input-area" style="display: none;">
-                <div class="chat-input-wrapper">
-                    <input type="text" id="message-input" placeholder="Type a message...">
-                    <input type="file" id="file-upload" style="display: none;" onchange="handleFileUpload(this)">
-<button onclick="document.getElementById('file-upload').click()">📎</button>
-                </div>
+            <button onclick="openFileLibrary()">📎</button>
+
+<div id="file-library-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Project Documents</h3>
+            <span style="cursor:pointer" onclick="closeFileLibrary()">×</span>
+        </div>
+        <div id="file-list-container" class="file-grid">
+            </div>
+        <div class="modal-footer">
+            <input type="file" id="file-upload" style="display: none;" onchange="handleFileUpload(this)">
+            <button class="add-task-btn" onclick="document.getElementById('file-upload').click()">+ Upload New File</button>
+        </div>
+    </div>
+</div>
             </div>
         </main>
         
@@ -1157,6 +1167,54 @@ socket.on('you-were-kicked', (projectId) => {
         window.location.reload(); 
     }
 });
+async function openFileLibrary() {
+    if (!currentChannel) return alert("Select a project first!");
+    
+    const modal = document.getElementById('file-library-modal');
+    const grid = document.getElementById('file-grid');
+    modal.style.display = 'flex';
+    grid.innerHTML = '<p style="grid-column: 1/-1; text-align:center;">Loading assets...</p>';
+
+    try {
+        // We fetch the list of files already sent in this project
+        const res = await fetch(`${API_BASE}/api/files/${currentChannel._id}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const files = await res.json();
+
+        grid.innerHTML = '';
+        if (files.length === 0) {
+            grid.innerHTML = '<p style="grid-column: 1/-1; text-align:center; color:#666;">No files uploaded yet.</p>';
+            return;
+        }
+
+        files.forEach(file => {
+            const card = document.createElement('div');
+            card.style = "border:1px solid #ddd; border-radius:8px; padding:10px; text-align:center; background:#fff; cursor:pointer; transition:transform 0.2s;";
+            card.onclick = () => window.open(file.url, '_blank');
+            card.onmouseover = () => card.style.transform = "scale(1.05)";
+            card.onmouseout = () => card.style.transform = "scale(1)";
+
+            // Determine Icon
+            let icon = "📄"; // Default
+            if (file.url.match(/\.(jpg|jpeg|png|gif)$/i)) icon = "🖼️";
+            if (file.url.match(/\.(ppt|pptx)$/i)) icon = "📊";
+            if (file.url.match(/\.(pdf)$/i)) icon = "📕";
+
+            card.innerHTML = `
+                <div style="font-size:40px; margin-bottom:8px;">${icon}</div>
+                <div style="font-size:12px; color:#333; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${file.name}">${file.name}</div>
+            `;
+            grid.appendChild(card);
+        });
+    } catch (e) {
+        grid.innerHTML = '<p style="color:red;">Error loading library.</p>';
+    }
+}
+
+function closeFileLibrary() {
+    document.getElementById('file-library-modal').style.display = 'none';
+}
     </script>
 </body>
 </html>
