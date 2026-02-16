@@ -147,22 +147,9 @@ const Message = mongoose.model('Message', MessageSchema);
 const Document = mongoose.model('Document', DocumentSchema);
 const Task = mongoose.model('Task', TaskSchema);
 
-// --- MIDDLEWARE ---
 
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return res.status(401).json({ error: 'Unauthorized: No token provided' });
-    }
-    const token = authHeader.split(' ')[1];
-    try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
-        const user = await User.findById(decoded.id).select('-passwordHash');
-        if (!user) return res.status(401).json({ error: 'Unauthorized: User not found' });
-        req.user = user;
-        next();
-    } catch (err) {
-        return res.status(401).json({ error: 'Unauthorized: Invalid token' });
-    }
+
+   
 
 
 const storage = multer.diskStorage({
