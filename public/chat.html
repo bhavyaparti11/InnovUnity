@@ -273,6 +273,8 @@
             <div class="chat-input-area" id="chat-input-area" style="display: none;">
                 <div class="chat-input-wrapper">
                     <input type="text" id="message-input" placeholder="Type a message...">
+                    <input type="file" id="file-upload" style="display: none;" onchange="handleFileUpload(this)">
+<button onclick="document.getElementById('file-upload').click()">📎</button>
                 </div>
             </div>
         </main>
@@ -337,6 +339,51 @@
     </div>
 
     <script>
+        // --- FILE UPLOAD FUNCTION ---
+async function handleFileUpload(input) {
+    const file = input.files[0];
+    if (!file) return;
+
+    // Optional: Visual feedback while uploading
+    const msgInput = document.getElementById('message-input');
+    const originalPlaceholder = msgInput.placeholder;
+    msgInput.placeholder = "Uploading...";
+    msgInput.disabled = true;
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+        // ✨ UPDATED: Uses the new /api/files/upload route
+        const res = await fetch(`${API_BASE}/api/files/upload`, { 
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` }, 
+            body: formData
+        });
+
+        const data = await res.json();
+        
+        if (data.fileUrl) {
+            // Send the S3 URL as a chat message
+            socket.emit('sendMessage', { 
+                projectId: currentChannel._id, 
+                text: data.fileUrl, 
+                authorName: userName, 
+                userId: currentUserId 
+            });
+        } else {
+            alert("Upload failed: " + (data.error || "Unknown error"));
+        }
+    } catch (e) {
+        console.error("Upload error:", e);
+        alert("Error uploading file");
+    } finally {
+        // Reset UI
+        msgInput.placeholder = originalPlaceholder;
+        msgInput.disabled = false;
+        input.value = ''; // Clear input so you can upload the same file again if needed
+    }
+}
         // --- AUTH & SETUP ---
         const token = localStorage.getItem("token");
         if (!token) window.location.href = "register.html";
@@ -863,6 +910,7 @@ async function loadTasks(projectId) {
             div.innerHTML = `<div class="message-content"><div class="message-header"><span class="author">${msg.author.name}</span></div><div class="message-text">${msg.text}</div></div>`;
             messagesWrapper.appendChild(div); messagesWrapper.scrollTop = messagesWrapper.scrollHeight;
         }
+        
         async function deleteProject(projectId, event) {
             event.stopPropagation();
             if (confirm("Delete project?")) {
