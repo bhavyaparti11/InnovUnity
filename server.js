@@ -148,7 +148,7 @@ const Document = mongoose.model('Document', DocumentSchema);
 const Task = mongoose.model('Task', TaskSchema);
 
 // --- MIDDLEWARE ---
-const authMiddleware = async (req, res, next) => {
+
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
         return res.status(401).json({ error: 'Unauthorized: No token provided' });
@@ -163,7 +163,7 @@ const authMiddleware = async (req, res, next) => {
     } catch (err) {
         return res.status(401).json({ error: 'Unauthorized: Invalid token' });
     }
-};
+
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, 'uploads/'),
