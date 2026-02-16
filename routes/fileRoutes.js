@@ -2,17 +2,24 @@ const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
 const upload = require('../config/s3'); 
-const authMiddleware = require('../middleware/auth'); 
+const authMiddleware = require('../middleware/auth');
+const { S3Client, DeleteObjectCommand } = require('@aws-sdk/client-s3');
 
-// --- 1. THE UPLOAD ROUTE (The missing piece) ---
-// authMiddleware MUST come before upload.single
+// Initialize S3 Client directly to avoid external file errors
+const s3Client = new S3Client({
+    region: process.env.AWS_REGION,
+    credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+    }
+});
+
+// --- 1. THE UPLOAD ROUTE ---
 router.post('/upload', authMiddleware, upload.single('file'), async (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({ error: "No file uploaded" });
         }
-
-        // We return the S3 URL so the frontend can send it as a message
         res.json({ 
             fileUrl: req.file.location,
             fileName: req.file.key 
@@ -23,29 +30,7 @@ router.post('/upload', authMiddleware, upload.single('file'), async (req, res) =
     }
 });
 
-// --- 2. THE LIBRARY ROUTE ---
-router.get('/:projectId', authMiddleware, async (req, res) => {
-    try {
-        const Message = mongoose.model('Message'); 
-        const messages = await Message.find({ 
-            projectId: req.params.projectId, 
-            text: { $regex: 'amazonaws.com' } 
-        });
-
-        const files = messages.map(m => ({
-            url: m.text,
-            // Updated to show uploader's name if it's in the URL
-            name: m.text.split('-').slice(1).join('-') || "File",
-            id: m._id,
-            uploaderId: m.author.id // Needed for the delete logic
-        }));
-
-        res.json(files);
-    } catch (err) {
-        res.status(500).json({ error: 'Failed to fetch library' });
-    }
-});
-
+// --- 2. THE LIBRARY ROUTE (Clean Naming) ---
 router.get('/:projectId', authMiddleware, async (req, res) => {
     try {
         const Message = mongoose.model('Message'); 
@@ -55,12 +40,10 @@ router.get('/:projectId', authMiddleware, async (req, res) => {
         });
 
         const files = messages.map(m => {
-            // Split the S3 URL to get the filename
             const urlParts = m.text.split('/');
             const fullFileName = urlParts[urlParts.length - 1];
             
-            // Extract the original name (everything after the second dash)
-            // Format: 171257337091-Bhavya-Filename.pdf
+            // Clean Name Logic: Extracts original name after timestamp and user name
             const nameParts = fullFileName.split('-');
             const displayName = nameParts.slice(2).join('-'); 
 
@@ -68,7 +51,7 @@ router.get('/:projectId', authMiddleware, async (req, res) => {
                 url: m.text,
                 name: displayName || "File",
                 id: m._id,
-                uploaderId: m.author.id.toString(), // For the permission check
+                uploaderId: m.author.id.toString(), 
                 uploaderName: m.author.name
             };
         });
@@ -79,9 +62,7 @@ router.get('/:projectId', authMiddleware, async (req, res) => {
     }
 });
 
-const { DeleteObjectCommand } = require('@aws-sdk/client-s3');
-const s3Client = require('../config/s3_client'); // You'll need to export s3 from your config
-
+// --- 3. THE SECURE DELETE ROUTE ---
 router.delete('/:fileId', authMiddleware, async (req, res) => {
     try {
         const Message = mongoose.model('Message');
@@ -102,13 +83,14 @@ router.delete('/:fileId', authMiddleware, async (req, res) => {
             Key: fileKey,
         });
 
-        await s3Client.send(deleteCommand); // Removes it from AWS
+        await s3Client.send(deleteCommand); 
 
         // 2. Remove from MongoDB
         await Message.findByIdAndDelete(req.params.fileId);
 
         res.json({ message: "File deleted successfully" });
     } catch (err) {
+        console.error("Delete Error:", err);
         res.status(500).json({ error: "Delete failed" });
     }
 });
