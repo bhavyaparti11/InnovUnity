@@ -4,7 +4,6 @@ const Message = mongoose.model('Message', MessageSchema);
 const authMiddleware = require('./middleware/auth'); 
 const fileRoutes = require('./routes/fileRoutes');
 const express = require('express');
-const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
