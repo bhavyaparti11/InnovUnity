@@ -1,3 +1,4 @@
+// config/s3.js
 require('dotenv').config();
 const { S3Client } = require('@aws-sdk/client-s3');
 const multer = require('multer');
@@ -6,8 +7,9 @@ const multerS3 = require('multer-s3');
 const s3 = new S3Client({
     region: process.env.AWS_REGION,
     credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID,     // <--- Reads from .env
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY // <--- Reads from .env
+        // 👇 THIS IS THE FIX: Use the variable NAMES, not the values
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,      
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY 
     }
 });
 
@@ -20,7 +22,7 @@ const upload = multer({
             cb(null, { fieldName: file.fieldname });
         },
         key: function (req, file, cb) {
-            cb(null, `${Date.now().toString()}-${file.originalname}`)
+            cb(null, `${Date.now().toString()}-${file.originalname}`);
         }
     })
 });
