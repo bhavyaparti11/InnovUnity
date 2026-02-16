@@ -1,20 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const upload = require('../config/s3'); 
+const Message = require('../models/Message'); // Ensure this path is correct
 const authMiddleware = require('../middleware/auth');
 
-// This handles the POST to /api/files/upload
-router.post('/upload', upload.single('file'), (req, res) => {
-    if (!req.file) {
-        return res.status(400).json({ error: 'No file uploaded' });
-    }
-    // multer-s3 provides the S3 URL in req.file.location
-    res.json({ fileUrl: req.file.location });
-});
-// GET all files for a specific project
+// GET all files for a project by searching chat messages for S3 links
 router.get('/:projectId', authMiddleware, async (req, res) => {
     try {
-        // We look for chat messages that contain S3 URLs (or you can create a FileSchema)
         const messages = await Message.find({ 
             projectId: req.params.projectId, 
             text: { $regex: 'amazonaws.com' } 
@@ -22,7 +13,7 @@ router.get('/:projectId', authMiddleware, async (req, res) => {
 
         const files = messages.map(m => ({
             url: m.text,
-            name: m.text.split('-').slice(1).join('-'), // Cleans the timestamp from filename
+            name: m.text.split('-').slice(1).join('-') || "File",
             id: m._id
         }));
 
