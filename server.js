@@ -1,4 +1,5 @@
 require('dotenv').config();
+const mongoose = require('mongoose');
 const Message = mongoose.model('Message', MessageSchema);
 const authMiddleware = require('./middleware/auth'); 
 const fileRoutes = require('./routes/fileRoutes');
