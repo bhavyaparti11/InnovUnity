@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const upload = require('../config/s3'); 
+const authMiddleware = require('../middleware/auth');
 
 // This handles the POST to /api/files/upload
 router.post('/upload', upload.single('file'), (req, res) => {
