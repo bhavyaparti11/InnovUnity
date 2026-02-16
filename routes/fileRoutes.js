@@ -1,7 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const Message = require('../models/Message'); // Ensure this path is correct
-const authMiddleware = require('../middleware/auth');
+const mongoose = require('mongoose'); // Add this
+const upload = require('../config/s3'); 
+const authMiddleware = require('../middleware/auth'); 
+
+// Instead of require('../models/Message'), use this:
+const Message = mongoose.model('Message'); 
+
 
 // GET all files for a project by searching chat messages for S3 links
 router.get('/:projectId', authMiddleware, async (req, res) => {
