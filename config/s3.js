@@ -33,8 +33,10 @@ const upload = multer({
     storage: multerS3({
         s3: s3,
         bucket: process.env.AWS_BUCKET_NAME,
-        acl: 'public-read', // 👈 ADD THIS LINE
+        acl: 'public-read', // MUST be here if ACLs are enabled
         contentType: multerS3.AUTO_CONTENT_TYPE,
-        // ... rest of your code ...
+        key: function (req, file, cb) {
+            cb(null, `${Date.now().toString()}-${file.originalname}`);
+        }
     })
 });
