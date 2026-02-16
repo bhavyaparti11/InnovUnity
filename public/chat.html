@@ -1186,7 +1186,33 @@ async function openFileLibrary() {
             const grid = document.getElementById('file-grid');
             modal.style.display = 'flex';
             grid.innerHTML = '<p style="grid-column: 1/-1; text-align:center;">Loading assets...</p>';
+files.forEach(file => {
+    const card = document.createElement('div');
+    card.className = "file-card";
+    
+    // Permission logic: Only show delete if I am the owner
+    const deleteBtn = (file.uploaderId === currentUserId) 
+        ? `<button onclick="deleteFile('${file.id}')" style="color:red; border:none; background:none; cursor:pointer; font-size:10px;">🗑️ Delete</button>` 
+        : `<span style="font-size:9px; color:gray;">By: ${file.uploaderName}</span>`;
 
+    card.innerHTML = `
+        <div onclick="window.open('${file.url}', '_blank')" style="cursor:pointer">
+            <div style="font-size:30px">📄</div>
+            <div style="font-size:11px; font-weight:bold;">${file.name}</div>
+        </div>
+        ${deleteBtn}
+    `;
+    grid.appendChild(card);
+});
+
+async function deleteFile(fileId) {
+    if(!confirm("Delete this file permanently?")) return;
+    const res = await fetch(`${API_BASE}/api/files/${fileId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if(res.ok) openFileLibrary(); // Refresh the list
+}
             try {
                 // Fetch list of files for this project
                 const res = await fetch(`${API_BASE}/api/files/${currentChannel._id}`, {
