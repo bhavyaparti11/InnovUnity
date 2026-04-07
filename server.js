@@ -138,6 +138,12 @@ const DocumentSchema = new mongoose.Schema({
     content: { type: String, default: '' },
     projectId: { type: mongoose.Schema.Types.ObjectId, ref: 'Project', required: true, index: true },
 }, { timestamps: true });
+const CodeFileSchema = new mongoose.Schema({
+    title: { type: String, required: true },
+    content: { type: String, default: '// Start coding...' },
+    projectId: { type: mongoose.Schema.Types.ObjectId, ref: 'Project', required: true, index: true },
+}, { timestamps: true });
+const CodeFile = mongoose.model('CodeFile', CodeFileSchema);
 
 const TaskSchema = new mongoose.Schema({
     projectId: { type: mongoose.Schema.Types.ObjectId, ref: 'Project', required: true, index: true },
@@ -369,6 +375,27 @@ apiRouter.delete('/projects/:projectId', authMiddleware, async (req, res) => {
         res.json({ message: 'Deleted' });
     } catch (err) { res.status(500).json({ error: 'Server error' }); }
 });
+// --- CODE FILES ROUTES ---
+apiRouter.get('/projects/:projectId/codefiles', authMiddleware, async (req, res) => {
+    try {
+        const files = await CodeFile.find({ projectId: req.params.projectId }).sort({ createdAt: -1 });
+        res.json(files);
+    } catch (err) { res.status(500).json({ error: 'Server error' }); }
+});
+apiRouter.post('/projects/:projectId/codefiles', authMiddleware, async (req, res) => {
+    try {
+        const newFile = new CodeFile({ title: req.body.title, projectId: req.params.projectId });
+        await newFile.save();
+        res.status(201).json(newFile);
+    } catch (err) { res.status(500).json({ error: 'Server error' }); }
+});
+apiRouter.get('/codefiles/:fileId', authMiddleware, async (req, res) => {
+    try {
+        const file = await CodeFile.findById(req.params.fileId);
+        if (!file) return res.status(404).json({ error: 'Not found' });
+        res.json(file);
+    } catch (err) { res.status(500).json({ error: 'Server error' }); }
+});
 
 // Join & Requests
 apiRouter.post('/request-join', authMiddleware, async (req, res) => {
@@ -566,7 +593,15 @@ apiRouter.delete('/tasks/:taskId', authMiddleware, async (req, res) => {
 // ==========================================
 io.on('connection', (socket) => {
     console.log('User connected:', socket.id);
-    
+    // Code Editor Sockets
+    socket.on('joinCodeFile', (fileId) => { socket.join(fileId); });
+    socket.on('leaveCodeFile', (fileId) => { socket.leave(fileId); });
+    socket.on('codeUpdate', async (data) => {
+        try {
+            await CodeFile.findByIdAndUpdate(data.fileId, { content: data.content });
+            socket.to(data.fileId).emit('codeChange', data);
+        } catch(e) { console.error('codeUpdate error', e); }
+    });
     // Project Rooms
     socket.on('joinProjectRooms', async (userId) => {
         const userProjects = await Project.find({ members: userId });

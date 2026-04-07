@@ -17,13 +17,13 @@ const upload = multer({
     storage: multerS3({
         s3: s3,
         bucket: process.env.AWS_BUCKET_NAME,
-        // ✨ Remove 'acl' to prevent 403 errors if your bucket blocks public access
+        //  Remove 'acl' to prevent 403 errors if your bucket blocks public access
         contentType: multerS3.AUTO_CONTENT_TYPE,
         metadata: function (req, file, cb) {
             cb(null, { fieldName: file.fieldname });
         },
         key: function (req, file, cb) {
-            // ✨ Logic to include uploader's name
+            //  Logic to include uploader's name
             // We use req.user.name (attached by authMiddleware)
             const userName = req.user && req.user.name ? req.user.name.replace(/\s+/g, '_') : 'guest';
             const fileName = `${Date.now()}-${userName}-${file.originalname}`;

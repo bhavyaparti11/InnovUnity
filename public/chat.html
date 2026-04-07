@@ -7,6 +7,9 @@
     
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <script src="https://unpkg.com/simple-peer@9.11.1/simplepeer.min.js"></script>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+<script src="https://unpkg.com/simple-peer@9.11.1/simplepeer.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.30.1/min/vs/loader.min.js"></script>
     
     <link rel="stylesheet" href="style.css">
     
@@ -239,10 +242,32 @@
                 </div>
             </header>
 
+            
             <div class="view-tabs" id="view-tabs" style="display: none;">
-                <button class="tab-btn active" onclick="switchView('chat')">Chat</button>
-                <button class="tab-btn" onclick="switchView('documents')">Documents</button>
-            </div>
+    <button class="tab-btn active" onclick="switchView('chat')">Chat</button>
+    <button class="tab-btn" onclick="switchView('documents')">Documents</button>
+    <button class="tab-btn" onclick="switchView('code')">Code</button> </div>
+
+    <div class="code-view view" id="code-view" style="display: none; height: 100%; display: flex; width: 100%;">
+    <div class="documents-list-panel" style="width: 250px; border-right: 1px solid #e5e7eb; display: flex; flex-direction: column;">
+        <div class="documents-header" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e5e7eb;">
+            <h3 style="margin: 0;">Code Files</h3>
+            <button id="add-code-btn" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #3e399b;">+</button>
+        </div>
+        <div id="new-code-container" style="display: none; padding: 10px;">
+            <input type="text" id="new-code-input" placeholder="Filename (e.g. app.js)..." style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+        </div>
+        <div id="code-list" style="flex: 1; overflow-y: auto;"></div>
+    </div>
+    
+    <div class="document-editor-panel" style="flex: 1; display: flex; flex-direction: column; background: #1e1e1e;">
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #2d2d2d; border-bottom: 1px solid #444;">
+            <span style="color: #00ff00; font-family: monospace;">💻 Monaco IDE</span>
+            <button id="ask-ai-btn" style="background: #6200ea; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; display: none;">Ask Groq AI ✨</button>
+        </div>
+        <div id="editor-container" style="flex: 1; width: 100%; min-height: 500px;"></div>
+    </div>
+</div>
 
             <div class="chat-messages view" id="chat-view" style="display: none;">
                 <div class="messages-wrapper" id="messages-wrapper"></div>
@@ -557,6 +582,7 @@ async function handleFileUpload(input) {
         if (currentDocument) {
             socket.emit('leaveDocument', currentDocument);
             currentDocument = null;
+            loadCodeFiles();
         }
 
         // 2. Wipe the editor UI clean immediately
@@ -1224,6 +1250,107 @@ async function openFileLibrary() {
         function closeFileLibrary() {
             document.getElementById('file-library-modal').style.display = 'none';
         }
+        // --- CODE FILES & MONACO LOGIC ---
+let codeFiles = [];
+let currentCodeFile = null;
+let editorInstance = null;
+let isTypingCode = false;
+let currentDecorations = [];
+
+// 1. Initialize Monaco
+require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.30.1/min/vs' }});
+require(['vs/editor/editor.main'], function() {
+    editorInstance = monaco.editor.create(document.getElementById('editor-container'), {
+        value: "// Select or create a code file...",
+        language: 'javascript',
+        theme: 'vs-dark',
+        readOnly: true,
+        automaticLayout: true
+    });
+
+    // Send Typing to Server
+    editorInstance.onDidChangeModelContent((event) => {
+        if (!isTypingCode && currentCodeFile) {
+            socket.emit('codeUpdate', { 
+                fileId: currentCodeFile, 
+                content: editorInstance.getValue(),
+                user: userName,
+                line: event.changes[0].range.startLineNumber
+            });
+        }
+    });
+
+    // Receive Typing from Server
+    socket.on('codeChange', (data) => {
+        if (!data || data.fileId !== currentCodeFile) return;
+        isTypingCode = true;
+        const pos = editorInstance.getPosition();
+        editorInstance.setValue(data.content);
+        editorInstance.setPosition(pos);
+
+        const userClass = data.user === userName ? 'edit-self' : 'edit-teammate';
+        currentDecorations = editorInstance.deltaDecorations(currentDecorations, [{
+            range: new monaco.Range(data.line, 1, data.line, 1),
+            options: { isWholeLine: true, className: userClass, hoverMessage: { value: `✏️ Edited by **${data.user}**` } }
+        }]);
+        isTypingCode = false;
+    });
+});
+
+// 2. Hook up the "Add Code File" UI
+document.getElementById('add-code-btn').onclick = () => { 
+    document.getElementById('new-code-container').style.display = 'block'; 
+};
+
+document.getElementById('new-code-input').addEventListener('keypress', async (e) => {
+    if(e.key === 'Enter' && e.target.value.trim() !== '') {
+        await fetch(`${API_BASE}/api/projects/${currentChannel._id}/codefiles`, { 
+            method: 'POST', 
+            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, 
+            body: JSON.stringify({ title: e.target.value }) 
+        });
+        e.target.value = ''; 
+        loadCodeFiles(); // Refresh list
+    }
+});
+
+// 3. Render the list of Code Files
+async function loadCodeFiles() {
+    if (!currentChannel) return;
+    const res = await fetch(`${API_BASE}/api/projects/${currentChannel._id}/codefiles`, { headers: { 'Authorization': `Bearer ${token}` } });
+    codeFiles = await res.json();
+    
+    const list = document.getElementById('code-list'); 
+    list.innerHTML = '';
+    
+    codeFiles.forEach(file => {
+         const div = document.createElement('div'); 
+         div.className = 'doc-item'; 
+         div.innerText = file.title;
+         
+         div.onclick = async () => {
+             if (currentCodeFile) socket.emit('leaveCodeFile', currentCodeFile);
+             
+             document.querySelectorAll('#code-list .doc-item').forEach(i => i.style.background = '');
+             div.style.background = '#e0e7ff';
+
+             const fileRes = await fetch(`${API_BASE}/api/codefiles/${file._id}`, { headers: { 'Authorization': `Bearer ${token}` } });
+             const data = await fileRes.json();
+             
+             if (editorInstance) {
+                 editorInstance.updateOptions({ readOnly: false });
+                 isTypingCode = true;
+                 editorInstance.setValue(data.content);
+                 isTypingCode = false;
+             }
+             
+             document.getElementById('ask-ai-btn').style.display = 'block';
+             currentCodeFile = file._id; 
+             socket.emit('joinCodeFile', file._id);
+         };
+         list.appendChild(div);
+    });
+}
     </script>
 </body>
 </html>
