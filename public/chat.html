@@ -248,17 +248,33 @@
     <button class="tab-btn" onclick="switchView('documents')">Documents</button>
     <button class="tab-btn" onclick="switchView('code')">Code</button> </div>
 
-    <div class="code-view view" id="code-view" style="display: none; height: 100%; display: flex; width: 100%;">
-    <div class="documents-list-panel" style="width: 250px; border-right: 1px solid #e5e7eb; display: flex; flex-direction: column;">
-        <div class="documents-header" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e5e7eb;">
-            <h3 style="margin: 0;">Code Files</h3>
-            <button id="add-code-btn" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #3e399b;">+</button>
+    <div class="code-view view" id="code-view" style="display: none;">
+    
+    <div class="documents-list-panel">
+        <div class="documents-header">
+            <h3>Code Files</h3>
+            <button id="add-code-btn" style="background: none; border: none; font-size: 20px; cursor: pointer;">+</button>
         </div>
         <div id="new-code-container" style="display: none; padding: 10px;">
-            <input type="text" id="new-code-input" placeholder="Filename (e.g. app.js)..." style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+            <input type="text" id="new-code-input" placeholder="e.g. app.js" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+            <div style="font-size: 11px; color: gray; margin-top: 4px; text-align: center;">Press Enter to save</div>
         </div>
-        <div id="code-list" style="flex: 1; overflow-y: auto;"></div>
+        <div id="code-list"></div>
     </div>
+    
+    <div class="document-editor-panel" style="padding: 0; display: flex; flex-direction: column; background: #1e1e1e;">
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; border-bottom: 1px solid #333; background: #2d2d2d;">
+            <span style="color: #4ade80; font-family: monospace; font-weight: bold;">💻 Monaco IDE</span>
+            <button id="ask-ai-btn" style="background: #6200ea; color: white; border: none; padding: 5px 12px; border-radius: 4px; cursor: pointer; display: none;">Ask Groq AI ✨</button>
+        </div>
+        
+        <div style="flex: 1; position: relative; width: 100%; height: 100%;">
+            <div id="editor-container" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0;"></div>
+        </div>
+
+    </div>
+</div>
     
     <div class="document-editor-panel" style="flex: 1; display: flex; flex-direction: column; background: #1e1e1e;">
         <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #2d2d2d; border-bottom: 1px solid #444;">
@@ -1302,15 +1318,47 @@ document.getElementById('add-code-btn').onclick = () => {
     document.getElementById('new-code-container').style.display = 'block'; 
 };
 
+// 2. Hook up the "Add Code File" UI
+document.getElementById('add-code-btn').onclick = () => { 
+    const container = document.getElementById('new-code-container');
+    container.style.display = container.style.display === 'none' ? 'block' : 'none';
+    if (container.style.display === 'block') document.getElementById('new-code-input').focus();
+};
+
 document.getElementById('new-code-input').addEventListener('keypress', async (e) => {
     if(e.key === 'Enter' && e.target.value.trim() !== '') {
-        await fetch(`${API_BASE}/api/projects/${currentChannel._id}/codefiles`, { 
-            method: 'POST', 
-            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, 
-            body: JSON.stringify({ title: e.target.value }) 
-        });
-        e.target.value = ''; 
-        loadCodeFiles(); // Refresh list
+        const filename = e.target.value.trim();
+        e.target.disabled = true; // Lock input while saving
+        e.target.value = 'Saving...';
+        
+        try {
+            // Save to DB
+            await fetch(`${API_BASE}/api/projects/${currentChannel._id}/codefiles`, { 
+                method: 'POST', 
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, 
+                body: JSON.stringify({ title: filename }) 
+            });
+            
+            // Reset Input UI
+            e.target.value = ''; 
+            e.target.disabled = false;
+            document.getElementById('new-code-container').style.display = 'none'; 
+            
+            // Refresh list
+            await loadCodeFiles(); 
+            
+            // ✨ THE FIX: Auto-click the newly created file to unlock Monaco ✨
+            setTimeout(() => {
+                const firstFile = document.querySelector('#code-list .doc-item');
+                if (firstFile) firstFile.click();
+            }, 100);
+
+        } catch (err) {
+            console.error("Error creating file:", err);
+            e.target.disabled = false;
+            e.target.value = filename;
+            alert("Failed to create file.");
+        }
     }
 });
 
