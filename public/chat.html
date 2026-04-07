@@ -244,52 +244,16 @@
 
             
             <div class="view-tabs" id="view-tabs" style="display: none;">
-    <button class="tab-btn active" onclick="switchView('chat')">Chat</button>
-    <button class="tab-btn" onclick="switchView('documents')">Documents</button>
-    <button class="tab-btn" onclick="switchView('code')">Code</button> </div>
-
-    <div class="code-view view" id="code-view" style="display: none;">
-    
-    <div class="documents-list-panel">
-        <div class="documents-header">
-            <h3>Code Files</h3>
-            <button id="add-code-btn" style="background: none; border: none; font-size: 20px; cursor: pointer;">+</button>
-        </div>
-        <div id="new-code-container" style="display: none; padding: 10px;">
-            <input type="text" id="new-code-input" placeholder="e.g. app.js" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-            <div style="font-size: 11px; color: gray; margin-top: 4px; text-align: center;">Press Enter to save</div>
-        </div>
-        <div id="code-list"></div>
-    </div>
-    
-    <div class="document-editor-panel" style="padding: 0; display: flex; flex-direction: column; background: #1e1e1e;">
-        
-        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; border-bottom: 1px solid #333; background: #2d2d2d;">
-            <span style="color: #4ade80; font-family: monospace; font-weight: bold;">💻 Monaco IDE</span>
-            <button id="ask-ai-btn" style="background: #6200ea; color: white; border: none; padding: 5px 12px; border-radius: 4px; cursor: pointer; display: none;">Ask Groq AI ✨</button>
-        </div>
-        
-        <div style="flex: 1; position: relative; width: 100%; height: 100%;">
-            <div id="editor-container" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0;"></div>
-        </div>
-
-    </div>
-</div>
-    
-    <div class="document-editor-panel" style="flex: 1; display: flex; flex-direction: column; background: #1e1e1e;">
-        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #2d2d2d; border-bottom: 1px solid #444;">
-            <span style="color: #00ff00; font-family: monospace;">💻 Monaco IDE</span>
-            <button id="ask-ai-btn" style="background: #6200ea; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; display: none;">Ask Groq AI ✨</button>
-        </div>
-        <div id="editor-container" style="flex: 1; width: 100%; min-height: 500px;"></div>
-    </div>
-</div>
+                <button class="tab-btn active" onclick="switchView('chat')">Chat</button>
+                <button class="tab-btn" onclick="switchView('documents')">Documents</button>
+                <button class="tab-btn" onclick="switchView('code')">Code</button>
+            </div>
 
             <div class="chat-messages view" id="chat-view" style="display: none;">
                 <div class="messages-wrapper" id="messages-wrapper"></div>
             </div>
             
-            <div class="documents-view view" id="documents-view" style="display: none;">
+            <div class="documents-view view" id="documents-view" style="display: none; width: 100%; height: 100%;">
                 <div class="documents-list-panel">
                     <div class="documents-header">
                         <h3>Documents</h3>
@@ -302,6 +266,29 @@
                 </div>
                 <div class="document-editor-panel">
                     <textarea id="doc-editor" placeholder="Select or create a document..."></textarea>
+                </div>
+            </div>
+
+            <div class="code-view view" id="code-view" style="display: none; width: 100%; height: 100%;">
+                <div class="documents-list-panel">
+                    <div class="documents-header">
+                        <h3>Code Files</h3>
+                        <button id="add-code-btn" style="background: none; border: none; font-size: 20px; cursor: pointer;">+</button>
+                    </div>
+                    <div id="new-code-container" style="display: none; padding: 10px;">
+                        <input type="text" id="new-code-input" placeholder="e.g. app.js" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                    </div>
+                    <div id="code-list"></div>
+                </div>
+                
+                <div class="document-editor-panel" style="padding: 0; display: flex; flex-direction: column; background: #1e1e1e;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; border-bottom: 1px solid #333; background: #2d2d2d;">
+                        <span style="color: #4ade80; font-family: monospace; font-weight: bold;">💻 Monaco IDE</span>
+                        <button id="ask-ai-btn" style="background: #6200ea; color: white; border: none; padding: 5px 12px; border-radius: 4px; cursor: pointer; display: none;">Ask Groq AI ✨</button>
+                    </div>
+                    <div style="flex: 1; position: relative; width: 100%; height: 100%;">
+                        <div id="editor-container" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0;"></div>
+                    </div>
                 </div>
             </div>
 
