@@ -156,9 +156,8 @@
 
             <!-- Code View -->
              <div class="code-view view" id="code-view" style="display:none; width:100%; height:100%; flex-direction: row;">
+                
                 <div class="documents-list-panel" style="width: 250px; min-width: 250px; flex-shrink: 0; border-right: 1px solid #e5e7eb; display: flex; flex-direction: column;">
-                <!-- FIX: Code file sidebar styled the same way as Documents -->
-                <div class="documents-list-panel">
                     <div class="documents-header">
                         <h3>Code Files</h3>
                         <button id="add-code-btn" style="background:none; border:none; font-size:22px; cursor:pointer; color:#3e399b; font-weight:bold; line-height:1;">+</button>
@@ -166,32 +165,27 @@
                     <div id="new-code-container" style="display:none; padding:8px;">
                         <input type="text" id="new-code-input" placeholder="e.g. app.js" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px; font-size:0.85rem;">
                     </div>
-                    <!-- code-list renders .code-file-item divs -->
-                    <div id="code-list"></div>
+                    <div id="code-list" style="flex: 1; overflow-y: auto;"></div>
                 </div>
                 
-                <!-- Monaco Editor Panel -->
-                 <div class="document-editor-panel" style="flex: 1; min-width: 0; padding:0; display:flex; flex-direction:column; background:#1e1e1e; overflow:hidden;"></div>
-                    <!-- Toolbar -->
+                <div class="document-editor-panel" style="flex: 1; min-width: 0; padding:0; display:flex; flex-direction:column; background:#1e1e1e; overflow:hidden;">
                     <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 15px; border-bottom:1px solid #333; background:#2d2d2d; flex-shrink:0;">
                         <span style="color:#4ade80; font-family:monospace; font-weight:bold; font-size:0.9rem;">💻 Monaco IDE</span>
                         <div style="display:flex; gap:8px; align-items:center;">
                             <span id="current-file-label" style="color:#888; font-family:monospace; font-size:0.78rem;"></span>
-                            <!-- FIX: Ask AI button is HTML (not injected via JS) -->
                             <button id="ask-ai-btn" style="background:#6200ea; color:white; border:none; padding:5px 14px; border-radius:4px; cursor:pointer; display:none; font-size:0.82rem; font-weight:600;">Ask Groq AI ✨</button>
                             <button id="run-code-btn" style="background:#10b981; color:white; border:none; padding:5px 14px; border-radius:4px; cursor:pointer; display:none; font-size:0.82rem; font-weight:600;">▶ Run</button>
                         </div>
                     </div>
-                    <!-- Editor container -->
                     <div style="flex:1; position:relative; min-height:0;">
                         <div id="editor-container" style="position:absolute; top:0; left:0; right:0; bottom:0;"></div>
                     </div>
-                    <!-- Terminal -->
                     <div id="terminal-output">
                         <div style="color:#555; margin-bottom:4px; font-size:0.72rem; letter-spacing:0.05em;">▶ CONSOLE OUTPUT</div>
                         <div id="console-logs"></div>
                     </div>
                 </div>
+
             </div>
 
             <!-- Welcome Screen -->
