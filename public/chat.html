@@ -5,172 +5,43 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>InnovUnity - Collaborate</title>
     
+    <!-- FIX 1: Removed duplicate socket.io and simplepeer imports -->
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <script src="https://unpkg.com/simple-peer@9.11.1/simplepeer.min.js"></script>
-    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
-<script src="https://unpkg.com/simple-peer@9.11.1/simplepeer.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.30.1/min/vs/loader.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.30.1/min/vs/loader.min.js"></script>
     
     <link rel="stylesheet" href="style.css">
     
     <style>
-        /* =========================================
-           ✨ INLINE STYLES FOR VIDEO & WIDGETS
-           ========================================= */
-
-        /* --- 1. Video Call Overlay --- */
+        /* Video Call Overlay */
         .video-call-overlay {
-            position: fixed;
-            top: 0; left: 0;
+            position: fixed; top: 0; left: 0;
             width: 100vw; height: 100vh;
-            background-color: #202124; /* Google Meet Dark Grey */
-            z-index: 2000;
-            display: none; /* Hidden by default */
-            flex-direction: column;
-            justify-content: space-between;
+            background-color: #202124;
+            z-index: 2000; display: none;
+            flex-direction: column; justify-content: space-between;
         }
-
-        /* Video Grid Area */
-        .video-grid {
-            flex: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-wrap: wrap;
-            padding: 2rem;
-            gap: 1rem;
-            overflow-y: auto;
-        }
-
-        .video-wrapper {
-            position: relative;
-            width: 100%;
-            max-width: 600px;
-            aspect-ratio: 16/9;
-            background: #3c4043;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-        }
-
-        video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transform: scaleX(-1); /* Mirror effect for self */
-        }
-
-        /* Label on video */
-        .video-label {
-            position: absolute;
-            bottom: 10px;
-            left: 10px;
-            color: white;
-            background: rgba(0,0,0,0.5);
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            font-weight: 500;
-        }
-
-        /* --- 2. Floating Video Controls (The "Pill") --- */
-        .video-controls-bar {
-            position: absolute;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            
-            display: flex;
-            gap: 20px;
-            
-            background: rgba(32, 33, 36, 0.9); /* Semi-transparent dark pill */
-            padding: 15px 30px;
-            border-radius: 50px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            z-index: 2100; /* On top of videos */
-        }
-
-        .control-btn {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            border: none;
-            background-color: #3c4043;
-            color: white;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s ease;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
-
-        .control-btn:hover {
-            background-color: #4b4f52;
-            transform: scale(1.1);
-        }
-
-        /* Active States (Red/Off) */
-        .control-btn.active-off {
-            background-color: #ea4335;
-        }
-        
-        .end-call-btn {
-            background-color: #ea4335;
-            padding: 0 20px;
-            width: auto;
-            border-radius: 30px;
-        }
+        .video-grid { flex: 1; display: flex; justify-content: center; align-items: center; flex-wrap: wrap; padding: 2rem; gap: 1rem; overflow-y: auto; }
+        .video-wrapper { position: relative; width: 100%; max-width: 600px; aspect-ratio: 16/9; background: #3c4043; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+        .video-label { position: absolute; bottom: 10px; left: 10px; color: white; background: rgba(0,0,0,0.5); padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 500; }
+        .video-controls-bar { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 20px; background: rgba(32, 33, 36, 0.9); padding: 15px 30px; border-radius: 50px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); z-index: 2100; }
+        .control-btn { width: 50px; height: 50px; border-radius: 50%; border: none; background-color: #3c4043; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; }
+        .control-btn:hover { background-color: #4b4f52; transform: scale(1.1); }
+        .control-btn.active-off { background-color: #ea4335; }
+        .end-call-btn { background-color: #ea4335; padding: 0 20px; width: auto; border-radius: 30px; }
         .end-call-btn:hover { background-color: #d93025; }
 
-
-        /* --- 3. Header Buttons (Green Start Button) --- */
+        /* Header Buttons */
         .header-actions { display: flex; gap: 12px; align-items: center; }
-        
-        .start-call-btn {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 0.5rem 1rem;
-            background-color: #10b981; /* Green */
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
+        .start-call-btn { display: flex; align-items: center; gap: 8px; padding: 0.5rem 1rem; background-color: #10b981; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background-color 0.2s; }
         .start-call-btn:hover { background-color: #059669; }
+        .invite-button { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; border-radius: 6px; border: 1px solid #e5e7eb; background-color: white; cursor: pointer; font-weight: 500; }
 
-        .invite-button {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            border: 1px solid #e5e7eb;
-            background-color: white;
-            cursor: pointer;
-            font-weight: 500;
-        }
-
-        /* --- 4. Task Widget --- */
-        .task-fab {
-            position: fixed; bottom: 30px; right: 30px;
-            width: 60px; height: 60px; border-radius: 50%;
-            background: linear-gradient(45deg, #3e399b, #95508f);
-            color: white; display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2); cursor: pointer; z-index: 1000;
-            transition: transform 0.2s;
-        }
+        /* Task Widget */
+        .task-fab { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(45deg, #3e399b, #95508f); color: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.2); cursor: pointer; z-index: 1000; transition: transform 0.2s; }
         .task-fab:hover { transform: scale(1.1); }
-        .task-panel {
-            position: fixed; bottom: 100px; right: 30px;
-            width: 350px; height: 500px; background: white;
-            border-radius: 12px; box-shadow: 0 5px 25px rgba(0,0,0,0.15);
-            display: none; flex-direction: column; z-index: 1000;
-            border: 1px solid #e5e7eb; overflow: hidden;
-        }
+        .task-panel { position: fixed; bottom: 100px; right: 30px; width: 350px; height: 500px; background: white; border-radius: 12px; box-shadow: 0 5px 25px rgba(0,0,0,0.15); display: none; flex-direction: column; z-index: 1000; border: 1px solid #e5e7eb; overflow: hidden; }
         .task-header { padding: 1rem; background: #f9fafb; border-bottom: 1px solid #e5e7eb; font-weight: bold; display: flex; justify-content: space-between; }
         .task-list { flex: 1; overflow-y: auto; padding: 1rem; }
         .task-item { background: #fff; border: 1px solid #e5e7eb; padding: 0.75rem; border-radius: 6px; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.75rem; }
@@ -181,7 +52,26 @@
         .task-input-area input, .task-input-area select { padding: 0.5rem; border: 1px solid #e5e7eb; border-radius: 4px; }
         .add-task-btn { background: #3e399b; color: white; border: none; padding: 0.5rem; border-radius: 4px; cursor: pointer; }
 
-        /* Misc Utils */
+        /* FIX: Code file list items - same look as document items */
+        .code-file-item { padding: 10px 15px; cursor: pointer; border-radius: 6px; margin: 4px 8px; font-size: 0.9rem; color: #374151; display: flex; align-items: center; gap: 8px; transition: background 0.15s; user-select: none; }
+        .code-file-item:hover { background: #f3f4f6; }
+        .code-file-item.active { background: #e0e7ff; color: #3e399b; font-weight: 600; }
+        .code-file-icon { font-size: 0.9rem; }
+
+        /* Terminal Output */
+        #terminal-output { display: none; background: #111; color: #4ade80; font-family: monospace; font-size: 0.85rem; padding: 10px 14px; max-height: 160px; overflow-y: auto; border-top: 2px solid #333; flex-shrink: 0; }
+
+        /* AI Popup */
+        #ai-popup { position: fixed; bottom: 20px; right: 20px; width: 390px; max-height: 460px; background: #1e1e1e; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); display: none; flex-direction: column; z-index: 5000; overflow: hidden; border: 1px solid #3d3d3d; }
+        #ai-popup-header { background: #2d2d2d; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; color: white; font-weight: 600; border-bottom: 1px solid #3d3d3d; font-size: 0.9rem; }
+        #ai-popup-header button { background: none; border: none; color: #999; cursor: pointer; font-size: 18px; line-height: 1; padding: 0; }
+        #ai-popup-header button:hover { color: white; }
+        #ai-content { flex: 1; padding: 14px; color: #d4d4d4; font-family: 'Segoe UI', sans-serif; font-size: 0.85rem; overflow-y: auto; white-space: pre-wrap; line-height: 1.65; }
+        #ai-loading { display: none; align-items: center; gap: 10px; padding: 18px 14px; color: #888; font-size: 0.85rem; }
+        .ai-spinner { width: 18px; height: 18px; border: 2px solid #444; border-top-color: #6200ea; border-radius: 50%; animation: spin 0.7s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Misc */
         .delete-project-btn { margin-left: auto; background: none; border: none; color: #fca5a5; cursor: pointer; font-weight: bold; display: none; padding: 0 5px; border-radius: 4px; }
         .channel-item:hover .delete-project-btn { display: inline-block; }
         .delete-project-btn:hover { color: #ef4444; background-color: #fee2e2; }
@@ -194,7 +84,6 @@
                 <strong>🔔 Join Requests:</strong>
                 <div id="request-list"></div>
             </div>
-
             <header class="sidebar-header">
                 <a href="index.html" class="logo">
                     <div class="logo-icon"></div>
@@ -202,13 +91,13 @@
                 </a>
             </header>
             <div class="sidebar-content">
-                <div class="projects-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding-right: 10px;">
-                    <span style="font-weight: bold; color: #333;">Projects</span>
-                    <button onclick="openProjectModal()" style="background:none; border:none; color: #3e399b; font-size: 28px; font-weight: bold; cursor:pointer; line-height: 1;" title="Create a new project">+</button>
+                <div class="projects-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; padding-right:10px;">
+                    <span style="font-weight:bold; color:#333;">Projects</span>
+                    <button onclick="openProjectModal()" style="background:none; border:none; color:#3e399b; font-size:28px; font-weight:bold; cursor:pointer; line-height:1;" title="Create a new project">+</button>
                 </div>
                 <div id="channel-list" class="channel-list"></div>
             </div>
-             <footer class="sidebar-footer">
+            <footer class="sidebar-footer">
                 <div id="user-profile-button" class="user-profile-button">
                     <span id="username-display-sidebar" class="username">Guest</span>
                 </div>
@@ -225,41 +114,37 @@
                     <span class="hash">#</span>
                     <span id="chat-title">Select a Project</span>
                 </div>
-                
-                <div class="header-actions" id="header-actions" style="display: none;">
+                <div class="header-actions" id="header-actions" style="display:none;">
                     <button class="start-call-btn" onclick="startVideoCall()">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M23 7l-7 5 7 5V7z"></path>
-                            <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
-                        </svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 7l-7 5 7 5V7z"></path><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
                         <span>Start Call</span>
                     </button>
-
-                    <button class="invite-button" id="invite-button" onclick="showInviteModal()">
+                    <button class="invite-button" onclick="showInviteModal()">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="19" y1="8" x2="19" y2="14"></line><line x1="22" y1="11" x2="16" y2="11"></line></svg>
                         <span>Invite</span>
                     </button>
                 </div>
             </header>
 
-            
-            <div class="view-tabs" id="view-tabs" style="display: none;">
+            <div class="view-tabs" id="view-tabs" style="display:none;">
                 <button class="tab-btn active" onclick="switchView('chat')">Chat</button>
                 <button class="tab-btn" onclick="switchView('documents')">Documents</button>
                 <button class="tab-btn" onclick="switchView('code')">Code</button>
             </div>
 
-            <div class="chat-messages view" id="chat-view" style="display: none;">
+            <!-- Chat View -->
+            <div class="chat-messages view" id="chat-view" style="display:none;">
                 <div class="messages-wrapper" id="messages-wrapper"></div>
             </div>
             
-            <div class="documents-view view" id="documents-view" style="display: none; width: 100%; height: 100%;">
+            <!-- Documents View -->
+            <div class="documents-view view" id="documents-view" style="display:none; width:100%; height:100%;">
                 <div class="documents-list-panel">
                     <div class="documents-header">
                         <h3>Documents</h3>
                         <button id="add-doc-btn">+</button>
                     </div>
-                    <div id="new-doc-container" style="display: none;">
+                    <div id="new-doc-container" style="display:none;">
                         <input type="text" id="new-doc-input" placeholder="New document title...">
                     </div>
                     <div id="doc-list"></div>
@@ -269,72 +154,84 @@
                 </div>
             </div>
 
-            <div class="code-view view" id="code-view" style="display: none; width: 100%; height: 100%;">
+            <!-- Code View -->
+            <div class="code-view view" id="code-view" style="display:none; width:100%; height:100%;">
+                <!-- FIX: Code file sidebar styled the same way as Documents -->
                 <div class="documents-list-panel">
                     <div class="documents-header">
                         <h3>Code Files</h3>
-                        <button id="add-code-btn" style="background: none; border: none; font-size: 20px; cursor: pointer;">+</button>
+                        <button id="add-code-btn" style="background:none; border:none; font-size:22px; cursor:pointer; color:#3e399b; font-weight:bold; line-height:1;">+</button>
                     </div>
-                    <div id="new-code-container" style="display: none; padding: 10px;">
-                        <input type="text" id="new-code-input" placeholder="e.g. app.js" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                    <div id="new-code-container" style="display:none; padding:8px;">
+                        <input type="text" id="new-code-input" placeholder="e.g. app.js" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px; font-size:0.85rem;">
                     </div>
+                    <!-- code-list renders .code-file-item divs -->
                     <div id="code-list"></div>
                 </div>
                 
-                <div class="document-editor-panel" style="padding: 0; display: flex; flex-direction: column; background: #1e1e1e;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; border-bottom: 1px solid #333; background: #2d2d2d;">
-                        <span style="color: #4ade80; font-family: monospace; font-weight: bold;">💻 Monaco IDE</span>
-                        <button id="ask-ai-btn" style="background: #6200ea; color: white; border: none; padding: 5px 12px; border-radius: 4px; cursor: pointer; display: none;">Ask Groq AI ✨</button>
+                <!-- Monaco Editor Panel -->
+                <div class="document-editor-panel" style="padding:0; display:flex; flex-direction:column; background:#1e1e1e; overflow:hidden;">
+                    <!-- Toolbar -->
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 15px; border-bottom:1px solid #333; background:#2d2d2d; flex-shrink:0;">
+                        <span style="color:#4ade80; font-family:monospace; font-weight:bold; font-size:0.9rem;">💻 Monaco IDE</span>
+                        <div style="display:flex; gap:8px; align-items:center;">
+                            <span id="current-file-label" style="color:#888; font-family:monospace; font-size:0.78rem;"></span>
+                            <!-- FIX: Ask AI button is HTML (not injected via JS) -->
+                            <button id="ask-ai-btn" style="background:#6200ea; color:white; border:none; padding:5px 14px; border-radius:4px; cursor:pointer; display:none; font-size:0.82rem; font-weight:600;">Ask Groq AI ✨</button>
+                            <button id="run-code-btn" style="background:#10b981; color:white; border:none; padding:5px 14px; border-radius:4px; cursor:pointer; display:none; font-size:0.82rem; font-weight:600;">▶ Run</button>
+                        </div>
                     </div>
-                    <div style="flex: 1; position: relative; width: 100%; height: 100%;">
-                        <div id="editor-container" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0;"></div>
+                    <!-- Editor container -->
+                    <div style="flex:1; position:relative; min-height:0;">
+                        <div id="editor-container" style="position:absolute; top:0; left:0; right:0; bottom:0;"></div>
+                    </div>
+                    <!-- Terminal -->
+                    <div id="terminal-output">
+                        <div style="color:#555; margin-bottom:4px; font-size:0.72rem; letter-spacing:0.05em;">▶ CONSOLE OUTPUT</div>
+                        <div id="console-logs"></div>
                     </div>
                 </div>
             </div>
 
+            <!-- Welcome Screen -->
             <div class="welcome-screen" id="welcome-screen">
                 <div class="logo-icon-large"></div>
                 <h2>Welcome to InnovUnity!</h2>
                 <p>Select a project to start collaborating.</p>
             </div>
             
-            <div class="chat-input-area" id="chat-input-area" style="display: none;">
-                <div class="chat-input-wrapper" style="display: flex; align-items: center; gap: 10px; padding: 10px; background: #f9fafb; border-top: 1px solid #e5e7eb;">
-                    <input type="text" id="message-input" placeholder="Type a message..." style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
-                    <button class="icon-btn" onclick="openFileLibrary()" style="background:none; border:none; font-size:20px; cursor:pointer;">📎</button>
+            <!-- Chat Input -->
+            <div class="chat-input-area" id="chat-input-area" style="display:none;">
+                <div class="chat-input-wrapper" style="display:flex; align-items:center; gap:10px; padding:10px; background:#f9fafb; border-top:1px solid #e5e7eb;">
+                    <input type="text" id="message-input" placeholder="Type a message..." style="flex:1; padding:10px; border:1px solid #ddd; border-radius:6px;">
+                    <button onclick="openFileLibrary()" style="background:none; border:none; font-size:20px; cursor:pointer;">📎</button>
                 </div>
             </div>
         </main>
         
+        <!-- FIX: Single members sidebar (duplicate removed) -->
         <aside class="members-sidebar" id="members-sidebar">
-             <div class="members-header">MEMBERS</div>
-             <div class="members-list" id="members-list"></div>
+            <div class="members-header">MEMBERS</div>
+            <div class="members-list" id="members-list"></div>
         </aside>
     </div>
 
-    <div id="file-library-modal" class="modal-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:5000; justify-content:center; align-items:center;">
-        <div class="modal-content" style="background:white; padding:20px; border-radius:12px; width:90%; max-width:500px; position:relative;">
-            <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; padding-bottom:10px;">
-                <h3 style="margin:0;">Project Documents</h3>
+    <!-- File Library Modal -->
+    <div id="file-library-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:5000; justify-content:center; align-items:center;">
+        <div style="background:white; padding:20px; border-radius:12px; width:90%; max-width:500px; position:relative;">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; padding-bottom:10px;">
+                <h3 style="margin:0;">Project Files</h3>
                 <span style="cursor:pointer; font-size:24px;" onclick="closeFileLibrary()">×</span>
             </div>
-            <div id="file-grid" class="file-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap:15px; padding:20px 0; max-height:300px; overflow-y:auto;">
-                </div>
-            <div class="modal-footer" style="border-top:1px solid #eee; padding-top:15px; text-align:center;">
-                <input type="file" id="file-upload-lib" style="display: none;" onchange="handleFileUpload(this)">
-                <button class="add-task-btn" onclick="document.getElementById('file-upload-lib').click()" style="background:#3e399b; color:white; border:none; padding:10px 20px; border-radius:6px; cursor:pointer;">+ Upload New File</button>
+            <div id="file-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(100px, 1fr)); gap:15px; padding:20px 0; max-height:300px; overflow-y:auto;"></div>
+            <div style="border-top:1px solid #eee; padding-top:15px; text-align:center;">
+                <input type="file" id="file-upload-lib" style="display:none;" onchange="handleFileUpload(this)">
+                <button onclick="document.getElementById('file-upload-lib').click()" style="background:#3e399b; color:white; border:none; padding:10px 20px; border-radius:6px; cursor:pointer;">+ Upload New File</button>
             </div>
         </div>
     </div>
-            </div>
-        </main>
-        
-        <aside class="members-sidebar" id="members-sidebar">
-             <div class="members-header">MEMBERS</div>
-             <div class="members-list" id="members-list"></div>
-        </aside>
-    </div>
 
+    <!-- Video Call Overlay -->
     <div id="video-call-overlay" class="video-call-overlay">
         <div class="video-grid" id="video-grid"></div>
         <div class="video-controls-bar">
@@ -350,13 +247,14 @@
         </div>
     </div>
 
-    <div id="task-fab" class="task-fab" onclick="toggleTaskPanel()" style="display: none;">
+    <!-- Task FAB & Panel -->
+    <div id="task-fab" class="task-fab" onclick="toggleTaskPanel()" style="display:none;">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
     </div>
     <div id="task-panel" class="task-panel">
         <div class="task-header">
             <span>Project Tasks</span>
-            <span style="cursor:pointer" onclick="toggleTaskPanel()">×</span>
+            <span style="cursor:pointer;" onclick="toggleTaskPanel()">×</span>
         </div>
         <div class="task-list" id="task-list"></div>
         <div class="task-input-area">
@@ -366,9 +264,10 @@
         </div>
     </div>
 
+    <!-- Invite Modal -->
     <div class="modal-overlay" id="invite-modal-overlay" onclick="hideInviteModal()">
         <div class="modal-content" onclick="event.stopPropagation()">
-            <h3 id="invite-modal-title">Invite to Project</h3>
+            <h3>Invite to Project</h3>
             <div class="invite-link-wrapper">
                 <input type="text" id="invite-link-input" readonly>
                 <button onclick="copyInviteLink()">Copy</button>
@@ -377,8 +276,9 @@
         </div>
     </div>
 
+    <!-- Create Project Modal -->
     <div id="projectModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:3000; justify-content:center; align-items:center;">
-        <div style="background:white; padding:20px; border-radius:8px; width:300px; text-align:center; color: black;">
+        <div style="background:white; padding:20px; border-radius:8px; width:300px; text-align:center; color:black;">
             <h3 style="margin-bottom:15px;">Create New Project</h3>
             <input type="text" id="newProjectName" placeholder="Enter Project Name" style="width:100%; padding:10px; margin-bottom:15px; border:1px solid #ccc; border-radius:4px;">
             <div style="display:flex; gap:10px;">
@@ -388,101 +288,80 @@
         </div>
     </div>
 
+    <!-- FIX: AI Popup lives in HTML, NOT inside a script tag -->
+    <div id="ai-popup">
+        <div id="ai-popup-header">
+            <span>🤖 Groq AI Code Review</span>
+            <button onclick="closeAIPopup()" title="Close">✕</button>
+        </div>
+        <div id="ai-loading">
+            <div class="ai-spinner"></div>
+            <span>Analyzing your code with Groq...</span>
+        </div>
+        <div id="ai-content">Select a code file and press "Ask Groq AI ✨" to get a review.</div>
+    </div>
+
     <script>
-        // --- FILE UPLOAD FUNCTION ---
-async function handleFileUpload(input) {
-    const file = input.files[0];
-    if (!file) return;
-
-    // Optional: Visual feedback while uploading
-    const msgInput = document.getElementById('message-input');
-    const originalPlaceholder = msgInput.placeholder;
-    msgInput.placeholder = "Uploading...";
-    msgInput.disabled = true;
-
-    const formData = new FormData();
-    formData.append('file', file);
-
-    try {
-        // ✨ UPDATED: Uses the new /api/files/upload route
-        const res = await fetch(`${API_BASE}/api/files/upload`, { 
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${token}` }, 
-            body: formData
-        });
-
-        const data = await res.json();
-        
-        if (data.fileUrl) {
-            // Send the S3 URL as a chat message
-            socket.emit('sendMessage', { 
-                projectId: currentChannel._id, 
-                text: data.fileUrl, 
-                authorName: userName, 
-                userId: currentUserId 
-            });
-        } else {
-            alert("Upload failed: " + (data.error || "Unknown error"));
-        }
-    } catch (e) {
-        console.error("Upload error:", e);
-        alert("Error uploading file");
-    } finally {
-        // Reset UI
-        msgInput.placeholder = originalPlaceholder;
-        msgInput.disabled = false;
-        input.value = ''; // Clear input so you can upload the same file again if needed
-    }
-}
-        // --- AUTH & SETUP ---
+        // ================================================================
+        // AUTH & CORE SETUP
+        // ================================================================
         const token = localStorage.getItem("token");
         if (!token) window.location.href = "register.html";
+
         const userName = localStorage.getItem("user_name") || "Guest";
         let currentUserId = localStorage.getItem("user_id"); 
-        
         const API_BASE = "";
         const socket = io(API_BASE, { auth: { token } });
-        
-        // --- GLOBAL VARIABLES ---
+
+        // ================================================================
+        // GLOBAL STATE
+        // ================================================================
         let currentChannel = null;
         let channels = [];
         let documents = [];
         let currentDocument = null;
-        
-        // --- VIDEO CALL VARS ---
+
+        // Video
         let localStream;
         let peers = {}; 
         let isMuted = false;
         let isCameraOff = false;
 
-        // --- DOM ELEMENTS ---
-        const channelList = document.getElementById('channel-list');
-        const messagesWrapper = document.getElementById('messages-wrapper');
-        const messageInput = document.getElementById('message-input');
-        const membersList = document.getElementById('members-list');
-        const videoGrid = document.getElementById('video-grid');
-        const micBtn = document.getElementById('mic-btn');
-        const cameraBtn = document.getElementById('camera-btn');
+        // Monaco / Code
+        let codeFiles = [];
+        let currentCodeFile = null;
+        let editorInstance = null;
+        let isTypingCode = false;
+        let currentDecorations = [];
 
-        // --- INIT ---
+        // ================================================================
+        // DOM REFS
+        // ================================================================
+        const channelList   = document.getElementById('channel-list');
+        const messagesWrapper = document.getElementById('messages-wrapper');
+        const messageInput  = document.getElementById('message-input');
+        const membersList   = document.getElementById('members-list');
+        const videoGrid     = document.getElementById('video-grid');
+        const micBtn        = document.getElementById('mic-btn');
+        const cameraBtn     = document.getElementById('camera-btn');
+
+        // ================================================================
+        // INIT
+        // ================================================================
         document.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('username-display-sidebar').innerText = userName;
-            
+
             const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('invite')) {
-                await joinProjectWithCode(urlParams.get('invite'));
-            }
-            
-            const userBtn = document.getElementById('user-profile-button');
+            if (urlParams.get('invite')) await joinProjectWithCode(urlParams.get('invite'));
+
+            const userBtn  = document.getElementById('user-profile-button');
             const userMenu = document.getElementById('user-menu');
             if (userBtn && userMenu) {
                 userBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
                     userMenu.style.display = userMenu.style.display === 'block' ? 'none' : 'block';
                 });
-                document.addEventListener('click', () => {
-                    userMenu.style.display = 'none';
-                });
+                document.addEventListener('click', () => { userMenu.style.display = 'none'; });
             }
 
             await loadUserProfile();
@@ -502,154 +381,141 @@ async function handleFileUpload(input) {
         }
 
         async function fetchProjects() {
-            const res = await fetch(`${API_BASE}/api/projects`, { headers: { 'Authorization': `Bearer ${token}` } });
-            channels = await res.json();
-            renderProjects();
+            try {
+                const res = await fetch(`${API_BASE}/api/projects`, { headers: { 'Authorization': `Bearer ${token}` } });
+                channels = await res.json();
+                renderProjects();
+            } catch(e) { console.error("Failed to fetch projects:", e); }
         }
 
-        // --- NEW PROJECT MODAL LOGIC ---
-        function openProjectModal() {
-            document.getElementById('projectModal').style.display = 'flex';
-        }
-
-        function closeProjectModal() {
-            document.getElementById('projectModal').style.display = 'none';
-            document.getElementById('newProjectName').value = ""; 
-        }
+        // ================================================================
+        // PROJECT MODAL
+        // ================================================================
+        function openProjectModal()  { document.getElementById('projectModal').style.display = 'flex'; }
+        function closeProjectModal() { document.getElementById('projectModal').style.display = 'none'; document.getElementById('newProjectName').value = ''; }
 
         async function createProject() {
-            const nameInput = document.getElementById('newProjectName');
-            const name = nameInput.value.trim();
-            
+            const name = document.getElementById('newProjectName').value.trim();
             if (!name) return alert("Please enter a project name!");
-
             try {
                 const res = await fetch(`${API_BASE}/api/projects`, {
                     method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}` 
-                    },
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                     body: JSON.stringify({ name })
                 });
-
-                if (res.ok) {
-                    alert("Project Created!");
-                    closeProjectModal();
-                    fetchProjects(); 
-                } else {
-                    const data = await res.json();
-                    alert(data.error || "Failed to create project");
-                }
-            } catch (err) {
-                console.error(err);
-                alert("Error creating project");
-            }
+                if (res.ok) { closeProjectModal(); fetchProjects(); }
+                else { const d = await res.json(); alert(d.error || "Failed to create project"); }
+            } catch (e) { alert("Error creating project"); }
         }
 
-        // --- PROJECT RENDERING ---
+        // ================================================================
+        // PROJECT RENDERING & OPENING
+        // ================================================================
         function renderProjects() {
-    channelList.innerHTML = '';
-    channels.forEach(project => {
-        const item = document.createElement('div');
-        item.className = `channel-item ${currentChannel && currentChannel._id === project._id ? 'active' : ''}`;
-        
-        let actionBtn = '';
-
-        // LOGIC: 
-        // If I am Creator -> Show Delete (×)
-        // If I am Member  -> Show Leave (➜)
-        if (project.creator === currentUserId) {
-            actionBtn = `<button class="delete-project-btn" onclick="deleteProject('${project._id}', event)" title="Delete Project">×</button>`;
-        } else {
-            actionBtn = `<button class="delete-project-btn" onclick="leaveProject('${project._id}', event)" title="Leave Project" style="color:orange;">➜</button>`;
+            channelList.innerHTML = '';
+            channels.forEach(project => {
+                const item = document.createElement('div');
+                item.className = `channel-item ${currentChannel && currentChannel._id === project._id ? 'active' : ''}`;
+                // FIX: Safe string comparison for creator check
+                const creatorId = project.creator?._id || project.creator;
+                const isMine = String(creatorId) === String(currentUserId);
+                const actionBtn = isMine
+                    ? `<button class="delete-project-btn" onclick="deleteProject('${project._id}',event)" title="Delete">×</button>`
+                    : `<button class="delete-project-btn" onclick="leaveProject('${project._id}',event)" title="Leave" style="color:orange;">➜</button>`;
+                item.innerHTML = `<span class="channel-icon">#</span><span class="channel-name">${project.name}</span>${actionBtn}`;
+                item.addEventListener('click', (e) => { if (e.target.tagName !== 'BUTTON') openProject(project); });
+                channelList.appendChild(item);
+            });
         }
 
-        item.innerHTML = `<span class="channel-icon">#</span><span class="channel-name">${project.name}</span>${actionBtn}`;
-        
-        item.addEventListener('click', (e) => {
-            // Only open if we didn't click the button
-            if (e.target.tagName !== 'BUTTON') openProject(project);
-        });
-        
-        channelList.appendChild(item);
-    });
-}
+        async function openProject(project) {
+            currentChannel = project;
+            renderProjects();
 
-      async function openProject(project) {
-        
-        currentChannel = project;
-        renderProjects();
+            // Leave old document/code rooms
+            if (currentDocument) { socket.emit('leaveDocument', currentDocument); currentDocument = null; }
+            if (currentCodeFile) { socket.emit('leaveCodeFile', currentCodeFile); currentCodeFile = null; }
 
-        // 1. Leave old document room
-        if (currentDocument) {
-            socket.emit('leaveDocument', currentDocument);
-            currentDocument = null;
+            // Reset Monaco state for new project
+            document.getElementById('ask-ai-btn').style.display = 'none';
+            document.getElementById('run-code-btn').style.display = 'none';
+            document.getElementById('current-file-label').innerText = '';
+            document.getElementById('terminal-output').style.display = 'none';
+            if (editorInstance) {
+                editorInstance.updateOptions({ readOnly: true });
+                isTypingCode = true;
+                editorInstance.setValue('// Select or create a code file...');
+                isTypingCode = false;
+            }
+
+            // Reset doc editor cleanly
+            const textarea = document.getElementById('doc-editor');
+            if (textarea) {
+                textarea.value = '';
+                textarea.placeholder = 'Select a document to start editing...';
+                const fresh = textarea.cloneNode(true);
+                textarea.parentNode.replaceChild(fresh, textarea);
+            }
+
+            // Show workspace UI
+            document.getElementById('welcome-screen').style.display = 'none';
+            document.getElementById('view-tabs').style.display = 'flex';
+            document.getElementById('members-sidebar').style.display = 'flex';
+            document.getElementById('header-actions').style.display = 'flex';
+            document.getElementById('chat-input-area').style.display = 'block';
+            document.getElementById('task-fab').style.display = 'flex';
+            checkPendingRequests(project);
+
+            switchView('chat');
+            document.getElementById('chat-title').innerText = project.name;
+
+            // Parallel fetch
+            const [msgRes, detailRes, docRes] = await Promise.all([
+                fetch(`${API_BASE}/api/projects/${project._id}/messages`, { headers: { 'Authorization': `Bearer ${token}` } }),
+                fetch(`${API_BASE}/api/projects/${project._id}`,          { headers: { 'Authorization': `Bearer ${token}` } }),
+                fetch(`${API_BASE}/api/projects/${project._id}/documents`, { headers: { 'Authorization': `Bearer ${token}` } })
+            ]);
+
+            const messages      = await msgRes.json();
+            const projectDetails = await detailRes.json();
+            documents           = await docRes.json();
+            currentChannel      = projectDetails; // Use the enriched detail object
+
+            messagesWrapper.innerHTML = '';
+            messages.forEach(addMessageToUI);
+            renderMembers(projectDetails.members);
+            renderDocuments();
+            loadTasks(project._id);
+            // FIX: Load code files immediately so list shows on project open
             loadCodeFiles();
         }
 
-        // 2. Wipe the editor UI clean immediately
-        const textarea = document.getElementById('doc-editor');
-        if (textarea) {
-            textarea.value = ""; 
-            textarea.placeholder = "Select a document to start editing...";
-            const newTextarea = textarea.cloneNode(true);
-            textarea.parentNode.replaceChild(newTextarea, textarea);
+        // ================================================================
+        // VIEW SWITCHING
+        // ================================================================
+        function switchView(view) {
+            document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`${view}-view`).style.display = 'flex';
+            document.querySelector(`button[onclick="switchView('${view}')"]`).classList.add('active');
+            document.getElementById('chat-input-area').style.display = view === 'chat' ? 'block' : 'none';
         }
 
-        // 3. UI Updates
-        document.getElementById('welcome-screen').style.display = 'none';
-        document.getElementById('view-tabs').style.display = 'flex';
-        document.getElementById('members-sidebar').style.display = 'flex';
-        document.getElementById('header-actions').style.display = 'flex'; 
-        document.getElementById('chat-input-area').style.display = 'block';
-        document.getElementById('task-fab').style.display = 'flex';
-        checkPendingRequests(project);
-
-        switchView('chat');
-        document.getElementById('chat-title').innerText = project.name;
-        
-        const [msgRes, detailRes, docRes] = await Promise.all([
-            fetch(`${API_BASE}/api/projects/${project._id}/messages`, { headers: { 'Authorization': `Bearer ${token}` } }),
-            fetch(`${API_BASE}/api/projects/${project._id}`, { headers: { 'Authorization': `Bearer ${token}` } }),
-            fetch(`${API_BASE}/api/projects/${project._id}/documents`, { headers: { 'Authorization': `Bearer ${token}` } })
-        ]);
-
-        const messages = await msgRes.json();
-        const projectDetails = await detailRes.json();
-        documents = await docRes.json();
-        currentChannel = projectDetails; 
-
-        messagesWrapper.innerHTML = '';
-        messages.forEach(addMessageToUI);
-        renderMembers(projectDetails.members);
-        renderDocuments();
-        loadTasks(project._id);
-        currentChannel = project;
-    }
-
-        // --- VIDEO CALL LOGIC ---
+        // ================================================================
+        // VIDEO CALL
+        // ================================================================
         async function startVideoCall() {
             if (!currentChannel) return;
             document.getElementById('video-call-overlay').style.display = 'flex';
-            
             try {
                 localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-                
-                // FORCE CAMERA OFF INITIALLY
                 const videoTrack = localStream.getVideoTracks()[0];
-                if (videoTrack) {
-                    videoTrack.enabled = false; 
-                    isCameraOff = true;         
+                if (videoTrack) { videoTrack.enabled = false; isCameraOff = true; }
+                const cam = document.getElementById('camera-btn');
+                if (cam) {
+                    cam.classList.add('active-off');
+                    cam.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M16 16v1a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2m5.66 0H14a2 2 0 0 1 2 2v3.34l1 1L23 7v10"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
                 }
-
-                // Turn the UI Button Red
-                const cameraBtn = document.getElementById('camera-btn');
-                if (cameraBtn) {
-                    cameraBtn.classList.add('active-off'); 
-                    cameraBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M16 16v1a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2m5.66 0H14a2 2 0 0 1 2 2v3.34l1 1L23 7v10"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
-                }
-
                 addVideoStream(localStream, 'You', true);
                 socket.emit('join-voice-room', currentChannel._id, currentUserId);
             } catch (err) {
@@ -661,731 +527,579 @@ async function handleFileUpload(input) {
 
         function leaveVideoCall() {
             document.getElementById('video-call-overlay').style.display = 'none';
-            if (localStream) {
-                localStream.getTracks().forEach(track => {
-                    track.stop();
-                    track.enabled = false;
-                });
-                localStream = null;
-            }
-            if (currentChannel) {
-                socket.emit('leave-voice-room', currentChannel._id, currentUserId);
-            }
-            Object.values(peers).forEach(peer => {
-                if(peer) peer.destroy();
-            });
-            peers = {};
-            videoGrid.innerHTML = ''; 
+            if (localStream) { localStream.getTracks().forEach(t => { t.stop(); t.enabled = false; }); localStream = null; }
+            if (currentChannel) socket.emit('leave-voice-room', currentChannel._id, currentUserId);
+            Object.values(peers).forEach(p => { if(p) p.destroy(); });
+            peers = {}; videoGrid.innerHTML = '';
         }
 
         function toggleMute() {
             if (!localStream) return;
-            const audioTrack = localStream.getAudioTracks()[0];
-            if (audioTrack) {
-                isMuted = !isMuted;
-                audioTrack.enabled = !isMuted;
+            const track = localStream.getAudioTracks()[0];
+            if (track) {
+                isMuted = !isMuted; track.enabled = !isMuted;
                 micBtn.classList.toggle('active-off', isMuted);
-                micBtn.innerHTML = isMuted ? 
-                    `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="1" y1="1" x2="23" y2="23"></line><path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"></path><path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>` : 
-                    `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>`;
+                micBtn.innerHTML = isMuted
+                    ? `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="1" y1="1" x2="23" y2="23"></line><path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"></path><path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>`
+                    : `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>`;
             }
         }
 
         function toggleCamera() {
             if (!localStream) return;
-            const videoTrack = localStream.getVideoTracks()[0];
-            if (videoTrack) {
-                isCameraOff = !isCameraOff;
-                videoTrack.enabled = !isCameraOff;
+            const track = localStream.getVideoTracks()[0];
+            if (track) {
+                isCameraOff = !isCameraOff; track.enabled = !isCameraOff;
                 cameraBtn.classList.toggle('active-off', isCameraOff);
-                 cameraBtn.innerHTML = isCameraOff ? 
-                    `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M16 16v1a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2m5.66 0H14a2 2 0 0 1 2 2v3.34l1 1L23 7v10"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>` : 
-                    `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M23 7l-7 5 7 5V7z"></path><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>`;
+                cameraBtn.innerHTML = isCameraOff
+                    ? `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M16 16v1a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2m5.66 0H14a2 2 0 0 1 2 2v3.34l1 1L23 7v10"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`
+                    : `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M23 7l-7 5 7 5V7z"></path><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>`;
             }
         }
 
-        // --- WEBRTC SIGNALING ---
+        // ================================================================
+        // WEBRTC SIGNALING
+        // FIX 1: trickl -> trickle (x2)
+        // FIX 2: Nested user-disconnected listener removed
+        // ================================================================
         socket.on('user-connected', userId => {
-            console.log("New user connected:", userId);
-            
-            // Notify active call
             const btn = document.querySelector('.start-call-btn');
             if (btn && document.getElementById('video-call-overlay').style.display === 'none') {
-                btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 7l-7 5 7 5V7z"></path><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg><span>Join Active Call</span>`;
+                btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"></path><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg><span>Join Active Call</span>`;
                 btn.style.backgroundColor = '#ef4444';
             }
-
-            const peer = new SimplePeer({ initiator: true, trickl: false, stream: localStream });
-            
-            peer.on('signal', signal => {
-                socket.emit('signal-peer', { userToSignal: userId, callerId: socket.id, signal });
-            });
-
-            peer.on('stream', stream => addVideoStream(stream, 'User'));
-            
-            socket.on('user-disconnected', (disconnectedUserId) => {
-                if(disconnectedUserId === userId) {
-                    if(peers[disconnectedUserId]) peers[disconnectedUserId].destroy();
-                    delete peers[disconnectedUserId];
-                    const el = document.getElementById(`video-${userId}`);
-                    if(el) el.remove();
-                }
-            });
-
+            const peer = new SimplePeer({ initiator: true, trickle: false, stream: localStream }); // FIX: trickle
+            peer.on('signal', sig => { socket.emit('signal-peer', { userToSignal: userId, callerId: socket.id, signal: sig }); });
+            peer.on('stream', stream => addVideoStream(stream, 'User', false, userId));
             peers[userId] = peer;
         });
-        
-        socket.on('user-disconnected', userId => {
-            if (peers[userId]) {
-                peers[userId].destroy();
-                delete peers[userId];
-            }
+
+        socket.on('user-disconnected', userId => { // FIX: single top-level handler
+            if (peers[userId]) { peers[userId].destroy(); delete peers[userId]; }
             const el = document.getElementById(`video-${userId}`);
             if (el) el.remove();
         });
 
         socket.on('peer-signal', data => {
             const peerId = data.callerId;
-            const peer = peers[peerId] || new SimplePeer({ initiator: false, trickl: false, stream: localStream });
-            
+            const peer = peers[peerId] || new SimplePeer({ initiator: false, trickle: false, stream: localStream }); // FIX: trickle
             if (!peers[peerId]) {
-                 peer.on('signal', signal => {
-                    socket.emit('signal-peer', { userToSignal: peerId, callerId: socket.id, signal });
-                });
+                peer.on('signal', sig => { socket.emit('signal-peer', { userToSignal: peerId, callerId: socket.id, signal: sig }); });
                 peer.on('stream', stream => addVideoStream(stream, 'User', false, peerId));
                 peers[peerId] = peer;
             }
             peer.signal(data.signal);
         });
 
-        function addVideoStream(stream, labelText = 'User', isMutedLocal = false, userId = null) {
-            const wrapper = document.createElement('div');
-            wrapper.className = 'video-wrapper';
-            if(userId) wrapper.id = `video-${userId}`; 
-            
+        function addVideoStream(stream, label = 'User', muted = false, userId = null) {
+            const wrapper = document.createElement('div'); wrapper.className = 'video-wrapper';
+            if (userId) wrapper.id = `video-${userId}`;
             const video = document.createElement('video');
-            video.srcObject = stream;
-            video.autoplay = true;
-            video.playsInline = true; 
-            if (isMutedLocal) video.muted = true;
-
-            const label = document.createElement('div');
-            label.className = 'video-label';
-            label.innerText = labelText;
-
-            wrapper.appendChild(video);
-            wrapper.appendChild(label);
-            videoGrid.appendChild(wrapper);
+            video.srcObject = stream; video.autoplay = true; video.playsInline = true;
+            if (muted) video.muted = true;
+            const lbl = document.createElement('div'); lbl.className = 'video-label'; lbl.innerText = label;
+            wrapper.appendChild(video); wrapper.appendChild(lbl); videoGrid.appendChild(wrapper);
         }
 
-
-        // --- TASK LOGIC (FIXED) ---
+        // ================================================================
+        // TASKS
+        // ================================================================
         function toggleTaskPanel() {
-            const panel = document.getElementById('task-panel');
-            panel.style.display = panel.style.display === 'flex' ? 'none' : 'flex';
+            const p = document.getElementById('task-panel');
+            p.style.display = p.style.display === 'flex' ? 'none' : 'flex';
         }
 
-        // --- LOAD TASKS + POPULATE DROPDOWN SAFELY ---
-async function loadTasks(projectId) {
-    try {
-        // 1. Fetch Tasks
-        const res = await fetch(`${API_BASE}/api/projects/${projectId}/tasks`, { 
-            headers: { 'Authorization': `Bearer ${token}` } 
-        });
-        const tasks = await res.json();
-        renderTasks(tasks);
-
-        // 2. Populate Dropdown (BY READING THE SIDEBAR)
-        const taskAssignSelect = document.getElementById('task-assign-select');
-        if (!taskAssignSelect) return;
-
-        taskAssignSelect.innerHTML = '<option value="">Unassigned</option>';
-
-        // Grab all the member items from the sidebar
-        const sidebarItems = document.querySelectorAll('#members-list .member-item');
-        
-        sidebarItems.forEach(item => {
-            const name = item.getAttribute('data-user-name');
-            const id = item.getAttribute('data-user-id');
-
-            // If the sidebar has it, we add it. No questions asked.
-            if (id && name) {
-                const opt = document.createElement('option');
-                opt.value = id; 
-                opt.innerText = name;
-                taskAssignSelect.appendChild(opt);
-            }
-        });
-
-    } catch (e) { console.error("Error loading tasks:", e); }
-}
-
+        async function loadTasks(projectId) {
+            try {
+                const res = await fetch(`${API_BASE}/api/projects/${projectId}/tasks`, { headers: { 'Authorization': `Bearer ${token}` } });
+                renderTasks(await res.json());
+                const sel = document.getElementById('task-assign-select');
+                if (!sel) return;
+                sel.innerHTML = '<option value="">Unassigned</option>';
+                document.querySelectorAll('#members-list .member-item').forEach(item => {
+                    const name = item.getAttribute('data-user-name');
+                    const id   = item.getAttribute('data-user-id');
+                    if (id && name) { const o = document.createElement('option'); o.value = id; o.innerText = name; sel.appendChild(o); }
+                });
+            } catch(e) { console.error("Error loading tasks:", e); }
+        }
 
         function renderTasks(tasks) {
-            const list = document.getElementById('task-list'); 
+            const list = document.getElementById('task-list');
             list.innerHTML = '';
-            
-            if (!tasks || tasks.length === 0) {
-                list.innerHTML = '<div style="padding:15px; color:#666; text-align:center;">No tasks yet.</div>';
-                return;
-            }
-
-            tasks.forEach(task => {
-                const el = document.createElement('div'); 
-                el.className = `task-item ${task.status === 'completed' ? 'completed' : ''}`;
-                
-                // ✨ Just the simple Blue Name Box
-                let assigneeHtml = '';
-                if (task.assignedTo && task.assignedTo.name) {
-                     assigneeHtml = `
-                        <div class="task-assignee" style="font-size:0.75rem; background:#e0e7ff; color:#3e399b; padding:2px 8px; border-radius:4px; margin-left:auto; font-weight:500;">
-                            ${task.assignedTo.name}
-                        </div>`;
-                }
-
-                el.innerHTML = `
-                    <input type="checkbox" ${task.status === 'completed' ? 'checked' : ''} onchange="toggleTask('${task._id}', this.checked)">
-                    <span style="flex:1; margin-left:10px;">${task.description}</span>
-                    ${assigneeHtml}
-                    <button onclick="deleteTask('${task._id}')" style="margin-left:10px; border:none; background:none; color:#ef4444; cursor:pointer; font-weight:bold; font-size:18px;">×</button>
-                `;
+            if (!tasks || !tasks.length) { list.innerHTML = '<div style="padding:15px;color:#666;text-align:center;">No tasks yet.</div>'; return; }
+            tasks.forEach(t => {
+                const el = document.createElement('div');
+                el.className = `task-item ${t.status === 'completed' ? 'completed' : ''}`;
+                const assignee = t.assignedTo?.name ? `<div class="task-assignee">${t.assignedTo.name}</div>` : '';
+                el.innerHTML = `<input type="checkbox" ${t.status==='completed'?'checked':''} onchange="toggleTask('${t._id}',this.checked)"><span style="flex:1;margin-left:10px;">${t.description}</span>${assignee}<button onclick="deleteTask('${t._id}')" style="margin-left:10px;border:none;background:none;color:#ef4444;cursor:pointer;font-weight:bold;font-size:18px;">×</button>`;
                 list.appendChild(el);
             });
         }
 
         async function addTask() {
-            const descInput = document.getElementById('task-desc-input');
-            const assignSelect = document.getElementById('task-assign-select');
-            
-            const description = descInput.value.trim();
-            const assignedTo = assignSelect.value; 
-
-            if (!description) return alert("Please enter a task description");
-
+            const desc = document.getElementById('task-desc-input').value.trim();
+            const assignedTo = document.getElementById('task-assign-select').value;
+            if (!desc) return alert("Please enter a task description");
             try {
-                const res = await fetch(`${API_BASE}/api/projects/${currentChannel._id}/tasks`, {
-                    method: 'POST', 
-                    headers: { 
-                        'Authorization': `Bearer ${token}`, 
-                        'Content-Type': 'application/json' 
-                    },
-                    body: JSON.stringify({ description, assignedTo })
-                });
-
-                if (res.ok) {
-                    descInput.value = ''; 
-                    loadTasks(currentChannel._id); 
-                } else {
-                    alert("Failed to add task");
-                }
-            } catch (e) { console.error(e); }
+                const res = await fetch(`${API_BASE}/api/projects/${currentChannel._id}/tasks`, { method:'POST', headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'}, body:JSON.stringify({description:desc,assignedTo}) });
+                if (res.ok) { document.getElementById('task-desc-input').value=''; loadTasks(currentChannel._id); }
+                else alert("Failed to add task");
+            } catch(e) { console.error(e); }
         }
 
-        async function toggleTask(taskId, isDone) {
-            await fetch(`${API_BASE}/api/tasks/${taskId}`, { method: 'PUT', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ status: isDone ? 'completed' : 'pending' }) });
+        async function toggleTask(id, done) {
+            await fetch(`${API_BASE}/api/tasks/${id}`, { method:'PUT', headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'}, body:JSON.stringify({status:done?'completed':'pending'}) });
             loadTasks(currentChannel._id);
         }
-        
-        async function deleteTask(taskId) {
-            if(confirm('Delete task?')) { await fetch(`${API_BASE}/api/tasks/${taskId}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } }); loadTasks(currentChannel._id); }
+        async function deleteTask(id) {
+            if (confirm('Delete task?')) { await fetch(`${API_BASE}/api/tasks/${id}`, {method:'DELETE',headers:{'Authorization':`Bearer ${token}`}}); loadTasks(currentChannel._id); }
         }
 
-        // --- STANDARD CHAT & HELPERS ---
-        function switchView(view) {
-            document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(`${view}-view`).style.display = 'flex';
-            document.querySelector(`button[onclick="switchView('${view}')"]`).classList.add('active');
-            document.getElementById('chat-input-area').style.display = view === 'chat' ? 'block' : 'none';
+        // ================================================================
+        // MEMBERS
+        // FIX: Safe creator ID comparison
+        // ================================================================
+        function renderMembers(members) {
+            membersList.innerHTML = '';
+            if (!members) return;
+            const creatorId = currentChannel?.creator?._id || currentChannel?.creator || '';
+            const iAmCreator = String(creatorId) === String(currentUserId);
+            members.forEach(m => {
+                const item = document.createElement('div');
+                item.className = 'member-item';
+                const name = m.name || 'Unknown';
+                const id   = m._id  || m;
+                item.setAttribute('data-user-id',   id);
+                item.setAttribute('data-user-name', name);
+                let html = `<span style="padding:10px;font-weight:500;">${name}</span>`;
+                if (iAmCreator && String(id) !== String(currentUserId)) {
+                    html += `<button onclick="kickMember('${id}')" style="margin-left:auto;background:none;border:none;color:#ef4444;cursor:pointer;font-weight:bold;font-size:18px;padding:0 10px;" title="Remove">×</button>`;
+                }
+                item.style.cssText = 'display:flex;justify-content:space-between;align-items:center;';
+                item.innerHTML = html;
+                membersList.appendChild(item);
+            });
         }
-       function renderMembers(members) {
-    const membersList = document.getElementById('members-list');
-    membersList.innerHTML = '';
-    
-    if (!members) return;
 
-    // ✨ FIX: Safely get the Creator ID string
-    let creatorId = "";
-    if (currentChannel && currentChannel.creator) {
-        // If it's an object (populated), get ._id. If it's a string, use it directly.
-        creatorId = currentChannel.creator._id || currentChannel.creator;
-    }
-    
-    // Convert both to strings to be 100% sure they match
-    const iAmCreator = String(creatorId) === String(currentUserId);
-
-    members.forEach(member => {
-        const item = document.createElement('div'); 
-        item.className = 'member-item';
-        
-        // Handle name data safely
-        const name = member.name || "Unknown";
-        const id = member._id || member;
-
-        // Metadata for dropdowns
-        item.setAttribute('data-user-id', id); 
-        item.setAttribute('data-user-name', name);
-
-        // Build HTML
-        let html = `<span style="padding: 10px; font-weight: 500;">${name}</span>`;
-
-        // ✨ KICK BUTTON LOGIC:
-        // Show button ONLY if: I am Creator AND This member is not me
-        if (iAmCreator && String(id) !== String(currentUserId)) {
-            html += `
-            <button onclick="kickMember('${id}')" 
-                    style="margin-left:auto; background:none; border:none; color:#ef4444; cursor:pointer; font-weight:bold; font-size:18px; padding:0 10px;" 
-                    title="Remove Member">
-                ×
-            </button>`;
-        }
-        
-        // Layout tweak to keep button on the right
-        item.style.display = "flex";
-        item.style.justifyContent = "space-between";
-        item.style.alignItems = "center";
-        
-        item.innerHTML = html;
-        membersList.appendChild(item);
-    });
-}
+        // ================================================================
+        // CHAT
+        // ================================================================
         messageInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
+
         function sendMessage() {
-            const text = messageInput.value.trim(); if(!text || !currentChannel) return;
+            const text = messageInput.value.trim();
+            if (!text || !currentChannel) return;
             socket.emit('sendMessage', { projectId: currentChannel._id, text, authorName: userName, userId: currentUserId });
             messageInput.value = '';
         }
-        socket.on('receiveMessage', msg => { if(currentChannel && msg.projectId === currentChannel._id) addMessageToUI(msg); });
+
+        socket.on('receiveMessage', msg => { if (currentChannel && msg.projectId === currentChannel._id) addMessageToUI(msg); });
+
         function addMessageToUI(msg) {
-            const div = document.createElement('div'); div.className = 'message-item';
+            const div = document.createElement('div');
+            div.className = 'message-item';
             div.innerHTML = `<div class="message-content"><div class="message-header"><span class="author">${msg.author.name}</span></div><div class="message-text">${msg.text}</div></div>`;
-            messagesWrapper.appendChild(div); messagesWrapper.scrollTop = messagesWrapper.scrollHeight;
+            messagesWrapper.appendChild(div);
+            messagesWrapper.scrollTop = messagesWrapper.scrollHeight;
         }
-        
+
+        // ================================================================
+        // PROJECT MANAGEMENT (delete / leave / kick)
+        // ================================================================
         async function deleteProject(projectId, event) {
             event.stopPropagation();
-            if (confirm("Delete project?")) {
-                await fetch(`${API_BASE}/api/projects/${projectId}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
-                channels = channels.filter(p => p._id !== projectId); renderProjects();
-            }
+            if (!confirm("Delete project?")) return;
+            await fetch(`${API_BASE}/api/projects/${projectId}`, {method:'DELETE',headers:{'Authorization':`Bearer ${token}`}});
+            channels = channels.filter(p => p._id !== projectId); renderProjects();
         }
-        
-        // Documents
+
+        async function leaveProject(projectId, event) {
+            if (event) event.stopPropagation();
+            if (!confirm("Are you sure you want to LEAVE this project?")) return;
+            try {
+                const res = await fetch(`${API_BASE}/api/projects/${projectId}/leave`, {method:'POST',headers:{'Authorization':`Bearer ${token}`}});
+                if (res.ok) {
+                    channels = channels.filter(p=>p._id!==projectId); renderProjects();
+                    if (currentChannel && currentChannel._id === projectId) {
+                        document.getElementById('welcome-screen').style.display = 'flex';
+                        document.getElementById('view-tabs').style.display = 'none';
+                        document.getElementById('chat-input-area').style.display = 'none';
+                        currentChannel = null;
+                    }
+                    alert("You left the project.");
+                } else { const d = await res.json(); alert(d.error); }
+            } catch(e) { console.error(e); }
+        }
+
+        async function kickMember(userId) {
+            if (!confirm("Remove this member?")) return;
+            const res = await fetch(`${API_BASE}/api/projects/${currentChannel._id}/kick`, {method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`},body:JSON.stringify({userIdToKick:userId})});
+            if (res.ok) alert("Member removed."); else alert("Failed.");
+        }
+
+        socket.on('member-updated', (newMembers) => {
+            if (currentChannel) { currentChannel.members = newMembers; renderMembers(newMembers); loadTasks(currentChannel._id); }
+        });
+        socket.on('you-were-kicked', (projectId) => {
+            alert("You have been removed from a project.");
+            fetchProjects();
+            if (currentChannel && currentChannel._id === projectId) window.location.reload();
+        });
+
+        // ================================================================
+        // DOCUMENTS
+        // ================================================================
         document.getElementById('add-doc-btn').onclick = () => { document.getElementById('new-doc-container').style.display = 'block'; };
         document.getElementById('new-doc-input').addEventListener('keypress', async (e) => {
-            if(e.key === 'Enter') {
-                await fetch(`${API_BASE}/api/projects/${currentChannel._id}/documents`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ title: e.target.value }) });
+            if (e.key === 'Enter') {
+                await fetch(`${API_BASE}/api/projects/${currentChannel._id}/documents`, {method:'POST',headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify({title:e.target.value})});
                 e.target.value = ''; openProject(currentChannel);
             }
         });
+
         function renderDocuments() {
-            const list = document.getElementById('doc-list'); 
+            const list = document.getElementById('doc-list');
             list.innerHTML = '';
-            
             documents.forEach(doc => {
-                 const d = document.createElement('div'); 
-                 d.className = 'doc-item'; 
-                 d.innerText = doc.title;
-                 
-                 d.onclick = async () => {
-                     // Leave old document room
-                     if (currentDocument) {
-                         socket.emit('leaveDocument', currentDocument);
-                     }
-
-                     // UI Updates
-                     document.querySelectorAll('.doc-item').forEach(i => i.style.background = '');
-                     d.style.background = '#e0e7ff';
-
-                     // Fetch Content
-                     const res = await fetch(`${API_BASE}/api/documents/${doc._id}`, { 
-                         headers: { 'Authorization': `Bearer ${token}` } 
-                     });
-                     const data = await res.json();
-                     
-                     // Update Editor
-                     const textarea = document.getElementById('doc-editor');
-                     textarea.value = data.content;
-                     
-                     // Update Current ID & Join New Room
-                     currentDocument = doc._id; 
-                     socket.emit('joinDocument', doc._id);
-
-                     // Reset Listeners (Prevent duplicates)
-                     const newTextarea = textarea.cloneNode(true);
-                     textarea.parentNode.replaceChild(newTextarea, textarea);
-                     
-                     // Re-attach typing listener
-                     newTextarea.addEventListener('input', (e) => {
-                         socket.emit('documentUpdate', { 
-                             documentId: currentDocument, 
-                             content: e.target.value 
-                         });
-                     });
-
-                     // Listen for changes
-                     socket.off('documentChange');
-                     socket.on('documentChange', (newContent) => {
-                         if (newTextarea.value !== newContent) {
-                             newTextarea.value = newContent;
-                         }
-                     });
-                 };
-                 list.appendChild(d);
+                const d = document.createElement('div');
+                d.className = 'doc-item'; d.innerText = doc.title;
+                d.onclick = async () => {
+                    if (currentDocument) socket.emit('leaveDocument', currentDocument);
+                    document.querySelectorAll('.doc-item').forEach(i => i.style.background = '');
+                    d.style.background = '#e0e7ff';
+                    const res  = await fetch(`${API_BASE}/api/documents/${doc._id}`, {headers:{'Authorization':`Bearer ${token}`}});
+                    const data = await res.json();
+                    const ta   = document.getElementById('doc-editor');
+                    ta.value   = data.content;
+                    currentDocument = doc._id;
+                    socket.emit('joinDocument', doc._id);
+                    const fresh = ta.cloneNode(true); ta.parentNode.replaceChild(fresh, ta);
+                    fresh.addEventListener('input', (e) => { socket.emit('documentUpdate', {documentId:currentDocument,content:e.target.value}); });
+                    socket.off('documentChange');
+                    socket.on('documentChange', (c) => { if (fresh.value !== c) fresh.value = c; });
+                };
+                list.appendChild(d);
             });
         }
-        
-        // Invite/Logout/Join
-        function showInviteModal() { document.getElementById('invite-link-input').value = `${window.location.origin}${window.location.pathname}?invite=${currentChannel.inviteCode}`; document.getElementById('invite-modal-overlay').style.display = 'flex'; }
+
+        // ================================================================
+        // INVITE / JOIN / LOGOUT
+        // ================================================================
+        function showInviteModal() { document.getElementById('invite-link-input').value = `${location.origin}${location.pathname}?invite=${currentChannel.inviteCode}`; document.getElementById('invite-modal-overlay').style.display = 'flex'; }
         function hideInviteModal() { document.getElementById('invite-modal-overlay').style.display = 'none'; }
-        function copyInviteLink() { document.getElementById('invite-link-input').select(); document.execCommand('copy'); }
-        function logoutUser() { localStorage.clear(); window.location.href = "index.html"; }
+        function copyInviteLink()  { document.getElementById('invite-link-input').select(); document.execCommand('copy'); }
+        function logoutUser()      { localStorage.clear(); window.location.href = 'index.html'; }
 
         async function joinProjectWithCode(code) {
             if (!confirm("Do you want to request to join this project?")) return;
-
             try {
-                const res = await fetch(`${API_BASE}/api/request-join`, {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}` 
-                    },
-                    body: JSON.stringify({ inviteCode: code })
-                });
-                
+                const res  = await fetch(`${API_BASE}/api/request-join`, {method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`},body:JSON.stringify({inviteCode:code})});
                 const data = await res.json();
                 alert(data.message || data.error);
-                
-                // Clear the URL invite param so it doesn't ask again on refresh
-                window.history.replaceState({}, document.title, window.location.pathname);
-            } catch (e) {
-                console.error(e);
-                alert("Error sending request");
-            }
+                window.history.replaceState({}, document.title, location.pathname);
+            } catch(e) { alert("Error sending request"); }
         }
 
-        // --- ADMIN NOTIFICATION LOGIC ---
+        // ================================================================
+        // ADMIN / JOIN REQUESTS
+        // FIX: Safe creator comparison
+        // ================================================================
         socket.on('new-join-request', data => {
-            if (currentChannel && currentChannel._id === data.projectId) {
-                checkPendingRequests(currentChannel);
-            }
-            alert(`🔔 New Request: ${data.requesterName} wants to join project "${data.projectName}"`);
+            if (currentChannel && currentChannel._id === data.projectId) checkPendingRequests(currentChannel);
+            alert(`🔔 New Request: ${data.requesterName} wants to join "${data.projectName}"`);
         });
-
-        socket.on('request-approved', data => {
-            alert(`🎉 You have been approved to join "${data.projectName}".`);
-            fetchProjects(); 
-        });
+        socket.on('request-approved', data => { alert(`🎉 Approved to join "${data.projectName}".`); fetchProjects(); });
 
         async function checkPendingRequests(project) {
-            const adminArea = document.getElementById('admin-notifications');
+            const adminArea  = document.getElementById('admin-notifications');
             const requestList = document.getElementById('request-list');
-            
-            if (project.creator !== currentUserId) {
-                adminArea.style.display = 'none';
-                return;
-            }
+            // FIX: handle populated object or plain string
+            const creatorId = project.creator?._id || project.creator;
+            if (String(creatorId) !== String(currentUserId)) { adminArea.style.display = 'none'; return; }
 
-            const res = await fetch(`${API_BASE}/api/projects/${project._id}`, { headers: { 'Authorization': `Bearer ${token}` } });
+            const res  = await fetch(`${API_BASE}/api/projects/${project._id}`, {headers:{'Authorization':`Bearer ${token}`}});
             const data = await res.json();
-
-            if (data.pendingRequests && data.pendingRequests.length > 0) {
-                adminArea.style.display = 'block';
-                requestList.innerHTML = '';
-                
+            if (data.pendingRequests?.length > 0) {
+                adminArea.style.display = 'block'; requestList.innerHTML = '';
                 data.pendingRequests.forEach(req => {
-                    const div = document.createElement('div');
-                    div.style.marginTop = '5px';
-                    div.innerHTML = `
-                        <span>${req.name}</span>
-                        <div style="display:flex; gap:5px; margin-top:3px;">
-                            <button onclick="handleJoinRequest('${project._id}', '${req.user}', 'approve')" style="background:green; color:white; border:none; border-radius:3px; cursor:pointer;">✓</button>
-                            <button onclick="handleJoinRequest('${project._id}', '${req.user}', 'reject')" style="background:red; color:white; border:none; border-radius:3px; cursor:pointer;">✗</button>
-                        </div>
-                    `;
+                    const div = document.createElement('div'); div.style.marginTop = '5px';
+                    div.innerHTML = `<span>${req.name}</span><div style="display:flex;gap:5px;margin-top:3px;"><button onclick="handleJoinRequest('${project._id}','${req.user}','approve')" style="background:green;color:white;border:none;border-radius:3px;cursor:pointer;">✓</button><button onclick="handleJoinRequest('${project._id}','${req.user}','reject')" style="background:red;color:white;border:none;border-radius:3px;cursor:pointer;">✗</button></div>`;
                     requestList.appendChild(div);
                 });
-            } else {
-                adminArea.style.display = 'none';
-            }
+            } else { adminArea.style.display = 'none'; }
         }
 
         async function handleJoinRequest(projectId, userIdToApprove, action) {
-            await fetch(`${API_BASE}/api/handle-request`, {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}` 
-                },
-                body: JSON.stringify({ projectId, userIdToApprove, action })
-            });
-            
+            await fetch(`${API_BASE}/api/handle-request`, {method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`},body:JSON.stringify({projectId,userIdToApprove,action})});
             if (currentChannel && currentChannel._id === projectId) {
                 checkPendingRequests(currentChannel);
-                if (action === 'approve') {
-                     const res = await fetch(`${API_BASE}/api/projects/${projectId}`, { headers: { 'Authorization': `Bearer ${token}` } });
-                     const data = await res.json();
-                     renderMembers(data.members);
-                }
+                if (action === 'approve') { const res = await fetch(`${API_BASE}/api/projects/${projectId}`,{headers:{'Authorization':`Bearer ${token}`}}); renderMembers((await res.json()).members); }
             }
         }
-        // --- LEAVE & KICK LOGIC ---
 
-// 1. Leave Project Function
-async function leaveProject(projectId, event) {
-    if (event) event.stopPropagation(); // Stop click from opening the project
-    
-    if (!confirm("Are you sure you want to LEAVE this project?")) return;
-
-    try {
-        const res = await fetch(`${API_BASE}/api/projects/${projectId}/leave`, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        if (res.ok) {
-            // Remove from my list and refresh
-            channels = channels.filter(p => p._id !== projectId);
-            renderProjects();
-            
-            // If I was looking at that project, clear the screen
-            if (currentChannel && currentChannel._id === projectId) {
-                document.getElementById('welcome-screen').style.display = 'flex';
-                document.getElementById('view-tabs').style.display = 'none';
-                document.getElementById('chat-input-area').style.display = 'none';
-                currentChannel = null;
-            }
-            alert("You left the project.");
-        } else {
-            const data = await res.json();
-            alert(data.error);
-        }
-    } catch (e) { console.error(e); }
-}
-
-// 2. Kick Member Function
-async function kickMember(userId) {
-    if (!confirm("Are you sure you want to REMOVE this member?")) return;
-
-    try {
-        const res = await fetch(`${API_BASE}/api/projects/${currentChannel._id}/kick`, {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}` 
-            },
-            body: JSON.stringify({ userIdToKick: userId })
-        });
-
-        if (res.ok) {
-            // The socket 'member-updated' will handle the UI refresh
-            alert("Member removed.");
-        } else {
-            alert("Failed to remove member.");
-        }
-    } catch (e) { console.error(e); }
-}
-
-// 3. Socket Listener: Refresh Member List
-socket.on('member-updated', (newMembers) => {
-    if (currentChannel) {
-        // Update local data
-        currentChannel.members = newMembers;
-        renderMembers(newMembers);
-        // Refresh task dropdown so the kicked user is gone
-        loadTasks(currentChannel._id); 
-    }
-});
-
-// 4. Socket Listener: If I get kicked
-socket.on('you-were-kicked', (projectId) => {
-    alert("You have been removed from a project.");
-    // Refresh project list to remove it
-    fetchProjects();
-    // If I'm looking at it, kick me to welcome screen
-    if (currentChannel && currentChannel._id === projectId) {
-        window.location.reload(); 
-    }
-});
-async function openFileLibrary() {
+        // ================================================================
+        // FILE LIBRARY & UPLOAD
+        // ================================================================
+        async function openFileLibrary() {
             if (!currentChannel) return alert("Select a project first!");
-            
             const modal = document.getElementById('file-library-modal');
-            const grid = document.getElementById('file-grid');
+            const grid  = document.getElementById('file-grid');
             modal.style.display = 'flex';
-            grid.innerHTML = '<p style="grid-column: 1/-1; text-align:center;">Loading assets...</p>';
-
+            grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;">Loading...</p>';
             try {
-                // Fetch list of files for this project
-                const res = await fetch(`${API_BASE}/api/files/${currentChannel._id}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
+                const res   = await fetch(`${API_BASE}/api/files/${currentChannel._id}`, {headers:{'Authorization':`Bearer ${token}`}});
                 const files = await res.json();
-
                 grid.innerHTML = '';
-                if (!files || files.length === 0) {
-                    grid.innerHTML = '<p style="grid-column: 1/-1; text-align:center; color:#666;">No files uploaded yet.</p>';
-                    return;
-                }
-
+                if (!files?.length) { grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:#666;">No files uploaded yet.</p>'; return; }
                 files.forEach(file => {
                     const card = document.createElement('div');
-                    card.style = "border:1px solid #ddd; border-radius:8px; padding:10px; text-align:center; background:#fff; cursor:pointer;";
+                    card.style.cssText = 'border:1px solid #ddd;border-radius:8px;padding:10px;text-align:center;background:#fff;cursor:pointer;';
                     card.onclick = () => window.open(file.url, '_blank');
-
-                    let icon = "📄"; 
-                    if (file.url.match(/\.(jpg|jpeg|png|gif)$/i)) icon = "🖼️";
-                    if (file.url.match(/\.(ppt|pptx)$/i)) icon = "📊";
-                    if (file.url.match(/\.(pdf)$/i)) icon = "📕";
-
-                    card.innerHTML = `
-                        <div style="font-size:30px; margin-bottom:5px;">${icon}</div>
-                        <div style="font-size:10px; color:#333; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${file.name || 'File'}">${file.name || 'File'}</div>
-                    `;
+                    const ext  = file.url?.toLowerCase();
+                    let icon = '📄';
+                    if (ext?.match(/\.(jpg|jpeg|png|gif)$/)) icon = '🖼️';
+                    if (ext?.match(/\.(ppt|pptx)$/))         icon = '📊';
+                    if (ext?.match(/\.(pdf)$/))              icon = '📕';
+                    card.innerHTML = `<div style="font-size:28px;margin-bottom:5px;">${icon}</div><div style="font-size:10px;color:#333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${file.name||'File'}">${file.name||'File'}</div>`;
                     grid.appendChild(card);
                 });
-            } catch (e) {
-                grid.innerHTML = '<p style="color:red; grid-column:1/-1;">Error loading library.</p>';
+            } catch(e) { grid.innerHTML = '<p style="color:red;grid-column:1/-1;">Error loading files.</p>'; }
+        }
+
+        function closeFileLibrary() { document.getElementById('file-library-modal').style.display = 'none'; }
+
+        async function handleFileUpload(input) {
+            const file = input.files[0]; if (!file) return;
+            const msgInput = document.getElementById('message-input');
+            msgInput.placeholder = 'Uploading...'; msgInput.disabled = true;
+            const fd = new FormData(); fd.append('file', file);
+            try {
+                const res  = await fetch(`${API_BASE}/api/files/upload`, {method:'POST',headers:{'Authorization':`Bearer ${token}`},body:fd});
+                const data = await res.json();
+                if (data.fileUrl) socket.emit('sendMessage', {projectId:currentChannel._id,text:data.fileUrl,authorName:userName,userId:currentUserId});
+                else alert("Upload failed: " + (data.error || "Unknown"));
+            } catch(e) { alert("Error uploading file"); }
+            finally { msgInput.placeholder = 'Type a message...'; msgInput.disabled = false; input.value = ''; }
+        }
+
+        // ================================================================
+        // MONACO EDITOR
+        // ================================================================
+        require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.30.1/min/vs' }});
+        require(['vs/editor/editor.main'], function() {
+            editorInstance = monaco.editor.create(document.getElementById('editor-container'), {
+                value: '// Select or create a code file...',
+                language: 'javascript',
+                theme: 'vs-dark',
+                readOnly: true,
+                automaticLayout: true
+            });
+
+            // Broadcast edits to collaborators
+            editorInstance.onDidChangeModelContent((event) => {
+                if (!isTypingCode && currentCodeFile) {
+                    socket.emit('codeUpdate', {
+                        fileId:   currentCodeFile,
+                        content:  editorInstance.getValue(),
+                        user:     userName,
+                        line:     event.changes[0].range.startLineNumber
+                    });
+                }
+            });
+
+            // Receive remote edits
+            socket.on('codeChange', (data) => {
+                if (!data || data.fileId !== currentCodeFile) return;
+                isTypingCode = true;
+                const pos = editorInstance.getPosition();
+                editorInstance.setValue(data.content);
+                editorInstance.setPosition(pos);
+                const cls = data.user === userName ? 'edit-self' : 'edit-teammate';
+                currentDecorations = editorInstance.deltaDecorations(currentDecorations, [{
+                    range: new monaco.Range(data.line, 1, data.line, 1),
+                    options: { isWholeLine: true, className: cls, hoverMessage: { value: `✏️ Edited by **${data.user}**` } }
+                }]);
+                isTypingCode = false;
+            });
+        });
+
+        // ================================================================
+        // CODE FILES
+        // FIX: Single onclick handler; styled .code-file-item like doc-item
+        // FIX: Loaded automatically when project opens
+        // ================================================================
+
+        // FIX: Single, correct toggle handler (removed duplicate)
+        document.getElementById('add-code-btn').onclick = () => {
+            const container = document.getElementById('new-code-container');
+            const isOpen = container.style.display === 'block';
+            container.style.display = isOpen ? 'none' : 'block';
+            if (!isOpen) document.getElementById('new-code-input').focus();
+        };
+
+        document.getElementById('new-code-input').addEventListener('keypress', async (e) => {
+            if (e.key !== 'Enter' || !e.target.value.trim()) return;
+            const filename = e.target.value.trim();
+            e.target.disabled = true; e.target.value = 'Saving...';
+            try {
+                await fetch(`${API_BASE}/api/projects/${currentChannel._id}/codefiles`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title: filename })
+                });
+                e.target.value = ''; e.target.disabled = false;
+                document.getElementById('new-code-container').style.display = 'none';
+                await loadCodeFiles();
+                // Auto-click the first item so it's immediately open
+                setTimeout(() => {
+                    const first = document.querySelector('#code-list .code-file-item');
+                    if (first) first.click();
+                }, 100);
+            } catch (err) {
+                e.target.disabled = false; e.target.value = filename;
+                alert("Failed to create file.");
             }
-        }
+        });
 
-        function closeFileLibrary() {
-            document.getElementById('file-library-modal').style.display = 'none';
-        }
-        // --- CODE FILES & MONACO LOGIC ---
-let codeFiles = [];
-let currentCodeFile = null;
-let editorInstance = null;
-let isTypingCode = false;
-let currentDecorations = [];
+        async function loadCodeFiles() {
+            if (!currentChannel) return;
+            try {
+                const res = await fetch(`${API_BASE}/api/projects/${currentChannel._id}/codefiles`, { headers: { 'Authorization': `Bearer ${token}` } });
+                codeFiles = await res.json();
+            } catch(e) { codeFiles = []; }
 
-// 1. Initialize Monaco
-require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.30.1/min/vs' }});
-require(['vs/editor/editor.main'], function() {
-    editorInstance = monaco.editor.create(document.getElementById('editor-container'), {
-        value: "// Select or create a code file...",
-        language: 'javascript',
-        theme: 'vs-dark',
-        readOnly: true,
-        automaticLayout: true
-    });
+            const list = document.getElementById('code-list');
+            list.innerHTML = '';
 
-    // Send Typing to Server
-    editorInstance.onDidChangeModelContent((event) => {
-        if (!isTypingCode && currentCodeFile) {
-            socket.emit('codeUpdate', { 
-                fileId: currentCodeFile, 
-                content: editorInstance.getValue(),
-                user: userName,
-                line: event.changes[0].range.startLineNumber
+            if (!codeFiles?.length) {
+                list.innerHTML = '<div style="padding:12px;color:#9ca3af;font-size:0.85rem;text-align:center;">No code files yet.<br>Press + to create one.</div>';
+                return;
+            }
+
+            // Icon map by file extension
+            const iconMap = { js:'📜', ts:'📘', py:'🐍', html:'🌐', css:'🎨', json:'📋', md:'📝', cpp:'⚙️', c:'⚙️', java:'☕', sh:'🖥️', sql:'🗄️' };
+
+            codeFiles.forEach(file => {
+                const div = document.createElement('div');
+                div.className = 'code-file-item';
+                if (currentCodeFile === file._id) div.classList.add('active');
+
+                const ext  = (file.title.split('.').pop() || '').toLowerCase();
+                const icon = iconMap[ext] || '📄';
+                div.innerHTML = `<span class="code-file-icon">${icon}</span><span>${file.title}</span>`;
+
+                div.onclick = async () => {
+                    // Leave old room
+                    if (currentCodeFile) socket.emit('leaveCodeFile', currentCodeFile);
+
+                    // Update active highlight
+                    document.querySelectorAll('#code-list .code-file-item').forEach(i => i.classList.remove('active'));
+                    div.classList.add('active');
+
+                    // Show filename in toolbar
+                    document.getElementById('current-file-label').innerText = file.title;
+
+                    // Fetch & load content
+                    try {
+                        const fileRes = await fetch(`${API_BASE}/api/codefiles/${file._id}`, { headers: { 'Authorization': `Bearer ${token}` } });
+                        const data    = await fileRes.json();
+                        if (editorInstance) {
+                            // Auto-detect language
+                            const langMap = { js:'javascript', ts:'typescript', py:'python', html:'html', css:'css', json:'json', md:'markdown', cpp:'cpp', c:'c', java:'java', sh:'shell', sql:'sql' };
+                            monaco.editor.setModelLanguage(editorInstance.getModel(), langMap[ext] || 'javascript');
+                            editorInstance.updateOptions({ readOnly: false });
+                            isTypingCode = true;
+                            editorInstance.setValue(data.content || '');
+                            isTypingCode = false;
+                        }
+                    } catch(err) { console.error("Could not load file content:", err); }
+
+                    // Show action buttons
+                    document.getElementById('ask-ai-btn').style.display  = 'inline-block';
+                    document.getElementById('run-code-btn').style.display = 'inline-block';
+                    document.getElementById('terminal-output').style.display = 'none';
+
+                    currentCodeFile = file._id;
+                    socket.emit('joinCodeFile', file._id);
+                };
+
+                list.appendChild(div);
             });
         }
-    });
 
-    // Receive Typing from Server
-    socket.on('codeChange', (data) => {
-        if (!data || data.fileId !== currentCodeFile) return;
-        isTypingCode = true;
-        const pos = editorInstance.getPosition();
-        editorInstance.setValue(data.content);
-        editorInstance.setPosition(pos);
+        // ================================================================
+        // RUN CODE — JavaScript sandbox in the browser
+        // ================================================================
+        document.getElementById('run-code-btn').onclick = function() {
+            if (!editorInstance) return;
+            const output   = document.getElementById('terminal-output');
+            const logs     = document.getElementById('console-logs');
+            output.style.display = 'block';
+            logs.innerHTML = '';
 
-        const userClass = data.user === userName ? 'edit-self' : 'edit-teammate';
-        currentDecorations = editorInstance.deltaDecorations(currentDecorations, [{
-            range: new monaco.Range(data.line, 1, data.line, 1),
-            options: { isWholeLine: true, className: userClass, hoverMessage: { value: `✏️ Edited by **${data.user}**` } }
-        }]);
-        isTypingCode = false;
-    });
-});
+            const con = {
+                log: (...args) => {
+                    const e = document.createElement('div');
+                    e.innerText = `> ${args.map(a => typeof a === 'object' ? JSON.stringify(a) : a).join(' ')}`;
+                    logs.appendChild(e); output.scrollTop = output.scrollHeight;
+                },
+                error: (...args) => {
+                    const e = document.createElement('div'); e.style.color = '#ff4444';
+                    e.innerText = `[Error] ${args.join(' ')}`; logs.appendChild(e);
+                },
+                warn: (...args) => {
+                    const e = document.createElement('div'); e.style.color = '#facc15';
+                    e.innerText = `[Warn] ${args.join(' ')}`; logs.appendChild(e);
+                }
+            };
 
-// 2. Hook up the "Add Code File" UI
-document.getElementById('add-code-btn').onclick = () => { 
-    document.getElementById('new-code-container').style.display = 'block'; 
-};
+            try {
+                const fn = new Function('console', editorInstance.getValue());
+                fn(con);
+            } catch(err) { con.error(err.message); }
+        };
 
-// 2. Hook up the "Add Code File" UI
-document.getElementById('add-code-btn').onclick = () => { 
-    const container = document.getElementById('new-code-container');
-    container.style.display = container.style.display === 'none' ? 'block' : 'none';
-    if (container.style.display === 'block') document.getElementById('new-code-input').focus();
-};
+        // ================================================================
+        // GROQ AI INTEGRATION
+        // FIX: popup is HTML; this just controls visibility and fetches /review
+        // ================================================================
+        function openAIPopup()  { document.getElementById('ai-popup').style.display = 'flex'; }
+        function closeAIPopup() { document.getElementById('ai-popup').style.display = 'none'; }
 
-document.getElementById('new-code-input').addEventListener('keypress', async (e) => {
-    if(e.key === 'Enter' && e.target.value.trim() !== '') {
-        const filename = e.target.value.trim();
-        e.target.disabled = true; // Lock input while saving
-        e.target.value = 'Saving...';
-        
-        try {
-            // Save to DB
-            await fetch(`${API_BASE}/api/projects/${currentChannel._id}/codefiles`, { 
-                method: 'POST', 
-                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, 
-                body: JSON.stringify({ title: filename }) 
-            });
-            
-            // Reset Input UI
-            e.target.value = ''; 
-            e.target.disabled = false;
-            document.getElementById('new-code-container').style.display = 'none'; 
-            
-            // Refresh list
-            await loadCodeFiles(); 
-            
-            // ✨ THE FIX: Auto-click the newly created file to unlock Monaco ✨
-            setTimeout(() => {
-                const firstFile = document.querySelector('#code-list .doc-item');
-                if (firstFile) firstFile.click();
-            }, 100);
+        document.getElementById('ask-ai-btn').addEventListener('click', async () => {
+            if (!editorInstance) return;
+            const code = editorInstance.getValue().trim();
+            if (!code || code === '// Select or create a code file...') {
+                alert('Write some code first before asking for a review!'); return;
+            }
 
-        } catch (err) {
-            console.error("Error creating file:", err);
-            e.target.disabled = false;
-            e.target.value = filename;
-            alert("Failed to create file.");
-        }
-    }
-});
+            openAIPopup();
+            document.getElementById('ai-loading').style.display = 'flex';
+            document.getElementById('ai-content').style.display  = 'none';
 
-// 3. Render the list of Code Files
-async function loadCodeFiles() {
-    if (!currentChannel) return;
-    const res = await fetch(`${API_BASE}/api/projects/${currentChannel._id}/codefiles`, { headers: { 'Authorization': `Bearer ${token}` } });
-    codeFiles = await res.json();
-    
-    const list = document.getElementById('code-list'); 
-    list.innerHTML = '';
-    
-    codeFiles.forEach(file => {
-         const div = document.createElement('div'); 
-         div.className = 'doc-item'; 
-         div.innerText = file.title;
-         
-         div.onclick = async () => {
-             if (currentCodeFile) socket.emit('leaveCodeFile', currentCodeFile);
-             
-             document.querySelectorAll('#code-list .doc-item').forEach(i => i.style.background = '');
-             div.style.background = '#e0e7ff';
+            try {
+                const res = await fetch(`${API_BASE}/review`, {
+                    method:  'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body:    JSON.stringify({ code })
+                });
 
-             const fileRes = await fetch(`${API_BASE}/api/codefiles/${file._id}`, { headers: { 'Authorization': `Bearer ${token}` } });
-             const data = await fileRes.json();
-             
-             if (editorInstance) {
-                 editorInstance.updateOptions({ readOnly: false });
-                 isTypingCode = true;
-                 editorInstance.setValue(data.content);
-                 isTypingCode = false;
-             }
-             
-             document.getElementById('ask-ai-btn').style.display = 'block';
-             currentCodeFile = file._id; 
-             socket.emit('joinCodeFile', file._id);
-         };
-         list.appendChild(div);
-    });
-}
+                if (!res.ok) throw new Error(`Server responded with ${res.status}`);
+                const data = await res.json();
+
+                document.getElementById('ai-loading').style.display = 'none';
+                document.getElementById('ai-content').style.display  = 'block';
+                document.getElementById('ai-content').innerText = data.review || 'No review returned.';
+
+            } catch(err) {
+                document.getElementById('ai-loading').style.display = 'none';
+                document.getElementById('ai-content').style.display  = 'block';
+                document.getElementById('ai-content').innerText =
+                    `❌ Could not reach AI server.\n\nError: ${err.message}\n\nMake sure your backend (server.js) is running on port 3000 and GROQ_API_KEY is set in your .env file.`;
+            }
+        });
+
     </script>
 </body>
 </html>
