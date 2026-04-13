@@ -946,6 +946,9 @@ function termLine(text, cls) {
     body.scrollTop = body.scrollHeight;
 }
 
+// Cache the runtimes so we only fetch them once per session
+let pistonRuntimes = [];
+
 async function runCode() {
     if (!editorInstance || !currentCodeFileTitle) return;
 
@@ -979,12 +982,23 @@ async function runCode() {
     document.getElementById('terminal-lang-label').innerText = `▶ ${lang.toUpperCase()} — running…`;
 
     try {
+        // 1. Fetch exact version number dynamically
+        if (pistonRuntimes.length === 0) {
+            const rtRes = await fetch('https://emkc.org/api/v2/piston/runtimes');
+            pistonRuntimes = await rtRes.json();
+        }
+        
+        // Find the language in Piston's runtime list
+        const runtime = pistonRuntimes.find(r => r.language === lang || r.aliases.includes(lang));
+        const exactVersion = runtime ? runtime.version : "1.0.0"; // Fallback
+
+        // 2. Execute code with the exact version
         const res = await fetch('https://emkc.org/api/v2/piston/execute', {
             method:  'POST',
             headers: { 'Content-Type': 'application/json' },
             body:    JSON.stringify({
                 language: lang,
-                version:  '*',            // use latest available version
+                version:  exactVersion,   // <-- FIXED: Passing the exact version number
                 files:    [{ name: currentCodeFileTitle, content: code }],
                 stdin:    '',
                 args:     []
@@ -1003,7 +1017,7 @@ async function runCode() {
         const data = await res.json();
         const run  = data.run || data.compile || {};
 
-        document.getElementById('terminal-lang-label').innerText =
+        document.getElementById('terminal-lang-label').innerText = 
             `▶ ${lang.toUpperCase()} — exit code ${run.code ?? '?'}`;
 
         // Compile step errors (for C, C++, Java, etc.)
@@ -1026,8 +1040,8 @@ async function runCode() {
 
         // Exit status footer
         const exitCls = (run.code === 0) ? 'term-exit-ok' : 'term-exit-err';
-        const exitMsg = run.signal
-            ? `Process killed by signal: ${run.signal}`
+        const exitMsg = run.signal 
+            ? `Process killed by signal: ${run.signal}` 
             : `Exited with code ${run.code}`;
         termLine(exitMsg, exitCls);
 
