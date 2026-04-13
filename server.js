@@ -757,29 +757,27 @@ apiRouter.post('/codefiles/:fileId/explain', authMiddleware, async (req, res) =>
 apiRouter.post('/execute', authMiddleware, async (req, res) => {
     try {
         const { code, compiler } = req.body;
-        console.log('🔧 Execute hit — compiler:', compiler, '| code length:', code?.length);
+        if (!code || !compiler) return res.status(400).json({ error: 'code and compiler are required' });
 
-        if (!code || !compiler) {
-            console.log('❌ Missing code or compiler');
-            return res.status(400).json({ error: 'code and compiler are required' });
-        }
-
-        const response = await axios.post('https://wandbox.org/api/compile.json',
+        const response = await axios.post('https://wandbox.org/api/compile.json', 
             { code, compiler },
             { headers: { 'Content-Type': 'application/json' } }
         );
 
-        console.log('✅ Wandbox response status:', response.status);
         res.json(response.data);
-
     } catch (err) {
-        console.error('❌ Execute error name:', err.name);
-        console.error('❌ Execute error message:', err.message);
-        console.error('❌ Execute error stack:', err.stack);
-        if (err.response) {
-            console.error('❌ Wandbox responded with:', err.response.status, err.response.data);
-        }
+        console.error('Wandbox error:', err.message);
         res.status(500).json({ error: 'Execution service unavailable', details: err.message });
+    }
+});
+apiRouter.get('/wandbox-compilers', authMiddleware, async (req, res) => {
+    try {
+        const response = await axios.get('https://wandbox.org/api/list.json');
+        // Return just name + language for each compiler
+        const list = response.data.map(c => ({ name: c.name, language: c.language }));
+        res.json(list);
+    } catch (err) {
+        res.status(500).json({ error: err.message, details: err.response?.data });
     }
 });
 
