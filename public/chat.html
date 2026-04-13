@@ -484,7 +484,14 @@
             // FIX: Load code files immediately so list shows on project open
             loadCodeFiles();
         }
-
+<div class="ai-actions" style="margin-top: 10px; display: flex; gap: 10px;">
+    <button onclick="getAiReview('CURRENT_FILE_ID')" class="btn" style="background: #3e399b; color: white;">
+        Review Code
+    </button>
+    <button onclick="getAiExplanation('CURRENT_FILE_ID')" class="btn" style="background: #95508f; color: white;">
+        Explain Code
+    </button>
+</div>
         // ================================================================
         // VIEW SWITCHING
         // ================================================================

@@ -208,3 +208,59 @@ async function createProject() {
         alert("Server Error: Could not create project.");
     }
 }
+// --- AI CODE REVIEW & EXPLAIN ---
+
+async function getAiReview(fileId) {
+    const token = localStorage.getItem('token');
+    if (!token) return alert("You must be logged in to use AI.");
+
+    try {
+        // Change to 'Analyzing...' so the user knows it's working
+        console.log("Sending code to AI for review...");
+        
+        const res = await fetch(`/api/codefiles/${fileId}/review`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+
+        // Display the AI's response!
+        alert("🤖 AI Code Review:\n\n" + data.result);
+        
+    } catch (err) {
+        console.error(err);
+        alert("Failed to get AI review: " + err.message);
+    }
+}
+
+async function getAiExplanation(fileId) {
+    const token = localStorage.getItem('token');
+    if (!token) return alert("You must be logged in to use AI.");
+
+    try {
+        console.log("Asking AI to explain...");
+        
+        const res = await fetch(`/api/codefiles/${fileId}/explain`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+
+        // Display the AI's response!
+        alert("🤖 AI Explanation:\n\n" + data.result);
+        
+    } catch (err) {
+        console.error(err);
+        alert("Failed to get AI explanation: " + err.message);
+    }
+}
