@@ -26,7 +26,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
-
+const { reviewCode, explainCode } = require('./utils/ai');
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -646,6 +646,33 @@ io.on('connection', (socket) => {
     });
 
     socket.on('disconnect', () => { /* Handle disconnect */ });
+});
+// --- AI CODE ANALYSIS ROUTES ---
+
+// 1. Route to Review Code
+apiRouter.post('/codefiles/:fileId/review', authMiddleware, async (req, res) => {
+    try {
+        const file = await CodeFile.findById(req.params.fileId);
+        if (!file) return res.status(404).json({ error: 'Not found' });
+
+        const reviewResult = await reviewCode(file.content);
+        res.json({ result: reviewResult });
+    } catch (err) {
+        res.status(500).json({ error: 'Server error during AI review' });
+    }
+});
+
+// 2. Route to Explain Code
+apiRouter.post('/codefiles/:fileId/explain', authMiddleware, async (req, res) => {
+    try {
+        const file = await CodeFile.findById(req.params.fileId);
+        if (!file) return res.status(404).json({ error: 'Not found' });
+
+        const explainResult = await explainCode(file.content);
+        res.json({ result: explainResult });
+    } catch (err) {
+        res.status(500).json({ error: 'Server error during AI explanation' });
+    }
 });
 
 // ==========================================
