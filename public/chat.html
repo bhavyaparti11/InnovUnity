@@ -187,8 +187,59 @@
                         <button id="explain-ai-btn" onclick="callGroqAI('explain')" style="background:#7c3aed;color:#fff;border:none;padding:4px 11px;border-radius:4px;cursor:pointer;display:none;font-size:.8rem;font-weight:600;">💡 Explain</button>
                         <button id="duplicate-btn"  onclick="duplicateCodeFile()"  style="background:#0ea5e9;color:#fff;border:none;padding:4px 11px;border-radius:4px;cursor:pointer;display:none;font-size:.8rem;font-weight:600;">⎘ Duplicate</button>
                         <button id="logs-btn"       onclick="openLogsDrawer()"     style="background:#374151;color:#e5e7eb;border:none;padding:4px 11px;border-radius:4px;cursor:pointer;display:none;font-size:.8rem;font-weight:600;">📋 Logs</button>
-                        <button id="run-btn"        onclick="runCode()"            style="background:#238636;color:#fff;border:none;padding:4px 11px;border-radius:4px;cursor:pointer;display:none;font-size:.8rem;font-weight:600;">▶ Run</button>
-                    </div>
+<select id="compiler-select" style="display:none;background:#1e1e1e;color:#d4d4d4;border:1px solid #444;border-radius:4px;padding:3px 6px;font-size:.78rem;cursor:pointer;">
+    <option value="">— select compiler —</option>
+    <optgroup label="Python">
+        <option value="cpython-3.12.0">Python 3.12</option>
+    </optgroup>
+    <optgroup label="JavaScript">
+        <option value="nodejs-head">Node.js (latest)</option>
+    </optgroup>
+    <optgroup label="TypeScript">
+        <option value="typescript-5.0.4">TypeScript 5</option>
+    </optgroup>
+    <optgroup label="C++">
+        <option value="gcc-head">GCC (latest)</option>
+        <option value="clang-head">Clang (latest)</option>
+    </optgroup>
+    <optgroup label="C">
+        <option value="gcc-head-c">GCC C (latest)</option>
+    </optgroup>
+    <optgroup label="Java">
+        <option value="openjdk-head">OpenJDK (latest)</option>
+    </optgroup>
+    <optgroup label="Rust">
+        <option value="rust-head">Rust (latest)</option>
+    </optgroup>
+    <optgroup label="Go">
+        <option value="go-head">Go (latest)</option>
+    </optgroup>
+    <optgroup label="Ruby">
+        <option value="ruby-head">Ruby (latest)</option>
+    </optgroup>
+    <optgroup label="PHP">
+        <option value="php-head">PHP (latest)</option>
+    </optgroup>
+    <optgroup label="C#">
+        <option value="mono-head">Mono C# (latest)</option>
+    </optgroup>
+    <optgroup label="Kotlin">
+        <option value="kotlinc-1.8.0">Kotlin 1.8</option>
+    </optgroup>
+    <optgroup label="Swift">
+        <option value="swift-5.9.1">Swift 5.9</option>
+    </optgroup>
+    <optgroup label="Bash">
+        <option value="bash">Bash</option>
+    </optgroup>
+    <optgroup label="Lua">
+        <option value="lua-5.4.6">Lua 5.4</option>
+    </optgroup>
+    <optgroup label="Perl">
+        <option value="perl-head">Perl (latest)</option>
+    </optgroup>
+</select>
+<button id="run-btn" onclick="runCode()" style="background:#238636;color:#fff;border:none;padding:4px 11px;border-radius:4px;cursor:pointer;display:none;font-size:.8rem;font-weight:600;">▶ Run</button>                    </div>
                 </div>
                 <div style="flex:1;position:relative;min-height:0;">
                     <div id="editor-container" style="position:absolute;top:0;left:0;right:0;bottom:0;"></div>
@@ -800,8 +851,7 @@ async function loadCodeFiles() {
                     lastLoggedContent=data.content||'';
                 }
             } catch(err){console.error('Load file error',err);}
-            ['review-ai-btn','explain-ai-btn','duplicate-btn','logs-btn','run-btn'].forEach(id=>setDisplay(id,'inline-block'));
-            setDisplay('terminal-output','none');
+['review-ai-btn','explain-ai-btn','duplicate-btn','logs-btn','run-btn','compiler-select'].forEach(id=>setDisplay(id,'inline-block'));            setDisplay('terminal-output','none');
             document.getElementById('terminal-body').innerHTML='';
             document.getElementById('terminal-lang-label').innerText='▶ OUTPUT';
             socket.emit('joinCodeFile',file._id);
@@ -818,7 +868,7 @@ async function deleteCodeFile(fileId, e) {
         if(r.ok){
             if(currentCodeFile===fileId){
                 currentCodeFile=null;currentCodeFileTitle='';
-                ['review-ai-btn','explain-ai-btn','duplicate-btn','logs-btn','run-btn'].forEach(id=>setDisplay(id,'none'));
+                ['review-ai-btn','explain-ai-btn','duplicate-btn','logs-btn','run-btn','compiler-select'].forEach(id=>setDisplay(id,'none'));
                 setDisplay('terminal-output','none');
                 const lbl=document.getElementById('current-file-label');if(lbl)lbl.innerText='';
                 if(editorInstance){editorInstance.updateOptions({readOnly:true});isTypingCode=true;editorInstance.setValue('// Select or create a code file...');isTypingCode=false;}
@@ -909,34 +959,8 @@ function renderLogs(logs) {
     });
 }
 // ═══════════════════════════════════════════
-// CODE RUNNER — Piston API (free, no key needed)
-// Supports: Python, Node.js, C, C++, Java, TypeScript,
-//           Bash, Go, Rust, Ruby, PHP, Kotlin, Swift, R, Lua, and 60+ more
-// ═══════════════════════════════════════════
-
-// Maps file extension → Piston language name
-// Maps file extension → Wandbox compiler name
-const wandboxCompiler = {
-    py:   'cpython-3.12.0',
-    js:   'nodejs-head',
-    ts:   'typescript-5.0.4',
-    cpp:  'gcc-head',
-    c:    'gcc-head-c',
-    java: 'openjdk-head',
-    rs:   'rust-head',
-    go:   'go-head',
-    rb:   'ruby-head',
-    php:  'php-head',
-    sh:   'bash',
-    lua:  'lua-5.4.6',
-    cs:   'mono-head',
-    swift:'swift-5.9.1',
-    pl:   'perl-head',
-    kt:   'kotlinc-1.8.0',
-};
 
 // Languages that can't be "run" in an execution sandbox
-const noRunLangs = new Set(['html','css','json','md','sql','xml','yaml','yml']);
 
 function clearTerminal() {
     document.getElementById('terminal-body').innerHTML = '';
@@ -958,6 +982,71 @@ function termLine(text, cls) {
 
 
 async function runCode() {
+    if (!editorInstance || !currentCodeFileTitle) return;
+
+    const compiler = document.getElementById('compiler-select').value;
+    if (!compiler) {
+        alert('Please select a compiler from the dropdown first.');
+        return;
+    }
+
+    const code = editorInstance.getValue().trim();
+    if (!code) { alert('The file is empty — nothing to run.'); return; }
+
+    const ext = (currentCodeFileTitle.split('.').pop() || '').toLowerCase();
+
+    setDisplay('terminal-output', 'flex');
+    setDisplay('terminal-running', 'flex');
+    document.getElementById('terminal-body').innerHTML = '';
+    document.getElementById('terminal-lang-label').innerText = `▶ ${compiler} — running…`;
+
+    try {
+        const res = await fetch(`${API_BASE}/api/execute`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ code, compiler })
+        });
+
+        setDisplay('terminal-running', 'none');
+
+        if (!res.ok) {
+            const err = await res.json();
+            document.getElementById('terminal-lang-label').innerText = `▶ ${compiler} — error`;
+            termLine(err.error || `HTTP ${res.status}`, 'term-stderr');
+            return;
+        }
+
+        const data = await res.json();
+        const exitCode = parseInt(data.status ?? '1', 10);
+
+        document.getElementById('terminal-lang-label').innerText =
+            `▶ ${compiler} — exit code ${exitCode}`;
+
+        if (data.compiler_output) {
+            termLine('── Compiler ──', 'term-info');
+            termLine(data.compiler_output, 'term-stderr');
+        }
+        if (data.compiler_error) termLine(data.compiler_error, 'term-stderr');
+        if (data.program_output)  termLine(data.program_output, 'term-stdout');
+        if (data.program_error)   termLine(data.program_error,  'term-stderr');
+
+        if (!data.program_output && !data.program_error && !data.compiler_error && !data.compiler_output) {
+            termLine('(no output)', 'term-info');
+        }
+
+        const exitCls = exitCode === 0 ? 'term-exit-ok' : 'term-exit-err';
+        termLine(`Exited with code ${exitCode}`, exitCls);
+
+    } catch (err) {
+        setDisplay('terminal-running', 'none');
+        document.getElementById('terminal-lang-label').innerText = `▶ ${compiler} — failed`;
+        termLine('Could not reach the execution service.', 'term-stderr');
+        termLine(`Error: ${err.message}`, 'term-stderr');
+    }
+}
     if (!editorInstance || !currentCodeFileTitle) return;
 
     const ext  = (currentCodeFileTitle.split('.').pop() || '').toLowerCase();
@@ -1038,7 +1127,6 @@ async function runCode() {
     document.getElementById('terminal-lang-label').innerText = `▶ ${ext.toUpperCase()} — failed`;
     termLine('Could not reach the execution service.', 'term-stderr');
     termLine(`Error: ${err.message}`, 'term-stderr');
-}
 }
 </script>
 </body>
