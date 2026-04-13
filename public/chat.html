@@ -793,29 +793,45 @@
             const list = document.getElementById('doc-list');
             list.innerHTML = '';
             documents.forEach(doc => {
-                const d = document.createElement('div'); 
-                 d.className = 'doc-item';
-                 d.style.cssText = 'display:flex; align-items:center; justify-content:space-between;';
-                 d.innerHTML = `<span style="flex:1; overflow:hidden; text-overflow:ellipsis;">${doc.title}</span><button class="file-item-delete" title="Delete" onclick="deleteDocument('${doc._id}', event)">×</button>`;
-                 d.onclick = async (e) => {
-                     if (e.target.classList.contains('file-item-delete')) return;
-                d.onclick = async () => {
-                    if (currentDocument) socket.emit('leaveDocument', currentDocument);
-                    document.querySelectorAll('.doc-item').forEach(i => i.style.background = '');
-                    d.style.background = '#e0e7ff';
-                    const res  = await fetch(`${API_BASE}/api/documents/${doc._id}`, {headers:{'Authorization':`Bearer ${token}`}});
-                    const data = await res.json();
-                    const ta   = document.getElementById('doc-editor');
-                    ta.value   = data.content;
-                    currentDocument = doc._id;
-                    socket.emit('joinDocument', doc._id);
-                    const fresh = ta.cloneNode(true); ta.parentNode.replaceChild(fresh, ta);
-                    fresh.addEventListener('input', (e) => { socket.emit('documentUpdate', {documentId:currentDocument,content:e.target.value}); });
-                    socket.off('documentChange');
-                    socket.on('documentChange', (c) => { if (fresh.value !== c) fresh.value = c; });
-                };
-                list.appendChild(d);
-            });
+    const d = document.createElement('div'); 
+    d.className = 'doc-item';
+    d.style.cssText = 'display:flex; align-items:center; justify-content:space-between;';
+    d.innerHTML = `<span style="flex:1; overflow:hidden; text-overflow:ellipsis;">${doc.title}</span><button class="file-item-delete" title="Delete" onclick="deleteDocument('${doc._id}', event)">×</button>`;
+    
+    // --- COMBINED CLICK HANDLER ---
+    d.onclick = async (e) => {
+        // 1. Stop if they clicked the delete button instead of the document
+        if (e.target.classList.contains('file-item-delete')) return;
+        
+        // 2. Otherwise, load the document
+        if (currentDocument) socket.emit('leaveDocument', currentDocument);
+        document.querySelectorAll('.doc-item').forEach(i => i.style.background = '');
+        d.style.background = '#e0e7ff';
+        
+        const res  = await fetch(`${API_BASE}/api/documents/${doc._id}`, {headers:{'Authorization':`Bearer ${token}`}});
+        const data = await res.json();
+        const ta   = document.getElementById('doc-editor');
+        ta.value   = data.content;
+        currentDocument = doc._id;
+        
+        socket.emit('joinDocument', doc._id);
+        
+        const fresh = ta.cloneNode(true); 
+        ta.parentNode.replaceChild(fresh, ta);
+        fresh.addEventListener('input', (e) => { 
+            socket.emit('documentUpdate', {documentId:currentDocument, content:e.target.value}); 
+        });
+        
+        socket.off('documentChange');
+        socket.on('documentChange', (c) => { 
+            if (fresh.value !== c) fresh.value = c; 
+        });
+    }; 
+    // --- END CLICK HANDLER ---
+
+    // Append to the list OUTSIDE the click handler, but INSIDE the forEach loop
+    list.appendChild(d);
+});
         }
 
         // ================================================================
@@ -1090,7 +1106,7 @@
 
                 list.appendChild(div);
             });
-        }
+        }}
 
         // ================================================================
         // RUN CODE — JavaScript sandbox in the browser

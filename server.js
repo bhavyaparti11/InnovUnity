@@ -658,6 +658,7 @@ apiRouter.delete('/tasks/:taskId', authMiddleware, async (req, res) => {
 // ==========================================
 io.on('connection', (socket) => {
     console.log('User connected:', socket.id);
+    
     // Code Editor Sockets
     socket.on('joinCodeFile', (fileId) => { socket.join(fileId); });
     socket.on('leaveCodeFile', (fileId) => { socket.leave(fileId); });
@@ -667,6 +668,7 @@ io.on('connection', (socket) => {
             socket.to(data.fileId).emit('codeChange', data);
         } catch(e) { console.error('codeUpdate error', e); }
     });
+    
     // Project Rooms
     socket.on('joinProjectRooms', async (userId) => {
         const userProjects = await Project.find({ members: userId });
@@ -694,7 +696,6 @@ io.on('connection', (socket) => {
         } catch(e) { console.error('documentUpdate error', e); }
     });
 
-    // REPLACE WITH:
     // WebRTC — emit socket.id (not userId) so peers can route signals correctly
     socket.on('join-voice-room', (roomId, userId) => {
         socket.join(`voice-${roomId}`);
@@ -721,6 +722,8 @@ io.on('connection', (socket) => {
             socket.to(socket.voiceRoom).emit('user-disconnected', socket.id);
         }
     });
+}); // <--- THIS WAS MISSING! IT CLOSES io.on('connection')
+
 // --- AI CODE ANALYSIS ROUTES ---
 
 // 1. Route to Review Code
