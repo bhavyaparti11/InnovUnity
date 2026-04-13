@@ -773,11 +773,13 @@ apiRouter.post('/execute', authMiddleware, async (req, res) => {
 apiRouter.get('/wandbox-compilers', authMiddleware, async (req, res) => {
     try {
         const response = await axios.get('https://wandbox.org/api/list.json');
-        // Return just name + language for each compiler
-        const list = response.data.map(c => ({ name: c.name, language: c.language }));
-        res.json(list);
+        console.log('Wandbox list length:', response.data?.length);
+        console.log('First 3:', JSON.stringify(response.data?.slice(0,3)));
+        res.json(response.data);
     } catch (err) {
-        res.status(500).json({ error: err.message, details: err.response?.data });
+        console.error('Wandbox list error:', err.message);
+        console.error('Response:', err.response?.status, JSON.stringify(err.response?.data));
+        res.status(500).json({ error: err.message, status: err.response?.status, data: err.response?.data });
     }
 });
 
