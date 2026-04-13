@@ -915,16 +915,25 @@ function renderLogs(logs) {
 // ═══════════════════════════════════════════
 
 // Maps file extension → Piston language name
-const pistonLang = {
-    js:   'node',        ts:   'typescript',
-    py:   'python',      rb:   'ruby',
-    java: 'java',        kt:   'kotlin',
-    cpp:  'c++',         c:    'c',
-    cs:   'csharp',      go:   'go',
-    rs:   'rust',        php:  'php',
-    sh:   'bash',        r:    'r',
-    lua:  'lua',         swift:'swift',
-    pl:   'perl',
+// Maps file extension → Wandbox compiler name
+const wandboxCompiler = {
+    js:   'nodejs-head',
+    ts:   'typescript-5.3.3',
+    py:   'cpython-3.12.0',
+    rb:   'ruby-3.3.0',
+    java: 'openjdk-jdk-22+36',
+    kt:   'kotlin-1.9.21',
+    cpp:  'gcc-head',
+    c:    'gcc-head-c',
+    cs:   'mono-6.12.0.200',
+    go:   'go-1.22.0',
+    rs:   'rust-1.76.0',
+    php:  'php-8.3.0',
+    sh:   'bash',
+    lua:  'lua-5.4.6',
+    swift:'swift-5.9.2',
+    pl:   'perl-5.38.0',
+    rb:   'ruby-3.3.0',
 };
 
 // Languages that can't be "run" in an execution sandbox
@@ -947,7 +956,7 @@ function termLine(text, cls) {
 }
 
 // Cache the runtimes so we only fetch them once per session
-let pistonRuntimes = [];
+
 
 async function runCode() {
     if (!editorInstance || !currentCodeFileTitle) return;
@@ -965,7 +974,7 @@ async function runCode() {
         return;
     }
 
-    const lang = pistonLang[ext];
+    const lang = wandboxCompiler[ext];
     if (!lang) {
         setDisplay('terminal-output', 'flex');
         document.getElementById('terminal-body').innerHTML = '';
@@ -982,76 +991,55 @@ async function runCode() {
     document.getElementById('terminal-lang-label').innerText = `▶ ${lang.toUpperCase()} — running…`;
 
     try {
-        // 1. Fetch exact version number dynamically
-        if (pistonRuntimes.length === 0) {
-            const rtRes = await fetch('https://emkc.org/api/v2/piston/runtimes');
-            pistonRuntimes = await rtRes.json();
-        }
-        
-        // Find the language in Piston's runtime list
-        const runtime = pistonRuntimes.find(r => r.language === lang || r.aliases.includes(lang));
-        const exactVersion = runtime ? runtime.version : "1.0.0"; // Fallback
+    const res = await fetch('/api/execute', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ code, compiler: lang })
+    });
 
-        // 2. Execute code with the exact version
-        const res = await fetch('https://emkc.org/api/v2/piston/execute', {
-            method:  'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body:    JSON.stringify({
-                language: lang,
-                version:  exactVersion,   // <-- FIXED: Passing the exact version number
-                files:    [{ name: currentCodeFileTitle, content: code }],
-                stdin:    '',
-                args:     []
-            })
-        });
+    setDisplay('terminal-running', 'none');
 
-        setDisplay('terminal-running', 'none');
-
-        if (!res.ok) {
-            document.getElementById('terminal-lang-label').innerText = `▶ ${lang.toUpperCase()} — error`;
-            termLine(`HTTP ${res.status}: Could not reach the execution service.`, 'term-stderr');
-            termLine('Check your internet connection and try again.', 'term-info');
-            return;
-        }
-
-        const data = await res.json();
-        const run  = data.run || data.compile || {};
-
-        document.getElementById('terminal-lang-label').innerText = 
-            `▶ ${lang.toUpperCase()} — exit code ${run.code ?? '?'}`;
-
-        // Compile step errors (for C, C++, Java, etc.)
-        if (data.compile && data.compile.stderr) {
-            termLine('── Compilation ──', 'term-info');
-            termLine(data.compile.stderr, 'term-stderr');
-        }
-        if (data.compile && data.compile.stdout) {
-            termLine(data.compile.stdout, 'term-stdout');
-        }
-
-        // Runtime output
-        if (run.stdout) termLine(run.stdout, 'term-stdout');
-        if (run.stderr) termLine(run.stderr, 'term-stderr');
-
-        // If genuinely no output at all
-        if (!run.stdout && !run.stderr && !(data.compile?.stderr)) {
-            termLine('(no output)', 'term-info');
-        }
-
-        // Exit status footer
-        const exitCls = (run.code === 0) ? 'term-exit-ok' : 'term-exit-err';
-        const exitMsg = run.signal 
-            ? `Process killed by signal: ${run.signal}` 
-            : `Exited with code ${run.code}`;
-        termLine(exitMsg, exitCls);
-
-    } catch (err) {
-        setDisplay('terminal-running', 'none');
-        document.getElementById('terminal-lang-label').innerText = `▶ ${lang.toUpperCase()} — failed`;
-        termLine('Could not reach the Piston execution service.', 'term-stderr');
-        termLine(`Error: ${err.message}`, 'term-stderr');
-        termLine('Make sure you have internet access.', 'term-info');
+    if (!res.ok) {
+        document.getElementById('terminal-lang-label').innerText = `▶ ${ext.toUpperCase()} — error`;
+        termLine(`HTTP ${res.status}: Could not reach the execution service.`, 'term-stderr');
+        return;
     }
+
+    const data = await res.json();
+    const exitCode = parseInt(data.status ?? '1', 10);
+
+    document.getElementById('terminal-lang-label').innerText =
+        `▶ ${ext.toUpperCase()} — exit code ${exitCode}`;
+
+    // Compiler errors (C, C++, Java etc.)
+    if (data.compiler_output) {
+        termLine('── Compiler ──', 'term-info');
+        termLine(data.compiler_output, 'term-stderr');
+    }
+    if (data.compiler_error) {
+        termLine(data.compiler_error, 'term-stderr');
+    }
+
+    // Runtime output
+    if (data.program_output) termLine(data.program_output, 'term-stdout');
+    if (data.program_error)  termLine(data.program_error,  'term-stderr');
+
+    if (!data.program_output && !data.program_error && !data.compiler_error) {
+        termLine('(no output)', 'term-info');
+    }
+
+    const exitCls = exitCode === 0 ? 'term-exit-ok' : 'term-exit-err';
+    termLine(`Exited with code ${exitCode}`, exitCls);
+
+} catch (err) {
+    setDisplay('terminal-running', 'none');
+    document.getElementById('terminal-lang-label').innerText = `▶ ${ext.toUpperCase()} — failed`;
+    termLine('Could not reach the execution service.', 'term-stderr');
+    termLine(`Error: ${err.message}`, 'term-stderr');
+}
 }
 </script>
 </body>

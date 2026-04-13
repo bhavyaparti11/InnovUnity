@@ -751,6 +751,26 @@ apiRouter.post('/codefiles/:fileId/explain', authMiddleware, async (req, res) =>
         res.status(500).json({ error: 'Server error during AI explanation' });
     }
 });
+// ==========================================
+// CODE EXECUTION (Wandbox proxy)
+// ==========================================
+apiRouter.post('/execute', authMiddleware, async (req, res) => {
+    try {
+        const { code, compiler } = req.body;
+        if (!code || !compiler) return res.status(400).json({ error: 'code and compiler are required' });
+
+        const response = await fetch('https://wandbox.org/api/compile.json', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code, compiler })
+        });
+
+        const data = await response.json();
+        res.json(data);
+    } catch (err) {
+        res.status(500).json({ error: 'Execution service unavailable' });
+    }
+});
 
 // ==========================================
 // 6. SERVER START
