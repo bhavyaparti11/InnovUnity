@@ -76,6 +76,22 @@
         .delete-project-btn { margin-left:auto;background:none;border:none;color:#fca5a5;cursor:pointer;font-weight:bold;display:none;padding:0 5px;border-radius:4px; }
         .channel-item:hover .delete-project-btn { display:inline-block; }
         .delete-project-btn:hover { color:#ef4444;background:#fee2e2; }
+        /* ── Terminal ── */
+        #terminal-output { display:none;flex-direction:column;background:#0d1117;flex-shrink:0;max-height:220px;border-top:2px solid #30363d; }
+        #terminal-toolbar { display:flex;justify-content:space-between;align-items:center;padding:5px 12px;background:#161b22;border-bottom:1px solid #30363d;flex-shrink:0; }
+        #terminal-lang-label { color:#58a6ff;font-family:monospace;font-size:.75rem;font-weight:600; }
+        #terminal-clear-btn { background:none;border:none;color:#6e7681;cursor:pointer;font-size:.75rem;padding:2px 6px;border-radius:3px; }
+        #terminal-clear-btn:hover { background:#21262d;color:#c9d1d9; }
+        #terminal-close-btn { background:none;border:none;color:#6e7681;cursor:pointer;font-size:16px;padding:0 4px;line-height:1; }
+        #terminal-close-btn:hover { color:#c9d1d9; }
+        #terminal-body { flex:1;overflow-y:auto;padding:10px 14px;font-family:'Cascadia Code','Fira Mono',monospace;font-size:.82rem;line-height:1.6; }
+        #terminal-running { display:none;align-items:center;gap:8px;padding:10px 14px;color:#58a6ff;font-family:monospace;font-size:.82rem; }
+        .term-spinner { width:14px;height:14px;border:2px solid #30363d;border-top-color:#58a6ff;border-radius:50%;animation:spin .6s linear infinite;flex-shrink:0; }
+        .term-stdout { color:#3fb950; }
+        .term-stderr { color:#f85149; }
+        .term-info   { color:#8b949e;font-style:italic; }
+        .term-exit-ok  { color:#3fb950;margin-top:6px;padding-top:6px;border-top:1px solid #21262d; }
+        .term-exit-err { color:#f85149;margin-top:6px;padding-top:6px;border-top:1px solid #21262d; }
     </style>
 </head>
 <body>
@@ -171,10 +187,23 @@
                         <button id="explain-ai-btn" onclick="callGroqAI('explain')" style="background:#7c3aed;color:#fff;border:none;padding:4px 11px;border-radius:4px;cursor:pointer;display:none;font-size:.8rem;font-weight:600;">💡 Explain</button>
                         <button id="duplicate-btn"  onclick="duplicateCodeFile()"  style="background:#0ea5e9;color:#fff;border:none;padding:4px 11px;border-radius:4px;cursor:pointer;display:none;font-size:.8rem;font-weight:600;">⎘ Duplicate</button>
                         <button id="logs-btn"       onclick="openLogsDrawer()"     style="background:#374151;color:#e5e7eb;border:none;padding:4px 11px;border-radius:4px;cursor:pointer;display:none;font-size:.8rem;font-weight:600;">📋 Logs</button>
+                        <button id="run-btn"        onclick="runCode()"            style="background:#238636;color:#fff;border:none;padding:4px 11px;border-radius:4px;cursor:pointer;display:none;font-size:.8rem;font-weight:600;">▶ Run</button>
                     </div>
                 </div>
                 <div style="flex:1;position:relative;min-height:0;">
                     <div id="editor-container" style="position:absolute;top:0;left:0;right:0;bottom:0;"></div>
+                </div>
+                <!-- Terminal output panel -->
+                <div id="terminal-output">
+                    <div id="terminal-toolbar">
+                        <span id="terminal-lang-label">▶ OUTPUT</span>
+                        <div style="display:flex;gap:6px;align-items:center;">
+                            <button id="terminal-clear-btn" onclick="clearTerminal()">Clear</button>
+                            <button id="terminal-close-btn" onclick="setDisplay('terminal-output','none')" title="Close terminal">×</button>
+                        </div>
+                    </div>
+                    <div id="terminal-running"><div class="term-spinner"></div><span>Running…</span></div>
+                    <div id="terminal-body"></div>
                 </div>
             </div>
         </div>
@@ -399,7 +428,8 @@ async function openProject(project) {
     if (currentCodeFile)  { socket.emit('leaveCodeFile',  currentCodeFile);   currentCodeFile  = null; currentCodeFileTitle = ''; }
 
     // Reset Monaco (no reference to removed elements)
-    ['review-ai-btn','explain-ai-btn','duplicate-btn','logs-btn'].forEach(id => setDisplay(id,'none'));
+    ['review-ai-btn','explain-ai-btn','duplicate-btn','logs-btn','run-btn'].forEach(id => setDisplay(id,'none'));
+    setDisplay('terminal-output','none');
     setDisplay('current-file-label','');
     const lbl = document.getElementById('current-file-label');
     if (lbl) lbl.innerText = '';
@@ -770,7 +800,10 @@ async function loadCodeFiles() {
                     lastLoggedContent=data.content||'';
                 }
             } catch(err){console.error('Load file error',err);}
-            ['review-ai-btn','explain-ai-btn','duplicate-btn','logs-btn'].forEach(id=>setDisplay(id,'inline-block'));
+            ['review-ai-btn','explain-ai-btn','duplicate-btn','logs-btn','run-btn'].forEach(id=>setDisplay(id,'inline-block'));
+            setDisplay('terminal-output','none');
+            document.getElementById('terminal-body').innerHTML='';
+            document.getElementById('terminal-lang-label').innerText='▶ OUTPUT';
             socket.emit('joinCodeFile',file._id);
         });
         list.appendChild(div);
@@ -785,7 +818,8 @@ async function deleteCodeFile(fileId, e) {
         if(r.ok){
             if(currentCodeFile===fileId){
                 currentCodeFile=null;currentCodeFileTitle='';
-                ['review-ai-btn','explain-ai-btn','duplicate-btn','logs-btn'].forEach(id=>setDisplay(id,'none'));
+                ['review-ai-btn','explain-ai-btn','duplicate-btn','logs-btn','run-btn'].forEach(id=>setDisplay(id,'none'));
+                setDisplay('terminal-output','none');
                 const lbl=document.getElementById('current-file-label');if(lbl)lbl.innerText='';
                 if(editorInstance){editorInstance.updateOptions({readOnly:true});isTypingCode=true;editorInstance.setValue('// Select or create a code file...');isTypingCode=false;}
             }
@@ -873,6 +907,137 @@ function renderLogs(logs) {
             </div>`;
         list.appendChild(entry);
     });
+}
+// ═══════════════════════════════════════════
+// CODE RUNNER — Piston API (free, no key needed)
+// Supports: Python, Node.js, C, C++, Java, TypeScript,
+//           Bash, Go, Rust, Ruby, PHP, Kotlin, Swift, R, Lua, and 60+ more
+// ═══════════════════════════════════════════
+
+// Maps file extension → Piston language name
+const pistonLang = {
+    js:   'node',        ts:   'typescript',
+    py:   'python',      rb:   'ruby',
+    java: 'java',        kt:   'kotlin',
+    cpp:  'c++',         c:    'c',
+    cs:   'csharp',      go:   'go',
+    rs:   'rust',        php:  'php',
+    sh:   'bash',        r:    'r',
+    lua:  'lua',         swift:'swift',
+    pl:   'perl',
+};
+
+// Languages that can't be "run" in an execution sandbox
+const noRunLangs = new Set(['html','css','json','md','sql','xml','yaml','yml']);
+
+function clearTerminal() {
+    document.getElementById('terminal-body').innerHTML = '';
+}
+
+function termLine(text, cls) {
+    const body = document.getElementById('terminal-body');
+    // Each logical line as its own div so colours apply cleanly
+    text.split('\n').forEach(line => {
+        const div = document.createElement('div');
+        div.className = cls;
+        div.textContent = line;
+        body.appendChild(div);
+    });
+    body.scrollTop = body.scrollHeight;
+}
+
+async function runCode() {
+    if (!editorInstance || !currentCodeFileTitle) return;
+
+    const ext  = (currentCodeFileTitle.split('.').pop() || '').toLowerCase();
+    const code = editorInstance.getValue().trim();
+
+    // Non-runnable file types
+    if (noRunLangs.has(ext)) {
+        setDisplay('terminal-output', 'flex');
+        document.getElementById('terminal-body').innerHTML = '';
+        document.getElementById('terminal-lang-label').innerText = `▶ ${ext.toUpperCase()}`;
+        termLine(`Cannot execute .${ext} files directly.`, 'term-info');
+        termLine('Tip: run HTML in a browser, SQL in a DB client, etc.', 'term-info');
+        return;
+    }
+
+    const lang = pistonLang[ext];
+    if (!lang) {
+        setDisplay('terminal-output', 'flex');
+        document.getElementById('terminal-body').innerHTML = '';
+        termLine(`No executor found for ".${ext}" files.`, 'term-stderr');
+        return;
+    }
+
+    if (!code) { alert('The file is empty — nothing to run.'); return; }
+
+    // Show terminal in loading state
+    setDisplay('terminal-output', 'flex');
+    setDisplay('terminal-running', 'flex');
+    document.getElementById('terminal-body').innerHTML = '';
+    document.getElementById('terminal-lang-label').innerText = `▶ ${lang.toUpperCase()} — running…`;
+
+    try {
+        const res = await fetch('https://emkc.org/api/v2/piston/execute', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({
+                language: lang,
+                version:  '*',            // use latest available version
+                files:    [{ name: currentCodeFileTitle, content: code }],
+                stdin:    '',
+                args:     []
+            })
+        });
+
+        setDisplay('terminal-running', 'none');
+
+        if (!res.ok) {
+            document.getElementById('terminal-lang-label').innerText = `▶ ${lang.toUpperCase()} — error`;
+            termLine(`HTTP ${res.status}: Could not reach the execution service.`, 'term-stderr');
+            termLine('Check your internet connection and try again.', 'term-info');
+            return;
+        }
+
+        const data = await res.json();
+        const run  = data.run || data.compile || {};
+
+        document.getElementById('terminal-lang-label').innerText =
+            `▶ ${lang.toUpperCase()} — exit code ${run.code ?? '?'}`;
+
+        // Compile step errors (for C, C++, Java, etc.)
+        if (data.compile && data.compile.stderr) {
+            termLine('── Compilation ──', 'term-info');
+            termLine(data.compile.stderr, 'term-stderr');
+        }
+        if (data.compile && data.compile.stdout) {
+            termLine(data.compile.stdout, 'term-stdout');
+        }
+
+        // Runtime output
+        if (run.stdout) termLine(run.stdout, 'term-stdout');
+        if (run.stderr) termLine(run.stderr, 'term-stderr');
+
+        // If genuinely no output at all
+        if (!run.stdout && !run.stderr && !(data.compile?.stderr)) {
+            termLine('(no output)', 'term-info');
+        }
+
+        // Exit status footer
+        const exitCls = (run.code === 0) ? 'term-exit-ok' : 'term-exit-err';
+        const exitMsg = run.signal
+            ? `Process killed by signal: ${run.signal}`
+            : `Exited with code ${run.code}`;
+        termLine(exitMsg, exitCls);
+
+    } catch (err) {
+        setDisplay('terminal-running', 'none');
+        document.getElementById('terminal-lang-label').innerText = `▶ ${lang.toUpperCase()} — failed`;
+        termLine('Could not reach the Piston execution service.', 'term-stderr');
+        termLine(`Error: ${err.message}`, 'term-stderr');
+        termLine('Make sure you have internet access.', 'term-info');
+    }
 }
 </script>
 </body>
