@@ -155,6 +155,7 @@
             </div>
 
             <!-- Code View -->
+             
              <div class="code-view view" id="code-view" style="display:none; width:100%; height:100%; flex-direction: row;">
                 
                 <div class="documents-list-panel" style="width: 250px; min-width: 250px; flex-shrink: 0; border-right: 1px solid #e5e7eb; display: flex; flex-direction: column;">
@@ -167,6 +168,14 @@
                     </div>
                     <div id="code-list" style="flex: 1; overflow-y: auto;"></div>
                 </div>
+                <div class="ai-actions" style="margin-top: 10px; display: flex; gap: 10px;">
+    <button onclick="getAiReview('CURRENT_FILE_ID')" class="btn" style="background: #3e399b; color: white;">
+        Review Code
+    </button>
+    <button onclick="getAiExplanation('CURRENT_FILE_ID')" class="btn" style="background: #95508f; color: white;">
+        Explain Code
+    </button>
+</div>
                 
                 <div class="document-editor-panel" style="flex: 1; min-width: 0; padding:0; display:flex; flex-direction:column; background:#1e1e1e; overflow:hidden;">
                     <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 15px; border-bottom:1px solid #333; background:#2d2d2d; flex-shrink:0;">
@@ -484,14 +493,7 @@
             // FIX: Load code files immediately so list shows on project open
             loadCodeFiles();
         }
-<div class="ai-actions" style="margin-top: 10px; display: flex; gap: 10px;">
-    <button onclick="getAiReview('CURRENT_FILE_ID')" class="btn" style="background: #3e399b; color: white;">
-        Review Code
-    </button>
-    <button onclick="getAiExplanation('CURRENT_FILE_ID')" class="btn" style="background: #95508f; color: white;">
-        Explain Code
-    </button>
-</div>
+
         // ================================================================
         // VIEW SWITCHING
         // ================================================================
