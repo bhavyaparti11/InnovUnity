@@ -12,7 +12,7 @@ const MessageSchema = new mongoose.Schema({
 
 
 const Message = mongoose.model('Message', MessageSchema);
-
+const axios = require('axios');
 const authMiddleware = require('./middleware/auth'); 
 const fileRoutes = require('./routes/fileRoutes');
 const express = require('express');
@@ -759,16 +759,15 @@ apiRouter.post('/execute', authMiddleware, async (req, res) => {
         const { code, compiler } = req.body;
         if (!code || !compiler) return res.status(400).json({ error: 'code and compiler are required' });
 
-        const response = await fetch('https://wandbox.org/api/compile.json', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ code, compiler })
-        });
+        const response = await axios.post('https://wandbox.org/api/compile.json', 
+            { code, compiler },
+            { headers: { 'Content-Type': 'application/json' } }
+        );
 
-        const data = await response.json();
-        res.json(data);
+        res.json(response.data);
     } catch (err) {
-        res.status(500).json({ error: 'Execution service unavailable' });
+        console.error('Wandbox error:', err.message);
+        res.status(500).json({ error: 'Execution service unavailable', details: err.message });
     }
 });
 
