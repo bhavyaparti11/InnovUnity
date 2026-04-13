@@ -144,6 +144,16 @@ const CodeFileSchema = new mongoose.Schema({
     projectId: { type: mongoose.Schema.Types.ObjectId, ref: 'Project', required: true, index: true },
 }, { timestamps: true });
 const CodeFile = mongoose.model('CodeFile', CodeFileSchema);
+// --- CODE FILE CHANGE LOG SCHEMA ---
+const CodeFileLogSchema = new mongoose.Schema({
+    fileId:    { type: mongoose.Schema.Types.ObjectId, ref: 'CodeFile', required: true, index: true },
+    type:      { type: String, enum: ['edit', 'duplicate'], default: 'edit' },
+    summary:   { type: String, default: '' },
+    content:   { type: String, default: '' },
+    author:    { type: String, required: true },
+    authorId:  { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+}, { timestamps: true });
+const CodeFileLog = mongoose.model('CodeFileLog', CodeFileLogSchema);
 
 const TaskSchema = new mongoose.Schema({
     projectId: { type: mongoose.Schema.Types.ObjectId, ref: 'Project', required: true, index: true },
@@ -382,10 +392,24 @@ apiRouter.get('/projects/:projectId/codefiles', authMiddleware, async (req, res)
         res.json(files);
     } catch (err) { res.status(500).json({ error: 'Server error' }); }
 });
+// REPLACE WITH:
 apiRouter.post('/projects/:projectId/codefiles', authMiddleware, async (req, res) => {
     try {
-        const newFile = new CodeFile({ title: req.body.title, projectId: req.params.projectId });
+        const { title, content, originalFileId } = req.body;
+        const newFile = new CodeFile({
+            title,
+            content: content || '// Start coding...',
+            projectId: req.params.projectId
+        });
         await newFile.save();
+        // If this is a duplicate, record a log on the new file
+        if (originalFileId) {
+            await CodeFileLog.create({
+                fileId: newFile._id, type: 'duplicate',
+                summary: `Duplicated from another file by ${req.user.name}`,
+                content: content || '', author: req.user.name, authorId: req.user.id
+            });
+        }
         res.status(201).json(newFile);
     } catch (err) { res.status(500).json({ error: 'Server error' }); }
 });
@@ -394,6 +418,47 @@ apiRouter.get('/codefiles/:fileId', authMiddleware, async (req, res) => {
         const file = await CodeFile.findById(req.params.fileId);
         if (!file) return res.status(404).json({ error: 'Not found' });
         res.json(file);
+    } catch (err) { res.status(500).json({ error: 'Server error' }); }
+});
+// DELETE a code file
+apiRouter.delete('/codefiles/:fileId', authMiddleware, async (req, res) => {
+    try {
+        await CodeFile.findByIdAndDelete(req.params.fileId);
+        await CodeFileLog.deleteMany({ fileId: req.params.fileId });
+        res.json({ success: true });
+    } catch (err) { res.status(500).json({ error: 'Server error' }); }
+});
+
+// POST a log entry for a code file
+apiRouter.post('/codefiles/:fileId/logs', authMiddleware, async (req, res) => {
+    try {
+        const { type, summary, content } = req.body;
+        const log = await CodeFileLog.create({
+            fileId: req.params.fileId,
+            type: type || 'edit',
+            summary: summary || '',
+            content: content || '',
+            author: req.user.name,
+            authorId: req.user.id
+        });
+        res.json(log);
+    } catch (err) { res.status(500).json({ error: 'Server error' }); }
+});
+
+// GET all logs for a code file
+apiRouter.get('/codefiles/:fileId/logs', authMiddleware, async (req, res) => {
+    try {
+        const logs = await CodeFileLog.find({ fileId: req.params.fileId })
+            .sort({ createdAt: -1 }).limit(50).lean();
+        res.json(logs);
+    } catch (err) { res.status(500).json({ error: 'Server error' }); }
+});
+
+// DELETE a document
+apiRouter.delete('/documents/:documentId', authMiddleware, async (req, res) => {
+    try {
+        await Document.findByIdAndDelete(req.params.documentId);
+        res.json({ success: true });
     } catch (err) { res.status(500).json({ error: 'Server error' }); }
 });
 
@@ -629,24 +694,33 @@ io.on('connection', (socket) => {
         } catch(e) { console.error('documentUpdate error', e); }
     });
 
-    // WebRTC (Video)
+    // REPLACE WITH:
+    // WebRTC — emit socket.id (not userId) so peers can route signals correctly
     socket.on('join-voice-room', (roomId, userId) => {
-        socket.join(roomId);
-        socket.to(roomId).emit('user-connected', userId);
+        socket.join(`voice-${roomId}`);
+        socket.voiceRoom = `voice-${roomId}`;
+        // Tell others in the room about the new peer, identified by socket.id
+        socket.to(`voice-${roomId}`).emit('user-connected', socket.id);
     });
-    socket.on('leave-voice-room', (roomId, userId) => {
-        socket.leave(roomId);
-        socket.to(roomId).emit('user-disconnected', userId);
+    socket.on('leave-voice-room', (roomId) => {
+        if (socket.voiceRoom) {
+            socket.to(socket.voiceRoom).emit('user-disconnected', socket.id);
+            socket.leave(socket.voiceRoom);
+            socket.voiceRoom = null;
+        }
     });
     socket.on('signal-peer', (data) => {
+        // data.userToSignal and data.callerId are both socket.ids
         io.to(data.userToSignal).emit('peer-signal', {
             signal: data.signal,
             callerId: data.callerId
         });
     });
-
-    socket.on('disconnect', () => { /* Handle disconnect */ });
-});
+    socket.on('disconnect', () => {
+        if (socket.voiceRoom) {
+            socket.to(socket.voiceRoom).emit('user-disconnected', socket.id);
+        }
+    });
 // --- AI CODE ANALYSIS ROUTES ---
 
 // 1. Route to Review Code

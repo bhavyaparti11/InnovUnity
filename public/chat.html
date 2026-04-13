@@ -75,6 +75,28 @@
         .delete-project-btn { margin-left: auto; background: none; border: none; color: #fca5a5; cursor: pointer; font-weight: bold; display: none; padding: 0 5px; border-radius: 4px; }
         .channel-item:hover .delete-project-btn { display: inline-block; }
         .delete-project-btn:hover { color: #ef4444; background-color: #fee2e2; }
+        /* Delete button on code/doc file items */
+.file-item-delete { display:none; margin-left:auto; flex-shrink:0; background:none; border:none; color:#f87171; cursor:pointer; font-size:15px; padding:2px 6px; border-radius:3px; line-height:1; }
+.code-file-item:hover .file-item-delete, .doc-item:hover .file-item-delete { display:inline-block; }
+.file-item-delete:hover { background:#fee2e2; color:#ef4444; }
+.code-file-item { display:flex; align-items:center; gap:8px; }
+
+/* Logs drawer */
+#logs-drawer { position:fixed; right:0; top:0; width:370px; height:100vh; background:#fff; border-left:1px solid #e5e7eb; box-shadow:-4px 0 20px rgba(0,0,0,.1); z-index:4000; display:none; flex-direction:column; }
+#logs-drawer-header { padding:14px 16px; background:#f9fafb; border-bottom:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; flex-shrink:0; }
+#logs-drawer-header h3 { margin:0; font-size:1rem; }
+#logs-drawer-header button { background:none; border:none; cursor:pointer; font-size:20px; color:#6b7280; }
+#logs-list { flex:1; overflow-y:auto; padding:12px; }
+.log-entry { border:1px solid #e5e7eb; border-radius:8px; margin-bottom:10px; overflow:hidden; font-size:.82rem; }
+.log-entry-header { padding:8px 12px; background:#f9fafb; display:flex; align-items:center; gap:8px; }
+.log-avatar { width:26px; height:26px; border-radius:50%; background:linear-gradient(45deg,#3e399b,#95508f); color:white; display:flex; align-items:center; justify-content:center; font-size:.72rem; font-weight:700; flex-shrink:0; }
+.log-author { font-weight:600; color:#111; flex:1; }
+.log-time { color:#9ca3af; font-size:.72rem; }
+.log-tag { font-size:.68rem; padding:1px 6px; border-radius:999px; font-weight:600; }
+.log-tag.edit { background:#dbeafe; color:#1d4ed8; }
+.log-tag.duplicate { background:#fef9c3; color:#92400e; }
+.log-body { padding:8px 12px; color:#374151; }
+.log-snippet { font-family:monospace; font-size:.75rem; background:#f3f4f6; padding:5px 8px; border-radius:4px; margin-top:5px; max-height:60px; overflow-y:auto; white-space:pre-wrap; }
     </style>
 </head>
 <body>
@@ -168,31 +190,23 @@
                     </div>
                     <div id="code-list" style="flex: 1; overflow-y: auto;"></div>
                 </div>
-                <div class="ai-actions" style="margin-top: 10px; display: flex; gap: 10px;">
-    <button onclick="getAiReview('CURRENT_FILE_ID')" class="btn" style="background: #3e399b; color: white;">
-        Review Code
-    </button>
-    <button onclick="getAiExplanation('CURRENT_FILE_ID')" class="btn" style="background: #95508f; color: white;">
-        Explain Code
-    </button>
-</div>
                 
                 <div class="document-editor-panel" style="flex: 1; min-width: 0; padding:0; display:flex; flex-direction:column; background:#1e1e1e; overflow:hidden;">
                     <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 15px; border-bottom:1px solid #333; background:#2d2d2d; flex-shrink:0;">
                         <span style="color:#4ade80; font-family:monospace; font-weight:bold; font-size:0.9rem;">💻 Monaco IDE</span>
-                        <div style="display:flex; gap:8px; align-items:center;">
+                        <div style="display:flex; gap:6px; align-items:center;">
                             <span id="current-file-label" style="color:#888; font-family:monospace; font-size:0.78rem;"></span>
-                            <button id="ask-ai-btn" style="background:#6200ea; color:white; border:none; padding:5px 14px; border-radius:4px; cursor:pointer; display:none; font-size:0.82rem; font-weight:600;">Ask Groq AI ✨</button>
-                            <button id="run-code-btn" style="background:#10b981; color:white; border:none; padding:5px 14px; border-radius:4px; cursor:pointer; display:none; font-size:0.82rem; font-weight:600;">▶ Run</button>
+                            <button id="review-ai-btn"  onclick="callGroqAI('review')"  style="background:#6200ea; color:white; border:none; padding:5px 12px; border-radius:4px; cursor:pointer; display:none; font-size:0.8rem; font-weight:600;">🔍 Review</button>
+                            <button id="explain-ai-btn" onclick="callGroqAI('explain')" style="background:#7c3aed; color:white; border:none; padding:5px 12px; border-radius:4px; cursor:pointer; display:none; font-size:0.8rem; font-weight:600;">💡 Explain</button>
+                            <button id="duplicate-btn"  onclick="duplicateCodeFile()"  style="background:#0ea5e9; color:white; border:none; padding:5px 12px; border-radius:4px; cursor:pointer; display:none; font-size:0.8rem; font-weight:600;">⎘ Duplicate</button>
+                            <button id="logs-btn"       onclick="openLogsDrawer()"     style="background:#374151; color:#e5e7eb; border:none; padding:5px 12px; border-radius:4px; cursor:pointer; display:none; font-size:0.8rem; font-weight:600;">📋 Logs</button>
                         </div>
                     </div>
+                
                     <div style="flex:1; position:relative; min-height:0;">
                         <div id="editor-container" style="position:absolute; top:0; left:0; right:0; bottom:0;"></div>
                     </div>
-                    <div id="terminal-output">
-                        <div style="color:#555; margin-bottom:4px; font-size:0.72rem; letter-spacing:0.05em;">▶ CONSOLE OUTPUT</div>
-                        <div id="console-logs"></div>
-                    </div>
+                    
                 </div>
 
             </div>
@@ -337,6 +351,9 @@
         let editorInstance = null;
         let isTypingCode = false;
         let currentDecorations = [];
+        let currentCodeFileTitle = '';  // tracks current open file title
+        let logDebounceTimer = null;    // debounce timer for auto-logging
+        let lastLoggedContent = '';     // prevents duplicate log entries
 
         // ================================================================
         // DOM REFS
@@ -567,14 +584,21 @@
         // FIX 2: Nested user-disconnected listener removed
         // ================================================================
         socket.on('user-connected', userId => {
+            // userId here is the NEW user's socket.id (fixed on server)
+            // Only create a peer if we ourselves are in a call
+            if (!localStream) return;
+            if (peers[userId]) return; // don't double-create
+
             const btn = document.querySelector('.start-call-btn');
             if (btn && document.getElementById('video-call-overlay').style.display === 'none') {
                 btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"></path><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg><span>Join Active Call</span>`;
                 btn.style.backgroundColor = '#ef4444';
             }
-            const peer = new SimplePeer({ initiator: true, trickle: false, stream: localStream }); // FIX: trickle
+            const peer = new SimplePeer({ initiator: true, trickle: false, stream: localStream });
             peer.on('signal', sig => { socket.emit('signal-peer', { userToSignal: userId, callerId: socket.id, signal: sig }); });
-            peer.on('stream', stream => addVideoStream(stream, 'User', false, userId));
+            peer.on('stream', stream => addVideoStream(stream, 'Teammate', false, userId));
+            peer.on('error', err => { console.error('Peer error:', err); delete peers[userId]; });
+            peer.on('close', () => { delete peers[userId]; const el = document.getElementById(`video-${userId}`); if (el) el.remove(); });
             peers[userId] = peer;
         });
 
@@ -585,14 +609,17 @@
         });
 
         socket.on('peer-signal', data => {
+            if (!localStream) return; // Only handle signals if we're in a call
             const peerId = data.callerId;
-            const peer = peers[peerId] || new SimplePeer({ initiator: false, trickle: false, stream: localStream }); // FIX: trickle
             if (!peers[peerId]) {
+                const peer = new SimplePeer({ initiator: false, trickle: false, stream: localStream });
                 peer.on('signal', sig => { socket.emit('signal-peer', { userToSignal: peerId, callerId: socket.id, signal: sig }); });
-                peer.on('stream', stream => addVideoStream(stream, 'User', false, peerId));
+                peer.on('stream', stream => addVideoStream(stream, 'Teammate', false, peerId));
+                peer.on('error', err => { console.error('Peer error:', err); delete peers[peerId]; });
+                peer.on('close', () => { delete peers[peerId]; const el = document.getElementById(`video-${peerId}`); if (el) el.remove(); });
                 peers[peerId] = peer;
             }
-            peer.signal(data.signal);
+            try { peers[peerId].signal(data.signal); } catch(e) { console.error('Signal error:', e); }
         });
 
         function addVideoStream(stream, label = 'User', muted = false, userId = null) {
@@ -766,8 +793,12 @@
             const list = document.getElementById('doc-list');
             list.innerHTML = '';
             documents.forEach(doc => {
-                const d = document.createElement('div');
-                d.className = 'doc-item'; d.innerText = doc.title;
+                const d = document.createElement('div'); 
+                 d.className = 'doc-item';
+                 d.style.cssText = 'display:flex; align-items:center; justify-content:space-between;';
+                 d.innerHTML = `<span style="flex:1; overflow:hidden; text-overflow:ellipsis;">${doc.title}</span><button class="file-item-delete" title="Delete" onclick="deleteDocument('${doc._id}', event)">×</button>`;
+                 d.onclick = async (e) => {
+                     if (e.target.classList.contains('file-item-delete')) return;
                 d.onclick = async () => {
                     if (currentDocument) socket.emit('leaveDocument', currentDocument);
                     document.querySelectorAll('.doc-item').forEach(i => i.style.background = '');
@@ -900,16 +931,26 @@
                 automaticLayout: true
             });
 
-            // Broadcast edits to collaborators
+            // Broadcast edits to collaborators + debounced log recording
             editorInstance.onDidChangeModelContent((event) => {
-                if (!isTypingCode && currentCodeFile) {
-                    socket.emit('codeUpdate', {
-                        fileId:   currentCodeFile,
-                        content:  editorInstance.getValue(),
-                        user:     userName,
-                        line:     event.changes[0].range.startLineNumber
-                    });
-                }
+                if (isTypingCode || !currentCodeFile) return;
+                const content = editorInstance.getValue();
+                const line    = event.changes[0].range.startLineNumber;
+                socket.emit('codeUpdate', { fileId: currentCodeFile, content, user: userName, line });
+
+                // Auto-record a log after 3 seconds of no typing
+                clearTimeout(logDebounceTimer);
+                logDebounceTimer = setTimeout(async () => {
+                    if (content === lastLoggedContent) return; // nothing new
+                    try {
+                        await fetch(`${API_BASE}/api/codefiles/${currentCodeFile}/logs`, {
+                            method: 'POST',
+                            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ type: 'edit', summary: `Edited near line ${line}`, content })
+                        });
+                        lastLoggedContent = content;
+                    } catch(e) { console.error('Log error:', e); }
+                }, 3000);
             });
 
             // Receive remote edits
@@ -984,6 +1025,23 @@
             // Icon map by file extension
             const iconMap = { js:'📜', ts:'📘', py:'🐍', html:'🌐', css:'🎨', json:'📋', md:'📝', cpp:'⚙️', c:'⚙️', java:'☕', sh:'🖥️', sql:'🗄️' };
 
+            async function loadCodeFiles() {
+            if (!currentChannel) return;
+            try {
+                const res = await fetch(`${API_BASE}/api/projects/${currentChannel._id}/codefiles`, { headers: { 'Authorization': `Bearer ${token}` } });
+                codeFiles = await res.json();
+            } catch(e) { codeFiles = []; }
+
+            const list = document.getElementById('code-list');
+            list.innerHTML = '';
+
+            if (!codeFiles?.length) {
+                list.innerHTML = '<div style="padding:12px;color:#9ca3af;font-size:0.85rem;text-align:center;">No code files yet.<br>Press + to create one.</div>';
+                return;
+            }
+
+            const iconMap = { js:'📜', ts:'📘', py:'🐍', html:'🌐', css:'🎨', json:'📋', md:'📝', cpp:'⚙️', c:'⚙️', java:'☕', sh:'🖥️', sql:'🗄️' };
+
             codeFiles.forEach(file => {
                 const div = document.createElement('div');
                 div.className = 'code-file-item';
@@ -991,42 +1049,44 @@
 
                 const ext  = (file.title.split('.').pop() || '').toLowerCase();
                 const icon = iconMap[ext] || '📄';
-                div.innerHTML = `<span class="code-file-icon">${icon}</span><span>${file.title}</span>`;
 
-                div.onclick = async () => {
-                    // Leave old room
+                // Name span + delete button
+                div.innerHTML = `
+                    <span class="code-file-icon">${icon}</span>
+                    <span style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${file.title}</span>
+                    <button class="file-item-delete" title="Delete file" onclick="deleteCodeFile('${file._id}', event)">×</button>
+                `;
+
+                div.addEventListener('click', async (e) => {
+                    if (e.target.classList.contains('file-item-delete')) return;
+
                     if (currentCodeFile) socket.emit('leaveCodeFile', currentCodeFile);
-
-                    // Update active highlight
                     document.querySelectorAll('#code-list .code-file-item').forEach(i => i.classList.remove('active'));
                     div.classList.add('active');
 
-                    // Show filename in toolbar
+                    currentCodeFile = file._id;
+                    currentCodeFileTitle = file.title;
                     document.getElementById('current-file-label').innerText = file.title;
 
-                    // Fetch & load content
                     try {
                         const fileRes = await fetch(`${API_BASE}/api/codefiles/${file._id}`, { headers: { 'Authorization': `Bearer ${token}` } });
-                        const data    = await fileRes.json();
+                        const data = await fileRes.json();
                         if (editorInstance) {
-                            // Auto-detect language
                             const langMap = { js:'javascript', ts:'typescript', py:'python', html:'html', css:'css', json:'json', md:'markdown', cpp:'cpp', c:'c', java:'java', sh:'shell', sql:'sql' };
                             monaco.editor.setModelLanguage(editorInstance.getModel(), langMap[ext] || 'javascript');
                             editorInstance.updateOptions({ readOnly: false });
                             isTypingCode = true;
                             editorInstance.setValue(data.content || '');
                             isTypingCode = false;
+                            lastLoggedContent = data.content || '';
                         }
-                    } catch(err) { console.error("Could not load file content:", err); }
+                    } catch(err) { console.error("Could not load file:", err); }
 
-                    // Show action buttons
-                    document.getElementById('ask-ai-btn').style.display  = 'inline-block';
-                    document.getElementById('run-code-btn').style.display = 'inline-block';
-                    document.getElementById('terminal-output').style.display = 'none';
-
-                    currentCodeFile = file._id;
+                    ['review-ai-btn','explain-ai-btn','duplicate-btn','logs-btn'].forEach(id => {
+                        document.getElementById(id).style.display = 'inline-block';
+                    });
                     socket.emit('joinCodeFile', file._id);
-                };
+                });
 
                 list.appendChild(div);
             });
@@ -1071,39 +1131,181 @@
         function openAIPopup()  { document.getElementById('ai-popup').style.display = 'flex'; }
         function closeAIPopup() { document.getElementById('ai-popup').style.display = 'none'; }
 
-        document.getElementById('ask-ai-btn').addEventListener('click', async () => {
-            if (!editorInstance) return;
-            const code = editorInstance.getValue().trim();
-            if (!code || code === '// Select or create a code file...') {
-                alert('Write some code first before asking for a review!'); return;
-            }
+        // ================================================================
+        // GROQ AI — calls /api/codefiles/:fileId/review or /explain
+        // ================================================================
+        function openAIPopup()  { document.getElementById('ai-popup').style.display = 'flex'; }
+        function closeAIPopup() { document.getElementById('ai-popup').style.display = 'none'; }
 
+        async function callGroqAI(mode) {
+            if (!currentCodeFile) return alert('Open a code file first.');
+
+            const label = mode === 'review' ? '🔍 Groq AI Review' : '💡 Groq AI Explanation';
+            document.querySelector('#ai-popup-header span').innerText = `🤖 ${label}`;
             openAIPopup();
             document.getElementById('ai-loading').style.display = 'flex';
             document.getElementById('ai-content').style.display  = 'none';
 
             try {
-                const res = await fetch(`${API_BASE}/review`, {
-                    method:  'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body:    JSON.stringify({ code })
+                // Calls the existing route in server.js that reads from DB
+                const res = await fetch(`${API_BASE}/api/codefiles/${currentCodeFile}/${mode}`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
                 });
-
                 if (!res.ok) throw new Error(`Server responded with ${res.status}`);
                 const data = await res.json();
 
                 document.getElementById('ai-loading').style.display = 'none';
                 document.getElementById('ai-content').style.display  = 'block';
-                document.getElementById('ai-content').innerText = data.review || 'No review returned.';
-
+                document.getElementById('ai-content').innerText = data.result || 'No response.';
             } catch(err) {
                 document.getElementById('ai-loading').style.display = 'none';
                 document.getElementById('ai-content').style.display  = 'block';
-                document.getElementById('ai-content').innerText =
-                    `❌ Could not reach AI server.\n\nError: ${err.message}\n\nMake sure your backend (server.js) is running on port 3000 and GROQ_API_KEY is set in your .env file.`;
+                document.getElementById('ai-content').innerText = `❌ Error: ${err.message}\n\nMake sure GROQ_API_KEY is set in .env`;
             }
-        });
+        }
+
+        // ================================================================
+        // DELETE CODE FILE
+        // ================================================================
+        async function deleteCodeFile(fileId, event) {
+            event.stopPropagation();
+            if (!confirm('Delete this code file? This cannot be undone.')) return;
+            try {
+                const res = await fetch(`${API_BASE}/api/codefiles/${fileId}`, {
+                    method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    if (currentCodeFile === fileId) {
+                        currentCodeFile = null; currentCodeFileTitle = '';
+                        ['review-ai-btn','explain-ai-btn','duplicate-btn','logs-btn'].forEach(id => document.getElementById(id).style.display = 'none');
+                        document.getElementById('current-file-label').innerText = '';
+                        if (editorInstance) { editorInstance.updateOptions({ readOnly: true }); isTypingCode = true; editorInstance.setValue('// Select or create a code file...'); isTypingCode = false; }
+                    }
+                    await loadCodeFiles();
+                } else { alert('Failed to delete file.'); }
+            } catch(e) { console.error(e); alert('Error deleting.'); }
+        }
+
+        // ================================================================
+        // DELETE DOCUMENT
+        // ================================================================
+        async function deleteDocument(docId, event) {
+            event.stopPropagation();
+            if (!confirm('Delete this document? This cannot be undone.')) return;
+            try {
+                const res = await fetch(`${API_BASE}/api/documents/${docId}`, {
+                    method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    documents = documents.filter(d => d._id !== docId);
+                    if (currentDocument === docId) {
+                        currentDocument = null;
+                        const ta = document.getElementById('doc-editor');
+                        if (ta) ta.value = '';
+                    }
+                    renderDocuments();
+                } else { alert('Failed to delete document.'); }
+            } catch(e) { console.error(e); alert('Error deleting.'); }
+        }
+
+        // ================================================================
+        // DUPLICATE CODE FILE
+        // ================================================================
+        async function duplicateCodeFile() {
+            if (!currentCodeFile || !currentCodeFileTitle) return alert('No file open.');
+            const ext  = currentCodeFileTitle.includes('.') ? '.' + currentCodeFileTitle.split('.').pop() : '';
+            const base = currentCodeFileTitle.includes('.') ? currentCodeFileTitle.slice(0, currentCodeFileTitle.lastIndexOf('.')) : currentCodeFileTitle;
+            const newTitle = `${base}_copy${ext}`;
+            const content  = editorInstance ? editorInstance.getValue() : '';
+            try {
+                const res = await fetch(`${API_BASE}/api/projects/${currentChannel._id}/codefiles`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title: newTitle, content, originalFileId: currentCodeFile })
+                });
+                if (!res.ok) throw new Error('Duplicate failed');
+                // Also record a log on the original
+                await fetch(`${API_BASE}/api/codefiles/${currentCodeFile}/logs`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type: 'duplicate', summary: `Duplicated as "${newTitle}"`, content })
+                });
+                await loadCodeFiles();
+                // Auto-open the new copy
+                setTimeout(() => {
+                    const items = document.querySelectorAll('#code-list .code-file-item');
+                    items.forEach(item => { if (item.querySelector('span:nth-child(2)')?.innerText === newTitle) item.click(); });
+                }, 150);
+            } catch(e) { alert('Error duplicating: ' + e.message); }
+        }
+
+        // ================================================================
+        // CODE CHANGE LOGS — debounced, auto-records after 3s of no typing
+        // ================================================================
+        // Add this inside the Monaco onDidChangeModelContent callback:
+        // FIND: editorInstance.onDidChangeModelContent((event) => {
+        //           if (!isTypingCode && currentCodeFile) {
+        //               socket.emit('codeUpdate', { ...
+        //               });
+        //           }
+        //       });
+        // REPLACE with:
+        // (see next instruction — modify the existing callback)
+
+        // ================================================================
+        // LOGS DRAWER
+        // ================================================================
+        async function openLogsDrawer() {
+            if (!currentCodeFile) return;
+            const drawer = document.getElementById('logs-drawer');
+            drawer.style.display = 'flex';
+            document.getElementById('logs-file-label').innerText = `File: ${currentCodeFileTitle}`;
+            document.getElementById('logs-list').innerHTML = '<p style="padding:16px;color:#9ca3af;">Loading...</p>';
+            try {
+                const res = await fetch(`${API_BASE}/api/codefiles/${currentCodeFile}/logs`, { headers: { 'Authorization': `Bearer ${token}` } });
+                const logs = await res.json();
+                renderLogs(logs);
+            } catch(e) { document.getElementById('logs-list').innerHTML = '<p style="padding:16px;color:red;">Failed to load logs.</p>'; }
+        }
+
+        function closeLogsDrawer() { document.getElementById('logs-drawer').style.display = 'none'; }
+
+        function renderLogs(logs) {
+            const list = document.getElementById('logs-list');
+            list.innerHTML = '';
+            if (!logs?.length) { list.innerHTML = '<p style="padding:16px;color:#9ca3af;text-align:center;">No changes recorded yet.</p>'; return; }
+            logs.forEach(log => {
+                const entry = document.createElement('div'); entry.className = 'log-entry';
+                const init  = (log.author || '?').charAt(0).toUpperCase();
+                const time  = new Date(log.createdAt).toLocaleString();
+                const snippet = (log.content || '').split('\n').filter(l => l.trim()).slice(0, 3).join('\n');
+                const tagCls  = log.type === 'duplicate' ? 'duplicate' : 'edit';
+                const tagLbl  = log.type === 'duplicate' ? '⎘ Duplicate' : '✏️ Edit';
+                entry.innerHTML = `
+                    <div class="log-entry-header">
+                        <div class="log-avatar">${init}</div>
+                        <span class="log-author">${log.author}</span>
+                        <span class="log-tag ${tagCls}">${tagLbl}</span>
+                        <span class="log-time">${time}</span>
+                    </div>
+                    <div class="log-body">
+                        ${log.summary}
+                        ${snippet ? `<div class="log-snippet">${snippet.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>` : ''}
+                    </div>`;
+                list.appendChild(entry);
+            });
+        }
 
     </script>
+    <!-- Logs Drawer -->
+    <div id="logs-drawer">
+        <div id="logs-drawer-header">
+            <h3>📋 Change Log</h3>
+            <button onclick="closeLogsDrawer()">×</button>
+        </div>
+        <div id="logs-file-label" style="padding:6px 16px; font-size:0.78rem; color:#6b7280; background:#fafafa; border-bottom:1px solid #e5e7eb;"></div>
+        <div id="logs-list"></div>
+    </div>
 </body>
 </html>
