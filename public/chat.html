@@ -9,16 +9,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.30.1/min/vs/loader.min.js"></script>
     <link rel="stylesheet" href="style.css">
     <style>
-/* ── Missing Root Variables Added ── */
-:root {
-    --surface: #1e2026;
-    --surface2: #16181c;
-    --border: #2a2d35;
-    --text: #e8eaf0;
-    --text2: #9ca3af;
-    --muted: #6b7280;
-}
-
 /* ── Inline overrides for dynamic elements ── */
 
 /* Video overlay */
@@ -139,13 +129,16 @@ video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);}
 <body>
 <div class="app-container">
 
+    <!-- ══════════════════ SIDEBAR ══════════════════ -->
     <aside class="sidebar">
 
+        <!-- Admin join-request notifications -->
         <div id="admin-notifications" style="display:none;">
             <strong>🔔 Join Requests</strong>
             <div id="request-list"></div>
         </div>
 
+        <!-- Logo -->
         <header class="sidebar-header">
             <a href="index.html" class="logo">
                 <div class="logo-icon"></div>
@@ -153,6 +146,7 @@ video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);}
             </a>
         </header>
 
+        <!-- Project list -->
         <div class="sidebar-content">
             <div class="projects-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding:0 6px;">
                 <span style="font-size:.68rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);">Projects</span>
@@ -161,6 +155,7 @@ video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);}
             <div id="channel-list" class="channel-list"></div>
         </div>
 
+        <!-- User profile -->
         <footer class="sidebar-footer">
             <div id="user-profile-button" class="user-profile-button">
                 <span id="username-display-sidebar" class="username">Guest</span>
@@ -172,8 +167,10 @@ video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);}
         </footer>
     </aside>
 
+    <!-- ══════════════════ MAIN AREA ══════════════════ -->
     <main class="chat-area">
 
+        <!-- Header -->
         <header class="chat-header" id="chat-header">
             <div class="channel-title">
                 <span class="hash">#</span>
@@ -191,16 +188,19 @@ video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);}
             </div>
         </header>
 
+        <!-- View tabs -->
         <div class="view-tabs" id="view-tabs" style="display:none;">
             <button class="tab-btn active" onclick="switchView('chat')">Chat</button>
             <button class="tab-btn" onclick="switchView('documents')">Docs</button>
             <button class="tab-btn" onclick="switchView('code')">Code</button>
         </div>
 
+        <!-- ── Chat view ── -->
         <div class="chat-messages view" id="chat-view" style="display:none;">
             <div class="messages-wrapper" id="messages-wrapper"></div>
         </div>
 
+        <!-- ── Documents view ── -->
         <div class="documents-view view" id="documents-view" style="display:none;width:100%;height:100%;">
             <div class="documents-list-panel">
                 <div class="documents-header">
@@ -217,8 +217,10 @@ video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);}
             </div>
         </div>
 
+        <!-- ── Code view ── -->
         <div class="code-view view" id="code-view" style="display:none;width:100%;height:100%;flex-direction:row;">
 
+            <!-- File list panel -->
             <div class="documents-list-panel" style="width:230px;min-width:230px;flex-shrink:0;border-right:1px solid var(--border);display:flex;flex-direction:column;">
                 <div class="documents-header">
                     <h3>Files</h3>
@@ -230,8 +232,10 @@ video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);}
                 <div id="code-list" style="flex:1;overflow-y:auto;padding:4px 0;"></div>
             </div>
 
+            <!-- Monaco panel -->
             <div style="flex:1;min-width:0;display:flex;flex-direction:column;background:#1e1e1e;overflow:hidden;">
 
+                <!-- Monaco toolbar -->
                 <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 14px;border-bottom:1px solid #2d2d2d;background:#1a1a1a;flex-shrink:0;gap:8px;">
                     <div style="display:flex;align-items:center;gap:10px;">
                         <span style="font-size:.7rem;font-family:'DM Mono',monospace;color:#6ee7b7;font-weight:500;letter-spacing:.04em;">MONACO IDE</span>
@@ -298,10 +302,12 @@ video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);}
                     </div>
                 </div>
 
+                <!-- Editor -->
                 <div style="flex:1;position:relative;min-height:0;">
                     <div id="editor-container" style="position:absolute;top:0;left:0;right:0;bottom:0;"></div>
                 </div>
 
+                <!-- Terminal -->
                 <div id="terminal-output">
                     <div id="terminal-toolbar">
                         <span id="terminal-lang-label">▶ OUTPUT</span>
@@ -316,12 +322,14 @@ video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);}
             </div>
         </div>
 
+        <!-- Welcome screen -->
         <div class="welcome-screen" id="welcome-screen">
             <div class="logo-icon-large"></div>
             <h2>Welcome to InnovUnity</h2>
             <p>Select a project from the sidebar to get started.</p>
         </div>
 
+        <!-- Chat input -->
         <div class="chat-input-area" id="chat-input-area" style="display:none;">
             <div class="chat-input-wrapper">
                 <input type="text" id="message-input" placeholder="Send a message…"/>
@@ -332,12 +340,16 @@ video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);}
         </div>
     </main>
 
+    <!-- ══════════════════ MEMBERS ══════════════════ -->
     <aside class="members-sidebar" id="members-sidebar" style="display:none;">
         <div class="members-header">Online</div>
         <div class="members-list" id="members-list"></div>
     </aside>
 </div>
 
+<!-- ══════════════════ OVERLAYS & PANELS ══════════════════ -->
+
+<!-- File Library Modal -->
 <div id="file-library-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);z-index:5000;justify-content:center;align-items:center;">
     <div style="background:#1e2026;padding:24px;border-radius:14px;width:90%;max-width:500px;border:1px solid #353940;box-shadow:0 24px 80px rgba(0,0,0,.6);">
         <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #2a2d35;padding-bottom:14px;margin-bottom:4px;">
@@ -352,6 +364,7 @@ video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);}
     </div>
 </div>
 
+<!-- Video overlay -->
 <div id="video-call-overlay" class="video-call-overlay">
     <div class="video-grid" id="video-grid"></div>
     <div class="video-controls-bar">
@@ -367,10 +380,12 @@ video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);}
     </div>
 </div>
 
+<!-- Task FAB -->
 <div id="task-fab" class="task-fab" onclick="toggleTaskPanel()" style="display:none;" title="Tasks">
     <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
 </div>
 
+<!-- Task Panel -->
 <div id="task-panel" class="task-panel">
     <div class="task-header">
         <span>Tasks</span>
@@ -384,6 +399,7 @@ video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);}
     </div>
 </div>
 
+<!-- Invite Modal -->
 <div class="modal-overlay" id="invite-modal-overlay" onclick="hideInviteModal()">
     <div class="modal-content" onclick="event.stopPropagation()">
         <h3>Invite to Project</h3>
@@ -395,6 +411,7 @@ video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);}
     </div>
 </div>
 
+<!-- Project Modal -->
 <div id="projectModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);z-index:3000;justify-content:center;align-items:center;">
     <div style="background:#1e2026;padding:24px;border-radius:14px;width:300px;text-align:center;color:#e8eaf0;border:1px solid #353940;box-shadow:0 24px 80px rgba(0,0,0,.6);">
         <h3 style="margin-bottom:16px;font-size:1.05rem;font-weight:600;">New Project</h3>
@@ -408,6 +425,7 @@ video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);}
     </div>
 </div>
 
+<!-- AI Popup -->
 <div id="ai-popup">
     <div id="ai-popup-header">
         <span id="ai-popup-title">🤖 Groq AI</span>
@@ -417,6 +435,7 @@ video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);}
     <div id="ai-content">Open a code file then press Review or Explain.</div>
 </div>
 
+<!-- Logs Drawer -->
 <div id="logs-drawer">
     <div id="logs-drawer-header">
         <h3>📋 Change Log</h3>
@@ -426,6 +445,7 @@ video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);}
     <div id="logs-list"></div>
 </div>
 
+<!-- ══════════════════ ALL JAVASCRIPT (UNCHANGED) ══════════════════ -->
 <script>
 // ═══════════════════════════════════════════
 // AUTH
@@ -435,10 +455,7 @@ if (!token) window.location.href = 'register.html';
 
 const userName = localStorage.getItem('user_name') || 'Guest';
 let currentUserId = localStorage.getItem('user_id');
-
-// UPDATE THIS: If deploying your backend to Render, replace this with your backend URL.
-// Example: const API_BASE = 'https://your-innovunity-backend.onrender.com';
-const API_BASE = 'http://localhost:3000'; 
+const API_BASE = '';
 const socket = io(API_BASE, { auth: { token } });
 
 // ═══════════════════════════════════════════
@@ -489,13 +506,7 @@ async function loadUserProfile() {
     } catch(e) {}
 }
 async function fetchProjects() {
-    try { 
-        const r = await fetch(`${API_BASE}/api/projects`, { headers: { Authorization: `Bearer ${token}` } }); 
-        if (r.ok) {
-            channels = await r.json(); 
-            renderProjects(); 
-        }
-    }
+    try { const r = await fetch(`${API_BASE}/api/projects`, { headers: { Authorization: `Bearer ${token}` } }); channels = await r.json(); renderProjects(); }
     catch(e) { console.error(e); }
 }
 
@@ -566,18 +577,16 @@ async function openProject(project) {
         fetch(`${API_BASE}/api/projects/${project._id}/documents`, { headers:{ Authorization:`Bearer ${token}` } })
     ]);
 
-    if (mr.ok && dr.ok && docr.ok) {
-        const msgs = await mr.json(), detail = await dr.json();
-        documents = await docr.json();
-        currentChannel = detail;
+    const msgs = await mr.json(), detail = await dr.json();
+    documents = await docr.json();
+    currentChannel = detail;
 
-        messagesWrapper.innerHTML = '';
-        msgs.forEach(addMessageToUI);
-        renderMembers(detail.members);
-        renderDocuments();
-        loadTasks(project._id);
-        loadCodeFiles();
-    }
+    messagesWrapper.innerHTML = '';
+    msgs.forEach(addMessageToUI);
+    renderMembers(detail.members);
+    renderDocuments();
+    loadTasks(project._id);
+    loadCodeFiles();
 }
 
 function switchView(v) {
@@ -676,7 +685,7 @@ function toggleTaskPanel() { const p=document.getElementById('task-panel'); p.st
 async function loadTasks(pid) {
     try {
         const r = await fetch(`${API_BASE}/api/projects/${pid}/tasks`, { headers:{Authorization:`Bearer ${token}`} });
-        if(r.ok) renderTasks(await r.json());
+        renderTasks(await r.json());
         const sel = document.getElementById('task-assign-select'); if(!sel) return;
         sel.innerHTML = '<option value="">Unassigned</option>';
         document.querySelectorAll('#members-list .member-item').forEach(item => {
@@ -766,24 +775,12 @@ function renderDocuments() {
             document.querySelectorAll('.doc-item').forEach(i=>i.style.background='');
             d.style.background='#1a3d2e';
             const r=await fetch(`${API_BASE}/api/documents/${doc._id}`,{headers:{Authorization:`Bearer ${token}`}});
-            if(r.ok) {
-                const data=await r.json();
-                const ta=document.getElementById('doc-editor'); ta.value=data.content;
-                currentDocument=doc._id; socket.emit('joinDocument',doc._id);
-                const fresh=ta.cloneNode(true); ta.parentNode.replaceChild(fresh,ta);
-                fresh.addEventListener('input',ev=>socket.emit('documentUpdate',{documentId:currentDocument,content:ev.target.value}));
-                
-                // FIXED TEXTAREA CURSOR JUMP BUG
-                socket.off('documentChange'); 
-                socket.on('documentChange', c => {
-                    if(fresh.value !== c) {
-                        const start = fresh.selectionStart;
-                        const end = fresh.selectionEnd;
-                        fresh.value = c;
-                        fresh.setSelectionRange(start, end);
-                    }
-                });
-            }
+            const data=await r.json();
+            const ta=document.getElementById('doc-editor'); ta.value=data.content;
+            currentDocument=doc._id; socket.emit('joinDocument',doc._id);
+            const fresh=ta.cloneNode(true); ta.parentNode.replaceChild(fresh,ta);
+            fresh.addEventListener('input',ev=>socket.emit('documentUpdate',{documentId:currentDocument,content:ev.target.value}));
+            socket.off('documentChange'); socket.on('documentChange',c=>{if(fresh.value!==c)fresh.value=c;});
         });
         list.appendChild(d);
     });
@@ -804,20 +801,7 @@ async function deleteDocument(docId, e) {
 // ═══════════════════════════════════════════
 function showInviteModal(){document.getElementById('invite-link-input').value=`${location.origin}${location.pathname}?invite=${currentChannel.inviteCode}`;setDisplay('invite-modal-overlay','flex');}
 function hideInviteModal(){setDisplay('invite-modal-overlay','none');}
-
-// FIXED CLIPBOARD API
-async function copyInviteLink() {
-    const input = document.getElementById('invite-link-input');
-    try {
-        await navigator.clipboard.writeText(input.value);
-        const c = document.getElementById('copy-confirm');
-        c.textContent = 'Copied!';
-        setTimeout(() => c.textContent = '', 2000);
-    } catch (err) {
-        console.error('Failed to copy', err);
-    }
-}
-
+function copyInviteLink(){document.getElementById('invite-link-input').select();document.execCommand('copy');const c=document.getElementById('copy-confirm');c.textContent='Copied!';setTimeout(()=>c.textContent='',2000);}
 function logoutUser(){localStorage.clear();window.location.href='index.html';}
 async function joinProjectWithCode(code){if(!confirm('Request to join this project?'))return;try{const r=await fetch(`${API_BASE}/api/request-join`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},body:JSON.stringify({inviteCode:code})});const d=await r.json();alert(d.message||d.error);window.history.replaceState({},document.title,location.pathname);}catch(e){alert('Error');}}
 
@@ -830,11 +814,8 @@ async function checkPendingRequests(project){
     const aa=document.getElementById('admin-notifications'),rl=document.getElementById('request-list');
     const cid=project.creator?._id||project.creator;
     if(String(cid)!==String(currentUserId)){aa.style.display='none';return;}
-    const r=await fetch(`${API_BASE}/api/projects/${project._id}`,{headers:{Authorization:`Bearer ${token}`}});
-    if(r.ok) {
-        const d=await r.json();
-        if(d.pendingRequests?.length>0){aa.style.display='block';rl.innerHTML='';d.pendingRequests.forEach(req=>{const div=document.createElement('div');div.style.marginTop='6px';div.innerHTML=`<span style="font-size:.82rem;">${req.name}</span><div style="display:flex;gap:5px;margin-top:4px;"><button onclick="handleJoinRequest('${project._id}','${req.user}','approve')" style="background:#1a3d2e;color:#6ee7b7;border:1px solid rgba(110,231,183,.2);border-radius:5px;padding:3px 10px;cursor:pointer;font-size:.75rem;font-family:'DM Sans',sans-serif;">Approve</button><button onclick="handleJoinRequest('${project._id}','${req.user}','reject')" style="background:#3b1414;color:#f87171;border:1px solid rgba(248,113,113,.2);border-radius:5px;padding:3px 10px;cursor:pointer;font-size:.75rem;font-family:'DM Sans',sans-serif;">Reject</button></div>`;rl.appendChild(div);});}else{aa.style.display='none';}
-    }
+    const r=await fetch(`${API_BASE}/api/projects/${project._id}`,{headers:{Authorization:`Bearer ${token}`}});const d=await r.json();
+    if(d.pendingRequests?.length>0){aa.style.display='block';rl.innerHTML='';d.pendingRequests.forEach(req=>{const div=document.createElement('div');div.style.marginTop='6px';div.innerHTML=`<span style="font-size:.82rem;">${req.name}</span><div style="display:flex;gap:5px;margin-top:4px;"><button onclick="handleJoinRequest('${project._id}','${req.user}','approve')" style="background:#1a3d2e;color:#6ee7b7;border:1px solid rgba(110,231,183,.2);border-radius:5px;padding:3px 10px;cursor:pointer;font-size:.75rem;font-family:'DM Sans',sans-serif;">Approve</button><button onclick="handleJoinRequest('${project._id}','${req.user}','reject')" style="background:#3b1414;color:#f87171;border:1px solid rgba(248,113,113,.2);border-radius:5px;padding:3px 10px;cursor:pointer;font-size:.75rem;font-family:'DM Sans',sans-serif;">Reject</button></div>`;rl.appendChild(div);});}else{aa.style.display='none';}
 }
 async function handleJoinRequest(pid,uid,action){await fetch(`${API_BASE}/api/handle-request`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},body:JSON.stringify({projectId:pid,userIdToApprove:uid,action})});if(currentChannel&&currentChannel._id===pid){checkPendingRequests(currentChannel);if(action==='approve'){const r=await fetch(`${API_BASE}/api/projects/${pid}`,{headers:{Authorization:`Bearer ${token}`}});renderMembers((await r.json()).members);}}}
 
@@ -941,14 +922,12 @@ async function loadCodeFiles() {
             const lbl=document.getElementById('current-file-label'); if(lbl) lbl.innerText=file.title;
             try {
                 const r=await fetch(`${API_BASE}/api/codefiles/${file._id}`,{headers:{Authorization:`Bearer ${token}`}});
-                if(r.ok) {
-                    const data=await r.json();
-                    if(editorInstance){
-                        monaco.editor.setModelLanguage(editorInstance.getModel(), langMap[ext]||'javascript');
-                        editorInstance.updateOptions({readOnly:false});
-                        isTypingCode=true; editorInstance.setValue(data.content||''); isTypingCode=false;
-                        lastLoggedContent=data.content||'';
-                    }
+                const data=await r.json();
+                if(editorInstance){
+                    monaco.editor.setModelLanguage(editorInstance.getModel(), langMap[ext]||'javascript');
+                    editorInstance.updateOptions({readOnly:false});
+                    isTypingCode=true; editorInstance.setValue(data.content||''); isTypingCode=false;
+                    lastLoggedContent=data.content||'';
                 }
             } catch(err){console.error('Load file error',err);}
             ['review-ai-btn','explain-ai-btn','duplicate-btn','logs-btn','run-btn','compiler-select'].forEach(id=>setDisplay(id,'inline-block'));
@@ -1029,11 +1008,7 @@ async function openLogsDrawer() {
     document.getElementById('logs-list').innerHTML='<p style="padding:16px;color:#6b7280;font-size:.82rem;">Loading…</p>';
     try {
         const r=await fetch(`${API_BASE}/api/codefiles/${currentCodeFile}/logs`,{headers:{Authorization:`Bearer ${token}`}});
-        if (r.ok) {
-            renderLogs(await r.json());
-        } else {
-            throw new Error('Failed to fetch');
-        }
+        renderLogs(await r.json());
     } catch(e){ document.getElementById('logs-list').innerHTML='<p style="padding:16px;color:#f87171;font-size:.82rem;">Failed to load.</p>'; }
 }
 function closeLogsDrawer(){ setDisplay('logs-drawer','none'); }
