@@ -306,12 +306,46 @@ async function loginUser() {
         localStorage.setItem('token', d.token);
         localStorage.setItem('user_name', d.user?.name || '');
         localStorage.setItem('user_id', d.user?.id || d.userId || '');
+        localStorage.setItem('user', JSON.stringify(d.user));
         window.location.href = 'chat.html';
     } catch(e) { errEl.textContent = 'Server error. Try again.'; errEl.classList.add('show'); }
 }
 
 document.addEventListener('keypress', e => { if (e.key === 'Enter') loginUser(); });
-if (localStorage.getItem('token')) window.location.href = 'chat.html';
+// 🔐 Auto Login Check
+document.addEventListener("DOMContentLoaded", async function () {
+
+    const token = localStorage.getItem("token");
+
+    // No token → stay on login page
+    if (!token) return;
+
+    try {
+
+        // Verify token with backend
+        const res = await fetch('/api/profile', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        // Invalid token
+        if (!res.ok) {
+            localStorage.clear();
+            return;
+        }
+
+        // Valid token → redirect
+        window.location.href = 'chat.html';
+
+    } catch (err) {
+
+        console.error(err);
+
+        // Prevent redirect loop
+        localStorage.clear();
+    }
+});
 </script>
 </body>
 </html>
