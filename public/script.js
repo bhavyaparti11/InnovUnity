@@ -1,99 +1,44 @@
-// 🌟 Register User
-function registerUser(event) {
+async function loginUser(event) {
     event.preventDefault();
 
-    let name = document.getElementById("name").value;
-    let email = document.getElementById("email").value;
-    let password = document.getElementById("password").value;
-    let confirmPassword = document.getElementById("confirmPassword").value;
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
 
-    if (password !== confirmPassword) {
-        alert("Passwords do not match!");
-        return false;
-    }
+    try {
+        const res = await fetch('/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email, password })
+        });
 
-    let user = { name, email, password };
-    localStorage.setItem("user", JSON.stringify(user));
-    alert("Registration successful! Redirecting to login.");
-    window.location.href = "login.html"; // Redirect to login page
-}
+        const data = await res.json();
 
-// 🔑 Login User
-function loginUser(event) {
-    event.preventDefault();
-
-    let email = document.getElementById("email").value;
-    let password = document.getElementById("password").value;
-    let storedUser = JSON.parse(localStorage.getItem("user"));
-
-    if (!storedUser || storedUser.email !== email || storedUser.password !== password) {
-        alert("Invalid email or password!");
-        return false;
-    }
-
-    localStorage.setItem("user_name", storedUser.name);
-    alert("Login successful! Redirecting to chat.");
-    window.location.href = "chat.html"; // Redirect to chat page
-}
-
-// 📩 Send Message
-function sendMessage() {
-    let messageInput = document.getElementById("messageInput");
-    let message = messageInput.value.trim();
-    if (message === "") return;
-
-    let chatBox = document.getElementById("chatBox");
-    let newMessage = document.createElement("p");
-    newMessage.textContent = localStorage.getItem("user_name") + ": " + message;
-    chatBox.appendChild(newMessage);
-
-    let messages = JSON.parse(localStorage.getItem("chat_messages")) || [];
-    messages.push(newMessage.textContent);
-    localStorage.setItem("chat_messages", JSON.stringify(messages));
-
-    messageInput.value = ""; // Clear input
-    document.getElementById("previewText").textContent = ""; // Clear preview
-}
-
-// 🔄 Load Previous Messages
-function loadMessages() {
-    let chatBox = document.getElementById("chatBox");
-    let messages = JSON.parse(localStorage.getItem("chat_messages")) || [];
-    messages.forEach(msg => {
-        let messageElement = document.createElement("p");
-        messageElement.textContent = msg;
-        chatBox.appendChild(messageElement);
-    });
-}
-
-// 👀 Preview Message Before Sending
-function previewMessage() {
-    let messageInput = document.getElementById("messageInput").value;
-    let previewText = document.getElementById("previewText");
-
-    if (messageInput.trim() === "") {
-        previewText.textContent = "";
-    } else {
-        previewText.textContent = localStorage.getItem("user_name") + ": " + messageInput;
-    }
-}
-
-// 🏁 Check Login Status
-document.addEventListener("DOMContentLoaded", function() {
-    if (document.getElementById("username")) {
-        let userName = localStorage.getItem("user_name");
-        if (!userName) {
-            window.location.href = "login.html"; // Redirect if not logged in
+        if (!res.ok) {
+            alert(data.error || "Login failed");
+            return;
         }
-        document.getElementById("username").innerText = userName;
-        loadMessages();
-    }
-});
 
-// 🔴 Logout User
-function logoutUser() {
-    localStorage.clear();
-    window.location.href = "login.html"; // Redirect to login
+        // Store auth data properly
+        localStorage.setItem('token', data.token);
+
+        localStorage.setItem('user', JSON.stringify({
+            id: data.user.id,
+            name: data.user.name,
+            email: data.user.email
+        }));
+
+        // Optional convenience keys
+        localStorage.setItem('user_name', data.user.name);
+        localStorage.setItem('user_id', data.user.id);
+
+        window.location.href = 'chat.html';
+
+    } catch (err) {
+        console.error(err);
+        alert("Server Error");
+    }
 }
 
 // ⏎ Send Message on Enter Key
