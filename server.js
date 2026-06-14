@@ -318,7 +318,7 @@ app.use('/', apiRouter);
 
 // Profile
 apiRouter.get('/profile', authMiddleware, (req, res) => {
-    const user = req.user.toObject();
+    const user = req.user;
     if (user.profile_picture_url) {
         user.profile_picture_url = `${req.protocol}://${req.get('host')}/${user.profile_picture_url.replace(/\\/g, "/")}`;
     }
@@ -770,7 +770,7 @@ apiRouter.post('/execute', authMiddleware, async (req, res) => {
         res.status(500).json({ error: 'Execution service unavailable', details: err.message });
     }
 });
-apiRouter.get('/wandbox-compilers', authMiddleware, async (req, res) => {
+apiRouter.get('/wandbox-compilers', async (req, res) => {
     try {
         const response = await axios.get('https://wandbox.org/api/list.json');
         console.log('Wandbox list length:', response.data?.length);
