@@ -317,33 +317,29 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     const token = localStorage.getItem("token");
 
-    // No token → stay on login page
     if (!token) return;
 
     try {
 
-        // Verify token with backend
-        const res = await fetch('/api/profile', {
+        const res = await fetch('https://innovunity.onrender.com/api/profile', {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
         });
 
-        // Invalid token
+        // Only clear token if it's genuinely rejected (not a network hiccup)
         if (!res.ok) {
-            localStorage.clear();
+            if (res.status === 401 || res.status === 403) {
+                localStorage.clear();
+            }
             return;
         }
 
-        // Valid token → redirect
         window.location.href = 'chat.html';
 
     } catch (err) {
-
+        // Render cold start or network blip — do NOT wipe the token
         console.error(err);
-
-        // Prevent redirect loop
-        localStorage.clear();
     }
 });
 </script>
