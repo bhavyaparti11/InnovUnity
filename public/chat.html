@@ -15,82 +15,82 @@
 /* Video overlay */
 .video-call-overlay{position:fixed;top:0;left:0;width:100vw;height:100vh;background:#0c0d0f;z-index:2000;display:none;flex-direction:column;justify-content:space-between;}
 .video-grid{flex:1;display:flex;justify-content:center;align-items:center;flex-wrap:wrap;padding:2rem;gap:1rem;overflow-y:auto;}
-.video-wrapper{position:relative;width:100%;max-width:560px;aspect-ratio:16/9;background:#1e2026;border-radius:14px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.5);border:1px solid #2a2d35;}
+.video-wrapper{position:relative;width:100%;max-width:560px;aspect-ratio:16/9;background:#1a1115;border-radius:14px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.5);border:1px solid #2a191f;}
 video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);}
 .video-label{position:absolute;bottom:12px;left:12px;color:#fff;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);padding:4px 10px;border-radius:6px;font-size:.75rem;font-weight:500;}
-.video-controls-bar{position:absolute;bottom:28px;left:50%;transform:translateX(-50%);display:flex;gap:16px;background:rgba(14,15,17,.9);backdrop-filter:blur(12px);padding:14px 28px;border-radius:50px;border:1px solid #2a2d35;box-shadow:0 8px 32px rgba(0,0,0,.5);z-index:2100;}
-.control-btn{width:46px;height:46px;border-radius:50%;border:1px solid #353940;background:#1e2026;color:#e8eaf0;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+.video-controls-bar{position:absolute;bottom:28px;left:50%;transform:translateX(-50%);display:flex;gap:16px;background:rgba(14,15,17,.9);backdrop-filter:blur(12px);padding:14px 28px;border-radius:50px;border:1px solid #2a191f;box-shadow:0 8px 32px rgba(0,0,0,.5);z-index:2100;}
+.control-btn{width:46px;height:46px;border-radius:50%;border:1px solid #3a2530;background:#1a1115;color:#ede0e4;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;}
 .control-btn:hover{background:#252830;transform:scale(1.08);}
 .control-btn.active-off{background:#f87171;border-color:transparent;}
 .end-call-btn{background:#f87171;border:none;padding:0 20px;width:auto;border-radius:30px;}
 .end-call-btn:hover{background:#dc2626!important;}
 
 /* Task FAB */
-.task-fab{position:fixed;bottom:28px;right:28px;width:52px;height:52px;border-radius:50%;background:#6ee7b7;color:#0a1f15;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(110,231,183,.35);cursor:pointer;z-index:1000;transition:transform .2s,box-shadow .2s;}
-.task-fab:hover{transform:scale(1.08);box-shadow:0 8px 28px rgba(110,231,183,.45);}
-.task-panel{position:fixed;bottom:90px;right:28px;width:340px;height:480px;background:#1e2026;border:1px solid #353940;border-radius:14px;box-shadow:0 16px 60px rgba(0,0,0,.5);display:none;flex-direction:column;z-index:1000;overflow:hidden;}
-.task-header{padding:14px 16px;background:#16181c;border-bottom:1px solid #2a2d35;font-weight:600;font-size:.875rem;display:flex;justify-content:space-between;align-items:center;color:#e8eaf0;flex-shrink:0;}
+.task-fab{position:fixed;bottom:28px;right:28px;width:52px;height:52px;border-radius:50%;background:#c48899;color:#1a0a0f;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(103,57,77,.35);cursor:pointer;z-index:1000;transition:transform .2s,box-shadow .2s;}
+.task-fab:hover{transform:scale(1.08);box-shadow:0 8px 28px rgba(103,57,77,.45);}
+.task-panel{position:fixed;bottom:90px;right:28px;width:340px;height:480px;background:#1a1115;border:1px solid #3a2530;border-radius:14px;box-shadow:0 16px 60px rgba(0,0,0,.5);display:none;flex-direction:column;z-index:1000;overflow:hidden;}
+.task-header{padding:14px 16px;background:#130c0f;border-bottom:1px solid #2a191f;font-weight:600;font-size:.875rem;display:flex;justify-content:space-between;align-items:center;color:#ede0e4;flex-shrink:0;}
 .task-list{flex:1;overflow-y:auto;padding:10px;}
-.task-item{background:#16181c;border:1px solid #2a2d35;padding:10px 12px;border-radius:6px;margin-bottom:6px;display:flex;align-items:center;gap:10px;transition:border-color .15s;}
-.task-item:hover{border-color:#353940;}
+.task-item{background:#130c0f;border:1px solid #2a191f;padding:10px 12px;border-radius:6px;margin-bottom:6px;display:flex;align-items:center;gap:10px;transition:border-color .15s;}
+.task-item:hover{border-color:#3a2530;}
 .task-item.completed{opacity:.55;}
-.task-item.completed span{text-decoration:line-through;color:#6b7280;}
-.task-item input[type=checkbox]{accent-color:#6ee7b7;width:15px;height:15px;cursor:pointer;flex-shrink:0;}
+.task-item.completed span{text-decoration:line-through;color:#6b4d57;}
+.task-item input[type=checkbox]{accent-color:#c48899;width:15px;height:15px;cursor:pointer;flex-shrink:0;}
 .task-item span{font-size:.83rem;color:#9ca3af;flex:1;}
-.task-assignee{font-size:.7rem;background:#1a3d2e;color:#6ee7b7;padding:2px 7px;border-radius:20px;margin-left:auto;white-space:nowrap;}
+.task-assignee{font-size:.7rem;background:#1a3d2e;color:#c48899;padding:2px 7px;border-radius:20px;margin-left:auto;white-space:nowrap;}
 .task-item>button{background:none;border:none;color:transparent;cursor:pointer;font-size:16px;padding:0 4px;transition:color .15s;}
-.task-item:hover>button{color:#6b7280;}
+.task-item:hover>button{color:#6b4d57;}
 .task-item>button:hover{color:#f87171!important;}
-.task-input-area{padding:12px;border-top:1px solid #2a2d35;display:flex;flex-direction:column;gap:8px;flex-shrink:0;background:#16181c;}
-.task-input-area input,.task-input-area select{padding:8px 10px;background:#1e2026;border:1px solid #2a2d35;border-radius:6px;color:#e8eaf0;font-size:.83rem;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .2s;}
-.task-input-area input:focus,.task-input-area select:focus{border-color:#6ee7b7;}
-.task-input-area input::placeholder{color:#6b7280;}
-.task-input-area select option{background:#1e2026;}
-.add-task-btn{padding:8px;background:#1a3d2e;border:1px solid rgba(110,231,183,.2);border-radius:6px;color:#6ee7b7;font-size:.83rem;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;transition:background .15s;}
-.add-task-btn:hover{background:rgba(52,211,153,.2);}
+.task-input-area{padding:12px;border-top:1px solid #2a191f;display:flex;flex-direction:column;gap:8px;flex-shrink:0;background:#130c0f;}
+.task-input-area input,.task-input-area select{padding:8px 10px;background:#1a1115;border:1px solid #2a191f;border-radius:6px;color:#ede0e4;font-size:.83rem;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .2s;}
+.task-input-area input:focus,.task-input-area select:focus{border-color:#c48899;}
+.task-input-area input::placeholder{color:#6b4d57;}
+.task-input-area select option{background:#1a1115;}
+.add-task-btn{padding:8px;background:#1a3d2e;border:1px solid rgba(103,57,77,.2);border-radius:6px;color:#c48899;font-size:.83rem;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;transition:background .15s;}
+.add-task-btn:hover{background:rgba(103,57,77,.2);}
 
 /* Code file list */
 .code-file-item{padding:7px 10px;cursor:pointer;border-radius:6px;margin:1px 6px;font-size:.83rem;color:#9ca3af;display:flex;align-items:center;gap:7px;transition:background .12s;user-select:none;}
-.code-file-item:hover{background:#1e2026;}
-.code-file-item.active{background:#1a3d2e;color:#6ee7b7;}
+.code-file-item:hover{background:#1a1115;}
+.code-file-item.active{background:#1a3d2e;color:#c48899;}
 
 /* Delete btn */
-.file-del-btn{display:none;flex-shrink:0;background:none;border:none;color:#6b7280;cursor:pointer;font-size:14px;padding:2px 5px;border-radius:4px;margin-left:auto;line-height:1;transition:color .15s,background .15s;}
+.file-del-btn{display:none;flex-shrink:0;background:none;border:none;color:#6b4d57;cursor:pointer;font-size:14px;padding:2px 5px;border-radius:4px;margin-left:auto;line-height:1;transition:color .15s,background .15s;}
 .code-file-item:hover .file-del-btn,.doc-item:hover .file-del-btn{display:inline-block;}
 .file-del-btn:hover{color:#f87171;background:#3b1414;}
 
 /* Delete project btn */
 .delete-project-btn{margin-left:auto;background:none;border:none;color:transparent;cursor:pointer;font-weight:bold;display:none;padding:2px 5px;border-radius:4px;font-size:14px;line-height:1;}
-.channel-item:hover .delete-project-btn{display:inline-block;color:#6b7280;}
+.channel-item:hover .delete-project-btn{display:inline-block;color:#6b4d57;}
 .delete-project-btn:hover{color:#f87171!important;background:#3b1414;}
 
 /* AI popup */
 #ai-popup{position:fixed;bottom:20px;right:20px;width:400px;max-height:480px;background:#141414;border-radius:14px;box-shadow:0 16px 60px rgba(0,0,0,.7);display:none;flex-direction:column;z-index:5000;overflow:hidden;border:1px solid #2a2a2a;}
-#ai-popup-header{background:#1a1a1a;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;color:#e8eaf0;font-weight:600;border-bottom:1px solid #2a2a2a;font-size:.85rem;flex-shrink:0;}
-#ai-popup-header button{background:none;border:none;color:#6b7280;cursor:pointer;font-size:18px;line-height:1;padding:0;transition:color .15s;}
-#ai-popup-header button:hover{color:#e8eaf0;}
+#ai-popup-header{background:#1a1a1a;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;color:#ede0e4;font-weight:600;border-bottom:1px solid #2a2a2a;font-size:.85rem;flex-shrink:0;}
+#ai-popup-header button{background:none;border:none;color:#6b4d57;cursor:pointer;font-size:18px;line-height:1;padding:0;transition:color .15s;}
+#ai-popup-header button:hover{color:#ede0e4;}
 #ai-content{flex:1;padding:14px 16px;color:#ccc;font-size:.82rem;overflow-y:auto;white-space:pre-wrap;line-height:1.65;font-family:'DM Mono',monospace;}
-#ai-loading{display:none;align-items:center;gap:10px;padding:18px 16px;color:#6b7280;font-size:.82rem;}
+#ai-loading{display:none;align-items:center;gap:10px;padding:18px 16px;color:#6b4d57;font-size:.82rem;}
 .ai-spinner{width:16px;height:16px;border:2px solid #333;border-top-color:#a78bfa;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* Logs drawer */
-#logs-drawer{position:fixed;right:0;top:0;width:360px;height:100vh;background:#16181c;border-left:1px solid #2a2d35;box-shadow:-8px 0 40px rgba(0,0,0,.4);z-index:4000;display:none;flex-direction:column;}
-#logs-drawer-header{padding:14px 16px;background:#1e2026;border-bottom:1px solid #2a2d35;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
-#logs-drawer-header h3{margin:0;font-size:.9rem;color:#e8eaf0;}
-#logs-drawer-header button{background:none;border:none;cursor:pointer;font-size:20px;color:#6b7280;transition:color .15s;}
-#logs-drawer-header button:hover{color:#e8eaf0;}
+#logs-drawer{position:fixed;right:0;top:0;width:360px;height:100vh;background:#130c0f;border-left:1px solid #2a191f;box-shadow:-8px 0 40px rgba(0,0,0,.4);z-index:4000;display:none;flex-direction:column;}
+#logs-drawer-header{padding:14px 16px;background:#1a1115;border-bottom:1px solid #2a191f;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
+#logs-drawer-header h3{margin:0;font-size:.9rem;color:#ede0e4;}
+#logs-drawer-header button{background:none;border:none;cursor:pointer;font-size:20px;color:#6b4d57;transition:color .15s;}
+#logs-drawer-header button:hover{color:#ede0e4;}
 #logs-list{flex:1;overflow-y:auto;padding:10px;}
-.log-entry{border:1px solid #2a2d35;border-radius:8px;margin-bottom:8px;overflow:hidden;}
-.log-entry-header{padding:9px 12px;background:#1e2026;display:flex;align-items:center;gap:8px;}
-.log-avatar{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#6ee7b7,#3b82f6);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;flex-shrink:0;}
-.log-author{font-weight:600;color:#e8eaf0;flex:1;font-size:.8rem;}
-.log-time{color:#6b7280;font-size:.7rem;font-family:'DM Mono',monospace;}
+.log-entry{border:1px solid #2a191f;border-radius:8px;margin-bottom:8px;overflow:hidden;}
+.log-entry-header{padding:9px 12px;background:#1a1115;display:flex;align-items:center;gap:8px;}
+.log-avatar{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#c48899,#3b82f6);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;flex-shrink:0;}
+.log-author{font-weight:600;color:#ede0e4;flex:1;font-size:.8rem;}
+.log-time{color:#6b4d57;font-size:.7rem;font-family:'DM Mono',monospace;}
 .log-tag{font-size:.65rem;padding:2px 7px;border-radius:20px;font-weight:600;}
 .log-tag.edit{background:rgba(96,165,250,.15);color:#60a5fa;border:1px solid rgba(96,165,250,.2);}
 .log-tag.duplicate{background:rgba(251,191,36,.12);color:#fbbf24;border:1px solid rgba(251,191,36,.2);}
 .log-body{padding:9px 12px;color:#9ca3af;font-size:.78rem;}
-.log-snippet{font-family:'DM Mono',monospace;font-size:.72rem;background:#0e0f11;padding:6px 8px;border-radius:5px;margin-top:6px;max-height:60px;overflow-y:auto;white-space:pre-wrap;color:#6b7280;border:1px solid #2a2d35;}
+.log-snippet{font-family:'DM Mono',monospace;font-size:.72rem;background:#0e0c0d;padding:6px 8px;border-radius:5px;margin-top:6px;max-height:60px;overflow-y:auto;white-space:pre-wrap;color:#6b4d57;border:1px solid #2a191f;}
 
 /* Terminal */
 #terminal-output{display:none;flex-direction:column;background:#0d1117;flex-shrink:0;max-height:220px;border-top:1px solid #21262d;}
@@ -110,18 +110,18 @@ video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);}
 .term-exit-err{color:#f85149;margin-top:6px;padding-top:6px;border-top:1px solid #21262d;}
 
 /* Monaco editor line decorations */
-.edit-self{background:rgba(110,231,183,.06);}
+.edit-self{background:rgba(103,57,77,.06);}
 .edit-teammate{background:rgba(96,165,250,.06);}
 
 /* Modal overlay backdrop */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);z-index:3000;justify-content:center;align-items:center;}
-.modal-content{background:#1e2026;border:1px solid #353940;border-radius:14px;padding:24px;width:90%;max-width:440px;box-shadow:0 24px 80px rgba(0,0,0,.6);}
-.modal-content h3{font-size:1.05rem;font-weight:600;margin-bottom:16px;color:#e8eaf0;}
+.modal-content{background:#1a1115;border:1px solid #3a2530;border-radius:14px;padding:24px;width:90%;max-width:440px;box-shadow:0 24px 80px rgba(0,0,0,.6);}
+.modal-content h3{font-size:1.05rem;font-weight:600;margin-bottom:16px;color:#ede0e4;}
 .invite-link-wrapper{display:flex;gap:8px;margin-bottom:12px;}
-.invite-link-wrapper input{flex:1;padding:9px 12px;background:#16181c;border:1px solid #2a2d35;border-radius:6px;color:#9ca3af;font-size:.82rem;font-family:'DM Mono',monospace;outline:none;}
-.invite-link-wrapper button{padding:9px 16px;background:#1a3d2e;border:1px solid rgba(110,231,183,.2);border-radius:6px;color:#6ee7b7;font-size:.82rem;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;white-space:nowrap;}
-.invite-link-wrapper button:hover{background:rgba(52,211,153,.2);}
-#copy-confirm{font-size:.78rem;color:#6ee7b7;font-family:'DM Mono',monospace;}
+.invite-link-wrapper input{flex:1;padding:9px 12px;background:#130c0f;border:1px solid #2a191f;border-radius:6px;color:#9ca3af;font-size:.82rem;font-family:'DM Mono',monospace;outline:none;}
+.invite-link-wrapper button{padding:9px 16px;background:#1a3d2e;border:1px solid rgba(103,57,77,.2);border-radius:6px;color:#c48899;font-size:.82rem;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;white-space:nowrap;}
+.invite-link-wrapper button:hover{background:rgba(103,57,77,.2);}
+#copy-confirm{font-size:.78rem;color:#c48899;font-family:'DM Mono',monospace;}
 
 /* Admin notifications */
 #admin-notifications{margin:10px;border-radius:6px;background:rgba(251,191,36,.08)!important;border:1px solid rgba(251,191,36,.25)!important;color:#fbbf24!important;font-size:.78rem;padding:10px 12px!important;}
@@ -239,7 +239,7 @@ video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);}
                 <!-- Monaco toolbar -->
                 <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 14px;border-bottom:1px solid #2d2d2d;background:#1a1a1a;flex-shrink:0;gap:8px;">
                     <div style="display:flex;align-items:center;gap:10px;">
-                        <span style="font-size:.7rem;font-family:'DM Mono',monospace;color:#6ee7b7;font-weight:500;letter-spacing:.04em;">MONACO IDE</span>
+                        <span style="font-size:.7rem;font-family:'DM Mono',monospace;color:#c48899;font-weight:500;letter-spacing:.04em;">MONACO IDE</span>
                         <span id="current-file-label" style="font-size:.7rem;font-family:'DM Mono',monospace;color:#555;padding:2px 8px;background:rgba(255,255,255,.04);border-radius:4px;border:1px solid #333;"></span>
                     </div>
                     <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
@@ -352,15 +352,15 @@ video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);}
 
 <!-- File Library Modal -->
 <div id="file-library-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);z-index:5000;justify-content:center;align-items:center;">
-    <div style="background:#1e2026;padding:24px;border-radius:14px;width:90%;max-width:500px;border:1px solid #353940;box-shadow:0 24px 80px rgba(0,0,0,.6);">
-        <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #2a2d35;padding-bottom:14px;margin-bottom:4px;">
-            <h3 style="margin:0;font-size:1rem;font-weight:600;color:#e8eaf0;">Project Files</h3>
-            <span style="cursor:pointer;font-size:22px;color:#6b7280;line-height:1;transition:color .15s;" onclick="closeFileLibrary()" onmouseover="this.style.color='#e8eaf0'" onmouseout="this.style.color='#6b7280'">×</span>
+    <div style="background:#1a1115;padding:24px;border-radius:14px;width:90%;max-width:500px;border:1px solid #3a2530;box-shadow:0 24px 80px rgba(0,0,0,.6);">
+        <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #2a191f;padding-bottom:14px;margin-bottom:4px;">
+            <h3 style="margin:0;font-size:1rem;font-weight:600;color:#ede0e4;">Project Files</h3>
+            <span style="cursor:pointer;font-size:22px;color:#6b4d57;line-height:1;transition:color .15s;" onclick="closeFileLibrary()" onmouseover="this.style.color='#ede0e4'" onmouseout="this.style.color='#6b4d57'">×</span>
         </div>
         <div id="file-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:12px;padding:16px 0;max-height:300px;overflow-y:auto;"></div>
-        <div style="border-top:1px solid #2a2d35;padding-top:14px;text-align:center;">
+        <div style="border-top:1px solid #2a191f;padding-top:14px;text-align:center;">
             <input type="file" id="file-upload-lib" style="display:none;" onchange="handleFileUpload(this)">
-            <button onclick="document.getElementById('file-upload-lib').click()" style="background:#1a3d2e;color:#6ee7b7;border:1px solid rgba(110,231,183,.2);padding:10px 20px;border-radius:8px;cursor:pointer;font-size:.85rem;font-weight:600;font-family:'DM Sans',sans-serif;transition:background .15s;">+ Upload File</button>
+            <button onclick="document.getElementById('file-upload-lib').click()" style="background:#1a3d2e;color:#c48899;border:1px solid rgba(103,57,77,.2);padding:10px 20px;border-radius:8px;cursor:pointer;font-size:.85rem;font-weight:600;font-family:'DM Sans',sans-serif;transition:background .15s;">+ Upload File</button>
         </div>
     </div>
 </div>
@@ -414,13 +414,13 @@ video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);}
 
 <!-- Project Modal -->
 <div id="projectModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);z-index:3000;justify-content:center;align-items:center;">
-    <div style="background:#1e2026;padding:24px;border-radius:14px;width:300px;text-align:center;color:#e8eaf0;border:1px solid #353940;box-shadow:0 24px 80px rgba(0,0,0,.6);">
+    <div style="background:#1a1115;padding:24px;border-radius:14px;width:300px;text-align:center;color:#ede0e4;border:1px solid #3a2530;box-shadow:0 24px 80px rgba(0,0,0,.6);">
         <h3 style="margin-bottom:16px;font-size:1.05rem;font-weight:600;">New Project</h3>
         <input type="text" id="newProjectName" placeholder="Project name…"
-            style="width:100%;padding:10px 12px;margin-bottom:14px;background:#16181c;border:1px solid #2a2d35;border-radius:8px;color:#e8eaf0;font-family:'DM Sans',sans-serif;font-size:.9rem;outline:none;box-sizing:border-box;"
-            onfocus="this.style.borderColor='#6ee7b7'" onblur="this.style.borderColor='#2a2d35'">
+            style="width:100%;padding:10px 12px;margin-bottom:14px;background:#130c0f;border:1px solid #2a191f;border-radius:8px;color:#ede0e4;font-family:'DM Sans',sans-serif;font-size:.9rem;outline:none;box-sizing:border-box;"
+            onfocus="this.style.borderColor='#c48899'" onblur="this.style.borderColor='#2a191f'">
         <div style="display:flex;gap:8px;">
-            <button onclick="createProject()" style="flex:1;background:#1a3d2e;color:#6ee7b7;border:1px solid rgba(110,231,183,.2);padding:10px;cursor:pointer;border-radius:8px;font-weight:600;font-family:'DM Sans',sans-serif;font-size:.85rem;transition:background .15s;">Create</button>
+            <button onclick="createProject()" style="flex:1;background:#1a3d2e;color:#c48899;border:1px solid rgba(103,57,77,.2);padding:10px;cursor:pointer;border-radius:8px;font-weight:600;font-family:'DM Sans',sans-serif;font-size:.85rem;transition:background .15s;">Create</button>
             <button onclick="closeProjectModal()" style="flex:1;background:#3b1414;color:#f87171;border:1px solid rgba(248,113,113,.2);padding:10px;cursor:pointer;border-radius:8px;font-weight:600;font-family:'DM Sans',sans-serif;font-size:.85rem;transition:background .15s;">Cancel</button>
         </div>
     </div>
@@ -442,7 +442,7 @@ video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);}
         <h3>📋 Change Log</h3>
         <button onclick="closeLogsDrawer()">×</button>
     </div>
-    <div id="logs-file-label" style="padding:7px 16px;font-size:.73rem;color:#6b7280;background:#16181c;border-bottom:1px solid #2a2d35;flex-shrink:0;font-family:'DM Mono',monospace;"></div>
+    <div id="logs-file-label" style="padding:7px 16px;font-size:.73rem;color:#6b4d57;background:#130c0f;border-bottom:1px solid #2a191f;flex-shrink:0;font-family:'DM Mono',monospace;"></div>
     <div id="logs-list"></div>
 </div>
 
@@ -697,7 +697,7 @@ async function loadTasks(pid) {
 }
 function renderTasks(tasks) {
     const list=document.getElementById('task-list'); list.innerHTML='';
-    if(!tasks?.length){list.innerHTML='<div style="padding:16px;color:#6b7280;text-align:center;font-size:.82rem;">No tasks yet.</div>';return;}
+    if(!tasks?.length){list.innerHTML='<div style="padding:16px;color:#6b4d57;text-align:center;font-size:.82rem;">No tasks yet.</div>';return;}
     tasks.forEach(t=>{
         const el=document.createElement('div'); el.className=`task-item ${t.status==='completed'?'completed':''}`;
         const a=t.assignedTo?.name?`<div class="task-assignee">${t.assignedTo.name}</div>`:''
@@ -723,7 +723,7 @@ function renderMembers(members) {
         let html=`<span style="font-size:.83rem;font-weight:500;">${name}</span>`;
         if(iAmCreator&&String(id)!==String(currentUserId)) html+=`<button onclick="kickMember('${id}')" title="Remove member" style="margin-left:auto;background:none;border:none;color:transparent;cursor:pointer;font-size:14px;padding:2px 5px;border-radius:4px;transition:color .15s,background .15s;" onmouseover="this.style.color='#f87171';this.style.background='#3b1414'" onmouseout="this.style.color='transparent';this.style.background='none'">×</button>`;
         item.style.cssText='display:flex;justify-content:space-between;align-items:center;padding:7px 8px;border-radius:6px;transition:background .12s;';
-        item.onmouseover=()=>item.style.background='#1e2026';
+        item.onmouseover=()=>item.style.background='#1a1115';
         item.onmouseout=()=>item.style.background='transparent';
         item.innerHTML=html; membersList.appendChild(item);
     });
@@ -816,7 +816,7 @@ async function checkPendingRequests(project){
     const cid=project.creator?._id||project.creator;
     if(String(cid)!==String(currentUserId)){aa.style.display='none';return;}
     const r=await fetch(`${API_BASE}/api/projects/${project._id}`,{headers:{Authorization:`Bearer ${token}`}});const d=await r.json();
-    if(d.pendingRequests?.length>0){aa.style.display='block';rl.innerHTML='';d.pendingRequests.forEach(req=>{const div=document.createElement('div');div.style.marginTop='6px';div.innerHTML=`<span style="font-size:.82rem;">${req.name}</span><div style="display:flex;gap:5px;margin-top:4px;"><button onclick="handleJoinRequest('${project._id}','${req.user}','approve')" style="background:#1a3d2e;color:#6ee7b7;border:1px solid rgba(110,231,183,.2);border-radius:5px;padding:3px 10px;cursor:pointer;font-size:.75rem;font-family:'DM Sans',sans-serif;">Approve</button><button onclick="handleJoinRequest('${project._id}','${req.user}','reject')" style="background:#3b1414;color:#f87171;border:1px solid rgba(248,113,113,.2);border-radius:5px;padding:3px 10px;cursor:pointer;font-size:.75rem;font-family:'DM Sans',sans-serif;">Reject</button></div>`;rl.appendChild(div);});}else{aa.style.display='none';}
+    if(d.pendingRequests?.length>0){aa.style.display='block';rl.innerHTML='';d.pendingRequests.forEach(req=>{const div=document.createElement('div');div.style.marginTop='6px';div.innerHTML=`<span style="font-size:.82rem;">${req.name}</span><div style="display:flex;gap:5px;margin-top:4px;"><button onclick="handleJoinRequest('${project._id}','${req.user}','approve')" style="background:#1a3d2e;color:#c48899;border:1px solid rgba(103,57,77,.2);border-radius:5px;padding:3px 10px;cursor:pointer;font-size:.75rem;font-family:'DM Sans',sans-serif;">Approve</button><button onclick="handleJoinRequest('${project._id}','${req.user}','reject')" style="background:#3b1414;color:#f87171;border:1px solid rgba(248,113,113,.2);border-radius:5px;padding:3px 10px;cursor:pointer;font-size:.75rem;font-family:'DM Sans',sans-serif;">Reject</button></div>`;rl.appendChild(div);});}else{aa.style.display='none';}
 }
 async function handleJoinRequest(pid,uid,action){await fetch(`${API_BASE}/api/handle-request`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},body:JSON.stringify({projectId:pid,userIdToApprove:uid,action})});if(currentChannel&&currentChannel._id===pid){checkPendingRequests(currentChannel);if(action==='approve'){const r=await fetch(`${API_BASE}/api/projects/${pid}`,{headers:{Authorization:`Bearer ${token}`}});renderMembers((await r.json()).members);}}}
 
@@ -826,8 +826,8 @@ async function handleJoinRequest(pid,uid,action){await fetch(`${API_BASE}/api/ha
 async function openFileLibrary(){
     if(!currentChannel)return alert('Select a project first!');
     const modal=document.getElementById('file-library-modal'),grid=document.getElementById('file-grid');
-    modal.style.display='flex'; grid.innerHTML='<p style="grid-column:1/-1;text-align:center;color:#6b7280;font-size:.82rem;">Loading…</p>';
-    try{const r=await fetch(`${API_BASE}/api/files/${currentChannel._id}`,{headers:{Authorization:`Bearer ${token}`}});const files=await r.json();grid.innerHTML='';if(!files?.length){grid.innerHTML='<p style="grid-column:1/-1;text-align:center;color:#6b7280;font-size:.82rem;">No files yet.</p>';return;}files.forEach(file=>{const card=document.createElement('div');card.style.cssText='border:1px solid #2a2d35;border-radius:8px;padding:10px;text-align:center;background:#16181c;cursor:pointer;transition:border-color .15s,background .15s;';card.onmouseover=()=>{card.style.borderColor='#353940';card.style.background='#1e2026';};card.onmouseout=()=>{card.style.borderColor='#2a2d35';card.style.background='#16181c';};card.onclick=()=>window.open(file.url,'_blank');const ext=file.url?.toLowerCase();let icon='📄';if(ext?.match(/\.(jpg|jpeg|png|gif)$/))icon='🖼️';if(ext?.match(/\.(ppt|pptx)$/))icon='📊';if(ext?.match(/\.(pdf)$/))icon='📕';card.innerHTML=`<div style="font-size:24px;margin-bottom:6px;">${icon}</div><div style="font-size:.7rem;color:#9ca3af;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${file.name||'File'}</div>`;grid.appendChild(card);});}catch(e){grid.innerHTML='<p style="color:#f87171;grid-column:1/-1;font-size:.82rem;">Error loading files.</p>';}
+    modal.style.display='flex'; grid.innerHTML='<p style="grid-column:1/-1;text-align:center;color:#6b4d57;font-size:.82rem;">Loading…</p>';
+    try{const r=await fetch(`${API_BASE}/api/files/${currentChannel._id}`,{headers:{Authorization:`Bearer ${token}`}});const files=await r.json();grid.innerHTML='';if(!files?.length){grid.innerHTML='<p style="grid-column:1/-1;text-align:center;color:#6b4d57;font-size:.82rem;">No files yet.</p>';return;}files.forEach(file=>{const card=document.createElement('div');card.style.cssText='border:1px solid #2a191f;border-radius:8px;padding:10px;text-align:center;background:#130c0f;cursor:pointer;transition:border-color .15s,background .15s;';card.onmouseover=()=>{card.style.borderColor='#3a2530';card.style.background='#1a1115';};card.onmouseout=()=>{card.style.borderColor='#2a191f';card.style.background='#130c0f';};card.onclick=()=>window.open(file.url,'_blank');const ext=file.url?.toLowerCase();let icon='📄';if(ext?.match(/\.(jpg|jpeg|png|gif)$/))icon='🖼️';if(ext?.match(/\.(ppt|pptx)$/))icon='📊';if(ext?.match(/\.(pdf)$/))icon='📕';card.innerHTML=`<div style="font-size:24px;margin-bottom:6px;">${icon}</div><div style="font-size:.7rem;color:#9ca3af;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${file.name||'File'}</div>`;grid.appendChild(card);});}catch(e){grid.innerHTML='<p style="color:#f87171;grid-column:1/-1;font-size:.82rem;">Error loading files.</p>';}
 }
 function closeFileLibrary(){setDisplay('file-library-modal','none');}
 async function handleFileUpload(input){const file=input.files[0];if(!file)return;const mi=document.getElementById('message-input');mi.placeholder='Uploading…';mi.disabled=true;const fd=new FormData();fd.append('file',file);try{const r=await fetch(`${API_BASE}/api/files/upload`,{method:'POST',headers:{Authorization:`Bearer ${token}`},body:fd});const d=await r.json();if(d.fileUrl)socket.emit('sendMessage',{projectId:currentChannel._id,text:d.fileUrl,authorName:userName,userId:currentUserId});else alert('Upload failed');}catch(e){alert('Error');}finally{mi.placeholder='Send a message…';mi.disabled=false;input.value='';}}
@@ -908,7 +908,7 @@ async function loadCodeFiles() {
     try { const r=await fetch(`${API_BASE}/api/projects/${currentChannel._id}/codefiles`,{headers:{Authorization:`Bearer ${token}`}});codeFiles=await r.json(); }
     catch(e){ codeFiles=[]; }
     const list=document.getElementById('code-list'); list.innerHTML='';
-    if(!codeFiles?.length){list.innerHTML='<div style="padding:16px 12px;color:#6b7280;font-size:.78rem;text-align:center;line-height:1.6;">No files yet.<br>Press + to create one.</div>';return;}
+    if(!codeFiles?.length){list.innerHTML='<div style="padding:16px 12px;color:#6b4d57;font-size:.78rem;text-align:center;line-height:1.6;">No files yet.<br>Press + to create one.</div>';return;}
     codeFiles.forEach(file=>{
         const ext=(file.title.split('.').pop()||'').toLowerCase();
         const div=document.createElement('div'); div.className='code-file-item';
@@ -1006,7 +1006,7 @@ async function openLogsDrawer() {
     if(!currentCodeFile) return;
     setDisplay('logs-drawer','flex');
     const lbl=document.getElementById('logs-file-label'); if(lbl) lbl.innerText=`File: ${currentCodeFileTitle}`;
-    document.getElementById('logs-list').innerHTML='<p style="padding:16px;color:#6b7280;font-size:.82rem;">Loading…</p>';
+    document.getElementById('logs-list').innerHTML='<p style="padding:16px;color:#6b4d57;font-size:.82rem;">Loading…</p>';
     try {
         const r=await fetch(`${API_BASE}/api/codefiles/${currentCodeFile}/logs`,{headers:{Authorization:`Bearer ${token}`}});
         renderLogs(await r.json());
@@ -1015,7 +1015,7 @@ async function openLogsDrawer() {
 function closeLogsDrawer(){ setDisplay('logs-drawer','none'); }
 function renderLogs(logs) {
     const list=document.getElementById('logs-list'); list.innerHTML='';
-    if(!logs?.length){list.innerHTML='<p style="padding:16px;color:#6b7280;text-align:center;font-size:.82rem;line-height:1.6;">No changes yet.<br>Start editing to create logs.</p>';return;}
+    if(!logs?.length){list.innerHTML='<p style="padding:16px;color:#6b4d57;text-align:center;font-size:.82rem;line-height:1.6;">No changes yet.<br>Start editing to create logs.</p>';return;}
     logs.forEach(log=>{
         const entry=document.createElement('div'); entry.className='log-entry';
         const init=(log.author||'?').charAt(0).toUpperCase();

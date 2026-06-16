@@ -7,21 +7,21 @@
 
 /* ── CSS Variables ─────────────────────────────────── */
 :root {
-  --bg:        #0e0f11;
-  --surface:   #16181c;
-  --surface2:  #1e2026;
-  --surface3:  #252830;
-  --border:    #2a2d35;
-  --border2:   #353940;
-  --text:      #e8eaf0;
-  --text2:     #9ca3af;
-  --muted:     #6b7280;
-  --accent:    #6ee7b7;
-  --accent2:   #34d399;
-  --accent-dim:#1a3d2e;
+  --bg:        #0e0c0d;
+  --surface:   #130c0f;
+  --surface2:  #1a1115;
+  --surface3:  #221520;
+  --border:    #2a191f;
+  --border2:   #3a2530;
+  --text:      #ede0e4;
+  --text2:     #b89aa3;
+  --muted:     #6b4d57;
+  --accent:    #67394d;
+  --accent2:   #7d4560;
+  --accent-dim:#2a1520;
   --danger:    #f87171;
   --danger-dim:#3b1414;
-  --blue:      #60a5fa;
+  --blue:      #c48899;
   --yellow:    #fbbf24;
   --sidebar-w: 240px;
   --members-w: 200px;
@@ -90,9 +90,9 @@ body {
 .logo-icon {
   width: 28px; height: 28px;
   border-radius: 8px;
-  background: linear-gradient(135deg, #6ee7b7, #34d399);
+  background: linear-gradient(135deg, #67394d, #7d4560);
   display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 0 16px rgba(110,231,183,.35);
+  box-shadow: 0 0 16px rgba(103,57,77,.35);
   flex-shrink: 0;
 }
 
@@ -101,7 +101,7 @@ body {
   display: block;
   width: 10px; height: 10px;
   border-radius: 3px;
-  background: #0a1f15;
+  background: #1a0a0f;
   clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
 }
 
@@ -255,7 +255,7 @@ body {
   content: '';
   width: 28px; height: 28px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent), #3b82f6);
+  background: linear-gradient(135deg, #67394d, #7d4560);
   flex-shrink: 0;
   display: block;
 }
@@ -380,8 +380,8 @@ body {
 .logo-icon-large {
   width: 52px; height: 52px;
   border-radius: 14px;
-  background: linear-gradient(135deg, rgba(110,231,183,.15), rgba(52,211,153,.08));
-  border: 1px solid rgba(110,231,183,.15);
+  background: linear-gradient(135deg, rgba(103,57,77,.15), rgba(103,57,77,.08));
+  border: 1px solid rgba(103,57,77,.20);
 }
 
 .welcome-screen h2 {
@@ -450,9 +450,9 @@ body {
   align-items: center;
   gap: 5px;
   padding: 3px 8px;
-  border: 1px solid rgba(96,165,250,.2);
+  border: 1px solid rgba(196,136,153,.2);
   border-radius: 6px;
-  background: rgba(96,165,250,.06);
+  background: rgba(196,136,153,.06);
   margin-top: 3px;
 }
 
@@ -477,7 +477,7 @@ body {
 
 .chat-input-wrapper:focus-within {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(110,231,183,.08);
+  box-shadow: 0 0 0 3px rgba(103,57,77,.12);
 }
 
 #message-input {
@@ -520,9 +520,9 @@ body {
   align-items: center;
   gap: 7px;
   padding: 7px 14px;
-  background: rgba(52,211,153,.12);
+  background: rgba(103,57,77,.15);
   color: var(--accent);
-  border: 1px solid rgba(110,231,183,.2);
+  border: 1px solid rgba(103,57,77,.3);
   border-radius: var(--radius-sm);
   font-weight: 500;
   font-size: .82rem;
@@ -532,8 +532,8 @@ body {
 }
 
 .start-call-btn:hover {
-  background: rgba(52,211,153,.2);
-  border-color: rgba(110,231,183,.4);
+  background: rgba(103,57,77,.25);
+  border-color: rgba(103,57,77,.5);
 }
 
 .invite-button {
@@ -920,7 +920,7 @@ body {
 .modal-content > button {
   padding: 9px 16px;
   background: var(--accent-dim);
-  border: 1px solid rgba(110,231,183,.2);
+  border: 1px solid rgba(103,57,77,.3);
   border-radius: var(--radius-sm);
   color: var(--accent);
   font-size: .82rem;
@@ -932,7 +932,7 @@ body {
 }
 
 .invite-link-wrapper button:hover,
-.modal-content > button:hover { background: rgba(52,211,153,.2); }
+.modal-content > button:hover { background: rgba(103,57,77,.25); }
 
 #copy-confirm {
   font-size: .78rem;
@@ -1008,7 +1008,7 @@ body {
   background: var(--accent);
   color: #0a1f15;
   display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 4px 20px rgba(110,231,183,.35);
+  box-shadow: 0 4px 20px rgba(103,57,77,.35);
   cursor: pointer;
   z-index: 1000;
   transition: transform .2s, box-shadow .2s;
@@ -1138,7 +1138,7 @@ body {
 .add-task-btn {
   padding: 8px;
   background: var(--accent-dim);
-  border: 1px solid rgba(110,231,183,.2);
+  border: 1px solid rgba(103,57,77,.3);
   border-radius: var(--radius-sm);
   color: var(--accent);
   font-size: .83rem;
@@ -1148,7 +1148,7 @@ body {
   transition: background .15s;
 }
 
-.add-task-btn:hover { background: rgba(52,211,153,.2); }
+.add-task-btn:hover { background: rgba(103,57,77,.25); }
 
 /* ═══════════════════════════════════════════════════════
    VIDEO OVERLAY
@@ -1379,7 +1379,7 @@ video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
 .log-avatar {
   width: 24px; height: 24px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent), #3b82f6);
+  background: linear-gradient(135deg, #67394d, #7d4560);
   color: #fff;
   display: flex; align-items: center; justify-content: center;
   font-size: .65rem;
@@ -1398,7 +1398,7 @@ video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
   letter-spacing: .03em;
 }
 
-.log-tag.edit { background: rgba(96,165,250,.15); color: var(--blue); border: 1px solid rgba(96,165,250,.2); }
+.log-tag.edit { background: rgba(96,165,250,.15); color: var(--blue); border: 1px solid rgba(196,136,153,.2); }
 .log-tag.duplicate { background: rgba(251,191,36,.12); color: var(--yellow); border: 1px solid rgba(251,191,36,.2); }
 
 .log-body { padding: 9px 12px; color: var(--text2); font-size: .78rem; }
@@ -1500,8 +1500,8 @@ video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
 /* ═══════════════════════════════════════════════════════
    MONACO line decoration overrides
    ═══════════════════════════════════════════════════════ */
-.edit-self     { background: rgba(110,231,183,.06); }
-.edit-teammate { background: rgba(96,165,250,.06); }
+.edit-self     { background: rgba(103,57,77,.08); }
+.edit-teammate { background: rgba(196,136,153,.06); }
 
 /* ═══════════════════════════════════════════════════════
    UTILITY ANIMATIONS

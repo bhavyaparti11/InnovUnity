@@ -10,17 +10,17 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
 :root{
-  --bg:       #0e0f11;
-  --surface:  #16181c;
-  --surface2: #1e2026;
-  --border:   #2a2d35;
-  --border2:  #353940;
-  --text:     #e8eaf0;
-  --muted:    #6b7280;
-  --accent:   #6ee7b7;
-  --accent2:  #34d399;
+  --bg:       #0e0c0d;
+  --surface:  #130c0f;
+  --surface2: #1a1115;
+  --border:   #2a191f;
+  --border2:  #3a2530;
+  --text:     #ede0e4;
+  --muted:    #6b4d57;
+  --accent:   #67394d;
+  --accent2:  #7d4560;
   --danger:   #f87171;
-  --blue:     #60a5fa;
+  --blue:     #c48899;
 }
 
 html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);overflow:hidden}
@@ -29,8 +29,8 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);colo
 body::before{
   content:'';position:fixed;inset:0;
   background-image:
-    radial-gradient(ellipse 80% 50% at 20% 50%,rgba(110,231,183,.07) 0%,transparent 60%),
-    radial-gradient(ellipse 60% 80% at 80% 20%,rgba(96,165,250,.05) 0%,transparent 50%);
+    radial-gradient(ellipse 80% 50% at 20% 50%,rgba(103,57,77,.10) 0%,transparent 60%),
+    radial-gradient(ellipse 60% 80% at 80% 20%,rgba(103,57,77,.06) 0%,transparent 50%);
   pointer-events:none;z-index:0;
 }
 
@@ -62,7 +62,7 @@ body::after{
   bottom:-120px;left:-80px;
   width:420px;height:420px;
   border-radius:50%;
-  background:radial-gradient(circle,rgba(110,231,183,.12),transparent 70%);
+  background:radial-gradient(circle,rgba(103,57,77,.15),transparent 70%);
   pointer-events:none;
 }
 
@@ -71,9 +71,9 @@ body::after{
 }
 .logo-icon{
   width:36px;height:36px;border-radius:10px;
-  background:linear-gradient(135deg,#6ee7b7,#34d399);
+  background:#67394d;
   display:flex;align-items:center;justify-content:center;
-  box-shadow:0 0 24px rgba(110,231,183,.4);
+  box-shadow:0 0 24px rgba(103,57,77,.4);
 }
 .logo-icon svg{display:block}
 .logo-text{
@@ -154,24 +154,24 @@ body::after{
 .form-input::placeholder{color:var(--muted);}
 .form-input:focus{
   border-color:var(--accent);
-  box-shadow:0 0 0 3px rgba(110,231,183,.12);
+  box-shadow:0 0 0 3px rgba(103,57,77,.15);
 }
 
 .btn-primary{
   width:100%;padding:.85rem;
   background:var(--accent);
-  color:#0a1f15;
+  color:#f0e2e7;
   border:none;border-radius:10px;
   font-size:.9rem;font-weight:600;
   font-family:'DM Sans',sans-serif;
   cursor:pointer;letter-spacing:.01em;
   transition:background .2s,transform .15s,box-shadow .2s;
-  box-shadow:0 4px 20px rgba(110,231,183,.25);
+  box-shadow:0 4px 20px rgba(103,57,77,.3);
   margin-top:.5rem;
 }
 .btn-primary:hover{
   background:var(--accent2);
-  box-shadow:0 6px 28px rgba(110,231,183,.35);
+  box-shadow:0 6px 28px rgba(103,57,77,.4);
   transform:translateY(-1px);
 }
 .btn-primary:active{transform:translateY(0);}
@@ -237,7 +237,7 @@ body::after{
   <div class="brand-panel">
     <div class="logo-mark">
       <div class="logo-icon">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0a1f15" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f0e2e7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
       </div>
       <span class="logo-text">InnovUnity</span>
     </div>
@@ -261,7 +261,7 @@ body::after{
       </div>
     </div>
 
-    <div class="brand-footer">MANIPAL UNIVERSITY JAIPUR · PBL-4 · 2026</div>
+    <div class="brand-footer">INNOVUNITY · 2026</div>
   </div>
 
   <!-- Auth panel -->
@@ -317,29 +317,33 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     const token = localStorage.getItem("token");
 
+    // No token → stay on login page
     if (!token) return;
 
     try {
 
-        const res = await fetch('https://innovunity.onrender.com/api/profile', {
+        // Verify token with backend
+        const res = await fetch('/api/profile', {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
         });
 
-        // Only clear token if it's genuinely rejected (not a network hiccup)
+        // Invalid token
         if (!res.ok) {
-            if (res.status === 401 || res.status === 403) {
-                localStorage.clear();
-            }
+            localStorage.clear();
             return;
         }
 
+        // Valid token → redirect
         window.location.href = 'chat.html';
 
     } catch (err) {
-        // Render cold start or network blip — do NOT wipe the token
+
         console.error(err);
+
+        // Prevent redirect loop
+        localStorage.clear();
     }
 });
 </script>
