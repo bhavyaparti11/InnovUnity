@@ -7,21 +7,23 @@
 
 /* ── CSS Variables ─────────────────────────────────── */
 :root {
-  --bg:        #0e0f11;
-  --surface:   #16181c;
-  --surface2:  #1e2026;
-  --surface3:  #252830;
-  --border:    #2a2d35;
-  --border2:   #353940;
-  --text:      #e8eaf0;
-  --text2:     #9ca3af;
-  --muted:     #6b7280;
-  --accent:    #67394d;
-  --accent2:   #7d4560;
-  --accent-dim:#2a1520;
+  --bg:        #0b0d14;
+  --surface:   #111320;
+  --surface2:  #161929;
+  --surface3:  #1c1f30;
+  --border:    #1e2235;
+  --border2:   #272b3f;
+  --text:      #e8eaf2;
+  --text2:     #8b90a8;
+  --muted:     #555a70;
+  --accent:    #6366f1;
+  --accent2:   #4f52d4;
+  --accent-dim:rgba(99,102,241,.12);
+  --cyan:      #22d3ee;
+  --cyan-dim:  rgba(34,211,238,.1);
   --danger:    #f87171;
   --danger-dim:#3b1414;
-  --blue:      #60a5fa;
+  --blue:      #6366f1;
   --yellow:    #fbbf24;
   --sidebar-w: 240px;
   --members-w: 200px;
@@ -90,19 +92,16 @@ body {
 .logo-icon {
   width: 28px; height: 28px;
   border-radius: 8px;
-  background: linear-gradient(135deg, #67394d, #7d4560);
+  background: linear-gradient(135deg, #6366f1, #22d3ee);
   display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 0 16px rgba(103,57,77,.4);
+  box-shadow: 0 0 16px rgba(99,102,241,.4);
   flex-shrink: 0;
 }
 
 .logo-icon::after {
-  content: '';
-  display: block;
-  width: 10px; height: 10px;
-  border-radius: 3px;
-  background: #f0e2e7;
-  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+  content: '⚡';
+  font-size: 13px;
+  line-height: 1;
 }
 
 .logo span {
@@ -255,7 +254,7 @@ body {
   content: '';
   width: 28px; height: 28px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #67394d, #7d4560);
+  background: linear-gradient(135deg, #6366f1, #4f52d4);
   flex-shrink: 0;
   display: block;
 }
@@ -380,8 +379,8 @@ body {
 .logo-icon-large {
   width: 52px; height: 52px;
   border-radius: 14px;
-  background: linear-gradient(135deg, rgba(103,57,77,.2), rgba(103,57,77,.1));
-  border: 1px solid rgba(103,57,77,.25);
+  background: linear-gradient(135deg, rgba(99,102,241,.2), rgba(99,102,241,.1));
+  border: 1px solid rgba(99,102,241,.25);
 }
 
 .welcome-screen h2 {
@@ -477,7 +476,7 @@ body {
 
 .chat-input-wrapper:focus-within {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(103,57,77,.12);
+  box-shadow: 0 0 0 3px rgba(99,102,241,.12);
 }
 
 #message-input {
@@ -520,9 +519,9 @@ body {
   align-items: center;
   gap: 7px;
   padding: 7px 14px;
-  background: rgba(103,57,77,.15);
+  background: rgba(99,102,241,.15);
   color: var(--accent);
-  border: 1px solid rgba(103,57,77,.3);
+  border: 1px solid rgba(99,102,241,.3);
   border-radius: var(--radius-sm);
   font-weight: 500;
   font-size: .82rem;
@@ -532,8 +531,8 @@ body {
 }
 
 .start-call-btn:hover {
-  background: rgba(103,57,77,.25);
-  border-color: rgba(103,57,77,.5);
+  background: rgba(99,102,241,.25);
+  border-color: rgba(99,102,241,.5);
 }
 
 .invite-button {
@@ -920,7 +919,7 @@ body {
 .modal-content > button {
   padding: 9px 16px;
   background: var(--accent-dim);
-  border: 1px solid rgba(103,57,77,.3);
+  border: 1px solid rgba(99,102,241,.3);
   border-radius: var(--radius-sm);
   color: var(--accent);
   font-size: .82rem;
@@ -932,7 +931,7 @@ body {
 }
 
 .invite-link-wrapper button:hover,
-.modal-content > button:hover { background: rgba(103,57,77,.25); }
+.modal-content > button:hover { background: rgba(99,102,241,.25); }
 
 #copy-confirm {
   font-size: .78rem;
@@ -1138,7 +1137,7 @@ body {
 .add-task-btn {
   padding: 8px;
   background: var(--accent-dim);
-  border: 1px solid rgba(103,57,77,.3);
+  border: 1px solid rgba(99,102,241,.3);
   border-radius: var(--radius-sm);
   color: var(--accent);
   font-size: .83rem;
@@ -1148,7 +1147,7 @@ body {
   transition: background .15s;
 }
 
-.add-task-btn:hover { background: rgba(103,57,77,.25); }
+.add-task-btn:hover { background: rgba(99,102,241,.25); }
 
 /* ═══════════════════════════════════════════════════════
    VIDEO OVERLAY
@@ -1379,7 +1378,7 @@ video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
 .log-avatar {
   width: 24px; height: 24px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #67394d, #7d4560);
+  background: linear-gradient(135deg, #6366f1, #4f52d4);
   color: #fff;
   display: flex; align-items: center; justify-content: center;
   font-size: .65rem;
@@ -1500,7 +1499,7 @@ video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
 /* ═══════════════════════════════════════════════════════
    MONACO line decoration overrides
    ═══════════════════════════════════════════════════════ */
-.edit-self     { background: rgba(103,57,77,.08); }
+.edit-self     { background: rgba(99,102,241,.08); }
 .edit-teammate { background: rgba(96,165,250,.06); }
 
 /* ═══════════════════════════════════════════════════════
